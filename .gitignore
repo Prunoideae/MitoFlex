@@ -1,2 +1,6 @@
 filter/filter_se/.vscode/settings.json
 filter/filter_se/main
+__pycache__/helper.cpython-36.pyc
+__pycache__/helper.cpython-37.pyc
+__pycache__/runner.cpython-36.pyc
+__pycache__/runner.cpython-37.pyc

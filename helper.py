@@ -254,7 +254,7 @@ def freeze_arguments(prog, desc):
         func['parser'] = parser_func
     main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
                              help='use preconfigurated file to run program')
-    main_parser.add_argument("-g", "--generate_config", type=bool, action="store_true", default=False,
+    main_parser.add_argument("-g", "--generate_config", action="store_true", default=False,
                             help=("if switched on, MitoX will not be run, but generate"
                                 "a configuration file with arguments input instead."))
     return main_parser

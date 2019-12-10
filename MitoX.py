@@ -37,9 +37,11 @@ try:
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoX installation!')
+    sys.exit()
 except ImportError as identifier:
     print(
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
+    sys.exit()
 
 from helper import *
 from runner import *

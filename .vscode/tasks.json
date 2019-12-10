@@ -12,28 +12,7 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "-I",
-                "/home/prunoideae/dev/vcpkg/installed/x64-linux/include"
-            ],
-            "options": {
-                "cwd": "/usr/bin"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build"
-        },
-        {
-            "type": "shell",
-            "label": "g++-7 build active file",
-            "command": "/usr/bin/g++-7",
-            "args": [
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
-                "-I",
-                "/home/prunoideae/dev/vcpkg/installed/x64-linux/include"
+                "-O3"
             ],
             "options": {
                 "cwd": "/usr/bin"
@@ -52,8 +31,7 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "-I",
-                "/home/prunoideae/dev/vcpkg/installed/x64-linux/include"
+                "-O3"
             ],
             "options": {
                 "cwd": "/usr/bin"
