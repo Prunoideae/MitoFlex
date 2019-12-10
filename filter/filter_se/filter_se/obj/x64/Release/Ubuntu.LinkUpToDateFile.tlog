@@ -1,1 +1,0 @@
-g++ -o "/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/bin/x64/Release/filter_se.out" -Wl,--no-undefined -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack "/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/obj/x64/Release/main.o"
