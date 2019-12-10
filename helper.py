@@ -255,8 +255,9 @@ def freeze_arguments(prog, desc):
     main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
                              help='use preconfigurated file to run program')
     main_parser.add_argument("-g", "--generate_config", action="store_true", default=False,
-                            help=("if switched on, MitoX will not be run, but generate"
-                                "a configuration file with arguments input instead."))
+                             help=("if switched on, MitoX will not be run, but generate "
+                                   "a configuration file with arguments input instead under current directory. "
+                                   "must specify before any arugments."))
     return main_parser
 
 
@@ -272,24 +273,30 @@ def parse_then_call(expr):
     args = expr.parse_args()
     parsed = vars(args)
 
+    generate_config = parsed['generate_config']
+    command = parsed['command']
     config = parsed['config']
+    parsed.pop('generate_config')
     parsed.pop('config')
+
+    if generate_config:
+        with open('generated_config.py', 'w') as f:
+            for key, value in parsed.items():
+                print(key, '\'{}\''.format(value) if type(value) is str else value, sep=' = ', end='\n', file=f)
+        return
 
     if config is not None:
         try:
             spec = import_util.spec_from_file_location('', config)
             mod = import_util.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            parsed.update({
-                item: vars(mod)[item]
-                for item in vars(mod) 
-                if not item.startswith("__")
-            })
+            parsed.update({item: vars(mod)[item] for item in vars(
+                mod) if not item.startswith("__")})
         except Exception as identifier:
             print(identifier)
             sys.exit('Errors occured when importing configuration file. Exiting.')
 
-    command = parsed['command']
+    
     if command in collected_args:
         parsed.pop('command')
         func = collected_args[command]['func']

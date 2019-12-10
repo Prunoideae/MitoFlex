@@ -1,3 +1,24 @@
+/*
+  filter_se.cpp
+
+  Copyright (c) 2019-2020 Henry Lee <2018301050@szu.edu.cn>.
+
+  This file is part of source code of MitoX.
+
+  MitoX is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  MitoX is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
@@ -5,6 +26,15 @@
 #include <string>
 
 using namespace std;
+
+/*
+  filter_se is only a runner, which is called by filter.py to filter data.
+  This is NOT a complete tool, as it only handles the filtering method, other
+  things like argument processing, help printing and others are done by
+  filter.py. This is for seperating the real processing part from the calling
+  part, which I think could extend the toolkit's flexibility while doing no harm
+  to the toolkit integrity.
+*/
 
 bool has_suffix(const std::string& str, const std::string& suffix) {
   return str.size() >= suffix.size() &&
@@ -61,6 +91,9 @@ inline bool filter_se(string input, string output, int start, int length,
 
     char *bps = bpseq, *quas = quaseq;
 
+    strtok(bps, "\n");
+    strtok(quas, "\n");
+
     if (start != -1) {
       bps += start;
       quas += start;
@@ -74,9 +107,13 @@ inline bool filter_se(string input, string output, int start, int length,
     if (!ns_check(bps, ns) || !quality_check(quas, quality, limit)) continue;
 
     fputs(head, ofile);
+    fputs("\n", ofile);
     fputs(bps, ofile);
+    fputs("\n", ofile);
     fputs(plus, ofile);
+    fputs("\n", ofile);
     fputs(quaseq, ofile);
+    fputs("\n", ofile);
   }
   return true;
 }
@@ -126,8 +163,9 @@ int main(int argc, char** argv) {
   }
 
   if (output.empty()) {
-    output = input;
-    output.append(".filtered");
+    output = input + ".filtered";
+    if (has_suffix(input, ".gz"))
+      output.append(".gz");  // file.gz.filtered.gz...
   }
 
   if (start != -1 || end != -1)
