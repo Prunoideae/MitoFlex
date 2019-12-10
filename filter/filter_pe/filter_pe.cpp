@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
   }
 
   if (i1.empty() || i2.empty()){
-    printf("Input missing. Two input files are needed.");
+    printf("Input missing. Two input files are needed.\n");
     valid = false;
   }
 
