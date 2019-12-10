@@ -1,0 +1,64 @@
+﻿Build started 12/7/2019 1:08:42 AM.
+Logging verbosity is set to: Normal.     1>Project "C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\filter_se.vcxproj" on node 2 (Build target(s)).
+     1>InitializeBuildStatus:
+         Creating "C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\obj\x64\Release\filter_se.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         Starting remote build
+         Compiling sources:
+         Invoking 'g++'
+         g++ -c -x c++ "/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp" -g1 -o "/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/obj/x64/Release/main.o" -Wall -Wswitch -W"no-deprecated-declarations" -W"empty-body" -Wconversion -W"return-type" -Wparentheses -W"no-format" -Wuninitialized -W"unreachable-code" -W"unused-function" -W"unused-value" -W"unused-variable" -O3 -fno-strict-aliasing -fomit-frame-pointer -DNDEBUG -fthreadsafe-statics -fexceptions -frtti -std=c++11
+         main.cpp
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp: In function ‘bool ns_check(char*, int)’:
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp:18:20: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     1>C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(18,20): warning : comparison between signed and unsigned integer expressions [-Wsign-compare]
+           for (int i = 0; i < strlen(bpseq); i++)
+                           ~~^~~~~~~~~~~~~~~
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp: In function ‘bool quality_check(char*, int, double)’:
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp:26:20: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     1>C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(26,20): warning : comparison between signed and unsigned integer expressions [-Wsign-compare]
+           for (int i = 0; i < strlen(quaseq); i++)
+                           ~~^~~~~~~~~~~~~~~~
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp:30:33: warning: conversion to ‘double’ from ‘size_t {aka long unsigned int}’ may alter its value [-Wconversion]
+     1>C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(30,33): warning : conversion to ‘double’ from ‘size_t {aka long unsigned int}’ may alter its value [-Wconversion]
+           return unqualified < int(strlen(quaseq) * limit);
+                                    ~~~~~~^~~~~~~~
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp: In function ‘bool filter_se(std::__cxx11::string, std::__cxx11::string, int, int, int, int, double)’:
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp:63:8: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+     1>C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(63,8): warning : ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+            fgets(bpseq, 1024, ifile);
+            ~~~~~^~~~~~~~~~~~~~~~~~~~
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp:64:8: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+     1>C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(64,8): warning : ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+            fgets(plus, 1024, ifile);
+            ~~~~~^~~~~~~~~~~~~~~~~~~
+         /mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp:65:8: warning: ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+     1>C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(65,8): warning : ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+            fgets(quaseq, 1024, ifile);
+            ~~~~~^~~~~~~~~~~~~~~~~~~~~
+         Done compiling '/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/main.cpp'
+       Link:
+         Linking objects
+         Invoking 'ld'
+         g++ -o "/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/bin/x64/Release/filter_se.out" -Wl,--no-undefined -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack "/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/obj/x64/Release/main.o"
+         Done linking, output file name: '/mnt/c/Users/45516/Desktop/Program Related/MitoX/filter/filter_se/filter_se/bin/x64/Release/filter_se.out'
+         filter_se.vcxproj -> C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\bin\x64\Release\filter_se.out
+       FinalizeBuildStatus:
+         Deleting file "C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\obj\x64\Release\filter_se.tlog\unsuccessfulbuild".
+         Touching "C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\obj\x64\Release\filter_se.tlog\filter_se.lastbuildstate".
+     1>Done Building Project "C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\filter_se.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+       "C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\filter_se.vcxproj" (Build target) (1) ->
+       (ClCompile target) -> 
+         C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(18,20): warning : comparison between signed and unsigned integer expressions [-Wsign-compare]
+         C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(26,20): warning : comparison between signed and unsigned integer expressions [-Wsign-compare]
+         C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(30,33): warning : conversion to ‘double’ from ‘size_t {aka long unsigned int}’ may alter its value [-Wconversion]
+         C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(63,8): warning : ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+         C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(64,8): warning : ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+         C:\Users\45516\Desktop\Program Related\MitoX\filter\filter_se\filter_se\main.cpp(65,8): warning : ignoring return value of ‘char* fgets(char*, int, FILE*)’, declared with attribute warn_unused_result [-Wunused-result]
+
+    6 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.50

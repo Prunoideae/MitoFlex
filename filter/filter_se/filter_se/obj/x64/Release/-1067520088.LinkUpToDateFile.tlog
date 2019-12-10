@@ -1,0 +1,1 @@
+g++ -o "/home/prunoideae/projects/filter_se/bin/x64/Release/filter_se.out" -Wl,--no-undefined -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack /home/prunoideae/projects/filter_se/obj/x64/Release/main.o
