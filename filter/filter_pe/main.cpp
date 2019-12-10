@@ -114,6 +114,25 @@ int main(int argc, char** argv) {
     o2.append(".filtered");
   }
 
+  if (start != -1 || end != -1)
+		if (start < -1 || start >= end || end < -1) {
+			printf("Invalid position statement with start %i and end %i. Both start and end can't be lower than -1, or start can't come latter than end.\n", start, end);
+			valid = false;
+		}
+
+	if (quality < 0) {
+		printf("Invalid quality valve %i. Can't specify a valve lower than 0.\n", quality);
+		valid = false;
+	}
+
+	if (limit < 0 || limit > 1) {
+		printf("Invalid limit %g. It should be a value between 0 and 1.\n", limit);
+		valid = false;
+	}
+
+	int cal_start = start;
+	int cal_length = end == -1 ? -1 : end - start + 1;
+
   if (!valid) {
     printf("Error(s) found, exiting.\n");
     return -1;

@@ -28,7 +28,10 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 # # command-line values, so be catious in checking values. The only one 
 # # way NOT to overwrite arguments passed is to comment out the values 
 # # you don't want to.
-# 
+# # Also, this configuration used a trick to make python import and 
+# # execute it as an module, thus you may add your config with some 
+# # code to make it even more flexible...
+
 # # Global configuration
 # command = 'all'
 # 
