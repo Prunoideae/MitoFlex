@@ -79,9 +79,13 @@ universal_parser, universal_group = register_group('Universal arguments', [
         'name': 'clean-temp',
         'default': False,
         'help': 'remove temporal files and folders after work done.'
+    },
+    {
+        'name': 'basedir',
+        'default': None,
+        'help': 'result and temp folder will be generated in this instead of current directory.'
     }
 ])
-
 
 # Fastq arguments
 fastq_parser, fastq_group = register_group('Fastq arguments', [
@@ -131,18 +135,6 @@ filter_parser, filter_group = register_group('Filter argumetns', [
         'name': 'adapter2',
         'meta': 'file',
         'help': 'input adapter list file 1 to filter adapter contamination.'
-    },
-    {
-        'name': 'cleanq1',
-        'meta': 'file',
-        'default': 'filtered.1.fq.gz',
-        'help': 'filtered fastq file 1 name.'
-    },
-    {
-        'name': 'cleanq2',
-        'meta': 'file',
-        'default': 'filtered.2.fq.gz',
-        'help': 'filtered fastq file 2 name.'
     },
     {
         'name': 'deduplication',
@@ -312,41 +304,31 @@ Version
 
 @parse_func(func_help='filter out unqualified reads from fastq',
             parents=[fastq_parser, filter_parser])
-@arg_prop(dest='workname', help='in where the filtered data will be put in.')
+@arg_prop(dest='workname', help='in where the filtered data will be put in.', required=True)
+@arg_prop(dest='basedir', help='result will be in this directory else than the current')
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
-def filter(workname=None, seq_size=None,
+def filter(workname=None, seq_size=None, basedir=None,
 
            fastq1=None, fastq2=None, fastq_alter_format=False, fastq_read_length=150,
 
-           adapter1=None, adapter2=None, cleanq1=None, cleanq2=None, deduplication=False,
+           adapter1=None, adapter2=None, deduplication=False,
            adapter_mismatch=3, adapter_length=15, keep_region='-1,-1', Ns_valve=10, quality_valve=50,
            percentage_valve=0.2
            ):
 
     if fastq1 is None and fastq2 is not None:
         fastq1, fastq2 = fastq2, fastq1
-        if cleanq1 is None and cleanq2 is not None:
-            cleanq1, cleanq2 = cleanq2, cleanq1
+
     elif fastq1 is None and fastq2 is None:
         collected_args['filter']['parser'].print_help()
         sys.exit('Both fastq input file is not specified. Exiting.')
 
-    if cleanq1 is None and fastq1 is not None:
-        cleanq1 = 'filtered.' + fastq1
+    work_folder = path.abspath(
+        path.join(work_dir if basedir is None else basedir, workname))
+    temp_folder = path.join(work_folder, workname + '.tmp')
 
-    if cleanq2 is None and fastq2 is not None:
-        cleanq2 = 'filtered.' + fastq2
-
-    if workname is not None:
-        dump_dir = path.join(work_dir, workname, workname+'.tmp', 'clean_data')
-
-        cleanq1 = path.join(dump_dir, cleanq1)
-        if fastq2 is not None:
-            cleanq2 = path.join(dump_dir, cleanq2)
-
-    cleanq1 = path.abspath(cleanq1)
-    if fastq2 is not None:
-        cleanq2 = path.abspath(cleanq2)
+    cleanq1 = path.join(temp_folder, 'filtered.1.fq.gz')
+    cleanq2 = path.join(temp_folder, 'filtered.2.fq.gz')
 
     # Validates the directories
     try:
@@ -385,18 +367,14 @@ def filter(workname=None, seq_size=None,
     return filtered1, filtered2
 
 @parse_func(func_help='assemble from input fastq reads, output mitochondrial sequences',
-            parents=[universal_parser, fastq_parser, assembly_parser, search_parser, saa_parser])
-def assemble(workname=None, threads=8, clean_temp=False,
+            parents=[universal_parser, fastq_parser, assembly_parser])
+def assemble(workname=None, threads=8, clean_temp=False, basedir=None,
 
              fastq1=None, fastq2=None, fastq_alter_format=None, fastq_read_length=125,
 
              insert_size=150, kmer_min=21, kmer_max=141, kmer_step=12, kmer_list=None, use_list=False, no_mercy=False,
              prune_level=2, prune_depth=2, disable_acc=False,
-
-             filter_taxa=False, min_abundance=10, required_taxa='Platyhelminthes', taxa_tolerance=0,
-
-             genetic_code=9, clade='Platyhelminthes-flatworms'):
-    # TODO:To fill the blanks of assemble method
+             ):
 
     if disable_acc:
         print('CPU accerlation disabled by option --disable_acc.')
@@ -409,6 +387,9 @@ def assemble(workname=None, threads=8, clean_temp=False,
     if fastq1 is None and fastq2 is not None:
         fastq1, fastq2 = fastq2, fastq1
 
+    if not fastq1 and not fastq2:
+        sys.exit('Both fastq1 and fastq2 are not specified!')
+
     if (use_list):
         if 0 in [int(x) % 2 for x in kmer_list.split(',')]:
             sys.exit('K-mer specified should always be odd numbers!')
@@ -416,9 +397,29 @@ def assemble(workname=None, threads=8, clean_temp=False,
         if 0 in [int(x) % 2 for x in range(kmer_min, kmer_max, kmer_step)]:
             sys.exit('K-mer specified should always be odd numbers!')
 
+    if (threads <= 0):
+        sys.exit('Unreasonable thread count specified!')
+
+    work_folder = path.abspath(
+        path.join(work_dir if basedir is None else basedir, workname))
+    result_folder = path.join(work_folder, workname + '.result')
+    temp_folder = path.join(work_folder, workname + '.tmp')
+
+    try:
+        os.makedirs(result_folder, exist_ok=True)
+        os.makedirs(temp_folder, exist_ok=True)
+    except Exception as identifier:
+        print(identifier)
+        sys.exit(
+            'Error occured when validating the directories, please check your permissions or things could be realted.')
+
     from assemble.assemble import assemble
 
-    assembled_contigs = None
+    assembled_contigs = assemble(fastq1=fastq1, fastq2=fastq2, result_dir=result_folder,
+                                 temp_dir=temp_folder, work_prefix=workname, uselist=use_list,
+                                 kmin=kmer_min, kmax=kmer_max, kstep=kmer_step, klist=kmer_list,
+                                 no_mercy=no_mercy, disable_acc=disable_acc, prune_level=prune_level,
+                                 prune_depth=prune_depth, clean_temp=clean_temp, threads=threads)
 
     return assembled_contigs
 
@@ -471,11 +472,11 @@ def visualize():
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def all(topology='linear', disable_filter=False, seq_size=None,
 
-        workname=None, threads=8, clean_temp=False,
+        workname=None, threads=8, clean_temp=False, basedir=None,
 
         fastq1=None, fastq2=None, fastq_alter_format=None, fastq_read_length=150,
 
-        adapter1=None, adapter2=None, cleanq1=None, cleanq2=None, deduplication=False,
+        adapter1=None, adapter2=None, deduplication=False,
         adapter_mismatch=3, adapter_length=15, keep_region=None, Ns_valve=10, quality_valve=50,
         percentage_valve=20,
 
@@ -490,20 +491,28 @@ def all(topology='linear', disable_filter=False, seq_size=None,
         ):
 
     dataq1, dataq2 = fastq1, fastq2
-    working_folder = path.join(work_dir, workname)
+    working_folder = path.abspath(
+        path.join(work_dir if basedir is None else basedir, workname))
     temp_folder = path.join(working_folder, workname + '.tmp')
 
     # Go filtering
     if not disable_filter:
         dataq1, dataq2 = filter(workname=workname, seq_size=seq_size, fastq1=fastq1, fastq2=fastq2, adapter1=adapter1,
-                                adapter2=adapter2, cleanq1=cleanq1, cleanq2=cleanq2, deduplication=deduplication,
+                                adapter2=adapter2, deduplication=deduplication,
                                 adapter_mismatch=adapter_mismatch, adapter_length=adapter_length,
                                 keep_region=keep_region, Ns_valve=Ns_valve, quality_valve=quality_valve,
-                                percentage_valve=percentage_valve)
+                                percentage_valve=percentage_valve, basedir=basedir)
     elif dataq1 is None and dataq2 is not None:
         dataq1, dataq2 = dataq2, dataq1
 
-    # TODO:Finish assembling methods.
+    contigs_file = assemble(workname=workname, threads=threads, clean_temp=clean_temp, basedir=basedir,
+                            fastq1=dataq1, fastq2=dataq2, fastq_alter_format=fastq_alter_format,
+                            fastq_read_length=fastq_read_length, insert_size=insert_size,
+                            kmer_min=kmer_min, kmer_max=kmer_max, kmer_step=kmer_step, kmer_list=kmer_list,
+                            use_list=use_list, no_mercy=no_mercy, prune_level=prune_level, prune_depth=prune_depth,
+                            disable_acc=disable_acc)
+
+    # TODO:Finish findmitoscaf methods.
 
 
 # Entry starts at here

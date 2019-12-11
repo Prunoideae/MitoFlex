@@ -37,7 +37,8 @@ megahit_dir = os.path.join(os.path.dirname(__file__), 'bin')
 def assemble(fastq1=None, fastq2=None, result_dir=None, temp_dir=None, work_prefix=None,
              uselist=False, kmin=21, kmax=141, kstep=12, klist=None,
              no_mercy=False, disable_acc=False,
-             prune_level=2, prune_depth=2, clean_temp=False):
+             prune_level=2, prune_depth=2, clean_temp=False,
+             threads=8):
 
     if(uselist):
         kmin = kmax = kstep = None
@@ -49,6 +50,6 @@ def assemble(fastq1=None, fastq2=None, result_dir=None, temp_dir=None, work_pref
                no_mercy=no_mercy, prune_level=prune_level, prune_depth=prune_depth,
                keep_tmp_files=clean_temp, tmp_dir=temp_dir,
                out_dir=result_dir, out_prefix=work_prefix,
-               no_hw_accel=disable_acc)
+               no_hw_accel=disable_acc, num_cpu_threads=threads)
 
     return os.path.join(result_dir, work_prefix + '.contigs.fa')
