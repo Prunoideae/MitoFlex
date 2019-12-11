@@ -21,9 +21,33 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-def filter_se():
-    pass
+import subprocess
+import sys
+import os
+try:
+    sys.path.insert(0, os.path.abspath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..")))
+    from helper import shell_call, direct_call
+except Exception as identifier:
+    print("Unable to import helper module, is the installation of MitoX valid?")
 
-def filter_pe():
-    pass
+filter_dir = os.path.dirname(os.path.abspath(__file__))
 
+
+def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None):
+    try:
+        shell_call(filter_dir+'/filter_se', i=fqiabs, o=fqoabs,
+                   n=Ns, q=quality, l=limit, s=start, e=end)
+    except Exception as identifier:
+        print("Error occured when running filter_se!")
+
+    return fqoabs
+
+
+def filter_pe(fq1=None, fq2=None, o1=None, o2=None, a1=None, a2=None, dedup=False, mis=3, ali=15, start=None, end=None, n=10, q=55, l=0.2):
+    try:
+        shell_call(filter_dir+'/filter_pe', _1=fq1,
+                   _2=fq2, _3=o1, _4=o2, _5=a1, _6=a2, d=dedup, m=mis, a=ali, s=start, e=end, n=n, q=q, l=l)
+    except Exception as identifier:
+        print("Error occured when running filter_pe!")
+    return o1, o2

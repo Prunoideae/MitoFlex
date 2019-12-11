@@ -50,7 +50,7 @@ def register_group(group_name, argument_list):
         if 'type' in i:
             real_type = i['type']
         elif 'default' in i:
-            real_type = type(i['default'])
+            real_type = type(i['default']) if i['default'] is not None else str
 
         # Use a tricky way to generate metavars for arguments.
         real_meta = i['meta'] if 'meta' in i else real_type.__name__
@@ -133,7 +133,8 @@ def parse_func(func=None, *, func_help='', parents=[]):
                     'default': default if default is not None else '',
                     'help': '',
                     'required': False,
-                    'choices': None
+                    'choices': None,
+                    'meta': None
                 }
 
     for arg in func_args.copy():
@@ -185,7 +186,7 @@ def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, c
         func_args[dest] = {
             'type': arg_type if arg_type is not None and type(default) is not bool
             else (type(default) if default is not None else str),
-            'default': default if default is not None else '',
+            'default': default if default is not None else None,
             'help': help if help is not None else '',
             'required': required if required is not None else False,
             'choices': choices,
@@ -206,6 +207,54 @@ def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, c
     return func
 
 
+def freeze_main(prog, desc):
+    global collected_args
+    if 'main' not in collected_args or not collected_args['main']['valid']:
+        raise Exception("main() function not reachable!")
+    main_parser = argparse.ArgumentParser(
+        prog=prog, description=desc, formatter_class=argparse.RawTextHelpFormatter,
+        parents=collected_args['main']['parents'])
+
+    main_func = collected_args['main']
+    for arg in main_func['args']:
+        arg_attrs = main_func['args'][arg]
+        if arg_attrs['type'] is bool:
+            main_parser.add_argument(
+                f'--{arg}',
+                default=arg_attrs['default'],
+                action='store_false' if arg_attrs['default'] else 'store_true',
+                help=arg_attrs['help'],
+                required=arg_attrs['required']
+            )
+        elif arg_attrs['choices'] is not None:
+            main_parser.add_argument(
+                f'--{arg}',
+                default=arg_attrs['default'],
+                choices=arg_attrs['choices'],
+                help=arg_attrs['help'],
+                required=arg_attrs['required']
+            )
+        else:
+            main_parser.add_argument(
+                f'--{arg}',
+                default=arg_attrs['default'],
+                help=arg_attrs['help'],
+                required=arg_attrs['required'],
+                metavar=f"<{arg_attrs['type'].__name__.upper() if arg_attrs['meta'] is None else arg_attrs['meta']}>",
+                type=arg_attrs['type']
+            )
+
+    main_func['parser'] = main_parser
+
+    main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
+                             help='use preconfigurated file to run program')
+    main_parser.add_argument("-g", "--generate_config", action="store_true", default=False,
+                             help=("if switched on, MitoX will not be run, but generate "
+                                   "a configuration file with arguments input instead under current directory. "
+                                   "must specify before any arugments."))
+    return main_parser
+
+
 def freeze_arguments(prog, desc):
     '''
     Collects all the information needed, and create a universal parser for all sub parser.
@@ -218,6 +267,7 @@ def freeze_arguments(prog, desc):
     main_parser = argparse.ArgumentParser(
         prog=prog, description=desc, formatter_class=argparse.RawTextHelpFormatter)
     subparsers = main_parser.add_subparsers(dest='command')
+
     for f in collected_args:
         func = collected_args[f]
         if not func['valid']:
@@ -274,7 +324,7 @@ def parse_then_call(expr):
     parsed = vars(args)
 
     generate_config = parsed['generate_config']
-    command = parsed['command']
+
     config = parsed['config']
     parsed.pop('generate_config')
     parsed.pop('config')
@@ -282,7 +332,8 @@ def parse_then_call(expr):
     if generate_config:
         with open('generated_config.py', 'w') as f:
             for key, value in parsed.items():
-                print(key, '\'{}\''.format(value) if type(value) is str else value, sep=' = ', end='\n', file=f)
+                print(key, '\'{}\''.format(value) if type(value)
+                      is str else value, sep=' = ', end='\n', file=f)
         return
 
     if config is not None:
@@ -296,13 +347,21 @@ def parse_then_call(expr):
             print(identifier)
             sys.exit('Errors occured when importing configuration file. Exiting.')
 
-    
-    if command in collected_args:
-        parsed.pop('command')
-        func = collected_args[command]['func']
+    if 'command' in parsed:
+        command = parsed['command']
+        if command in collected_args:
+            parsed.pop('command')
+            func = collected_args[command]['func']
+            func(**parsed)
+        else:
+            expr.print_help()
+    elif 'main' in collected_args:
+        func = collected_args['main']['func']
         func(**parsed)
     else:
-        expr.print_help()
+        raise Exception(
+            "Main entry parser specified, but main() function is not found in collected arguments!")
+
 
 # cmd runner
 
@@ -317,12 +376,23 @@ def shell_call(*args, **kwargs):
     shell_call('python', 'fun.py', foo='bar') -> 'python fun.py --foo bar'
     shell_call('python', 'foo.py', bar='lorem ipsum') -> 'python foo.py --bar lorem ipsum'
     '''
+    args = [str(x) for x in args]
+    kwargs = {x[1:]if x.startswith('_') else x: kwargs[x] for x in kwargs if kwargs[x] is not None}
+
     command = ' '.join(args)
     for arg in kwargs:
-        if type(kwargs[arg]) is not list:
-            command += f' --{arg} {kwargs[arg]}'
+        if kwargs[arg] is None:
+            continue
+        if type(kwargs[arg]) is list:
+            command += f' {"--" if len(arg)>1 else "-"}{arg} {" ".join(kwargs[arg])}'
+        elif type(kwargs[arg]) is bool:
+            if kwargs[arg]:
+                command += f' {"--" if len(arg)>1 else "-"}{arg}'
+            else:
+                continue
         else:
-            command += f' --{arg} {" ".join(kwargs[arg])}'
+            command += f' {"--" if len(arg)>1 else "-"}{arg} {kwargs[arg]}'
+    print(command)
     direct_call(command)
 
 

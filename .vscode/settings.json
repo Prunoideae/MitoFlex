@@ -2,5 +2,12 @@
     "files.associations": {
         "cstring": "cpp",
         "string": "cpp"
-    }
+    },
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": false,
+    "python.testing.promptToConfigure": false
 }

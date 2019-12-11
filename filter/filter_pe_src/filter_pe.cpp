@@ -98,11 +98,11 @@ inline bool filter_pe(string input1, string input2, string output1,
                : fopen(input2.c_str(), "rb");
 
   ofile1 = has_suffix(output1, ".gz")
-               ? popen(string("gzip -dc ").append(output1).c_str(), "wb")
+               ? popen(("gzip -dc " + (output1)).c_str(), "wb")
                : fopen(output1.c_str(), "rb");
 
   ofile2 = has_suffix(output2, ".gz")
-               ? popen(string("gzip -dc ").append(output2).c_str(), "wb")
+               ? popen(("gzip -dc " + (output2)).c_str(), "wb")
                : fopen(output2.c_str(), "rb");
 
   if (ifile1 == NULL || ofile1 == NULL || ifile2 == NULL || ofile2 == NULL) {

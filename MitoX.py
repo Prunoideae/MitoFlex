@@ -24,6 +24,7 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 import argparse
 import sys
 import os
+from os import path
 import re
 import subprocess
 import time
@@ -81,13 +82,13 @@ universal_parser, universal_group = register_group('Universal arguments', [
 fastq_parser, fastq_group = register_group('Fastq arguments', [
     {
         'name': 'fastq1',
-        'default': '',
+        'default': None,
         'meta': 'file',
         'help': 'fastq file 1 input.'
     },
     {
         'name': 'fastq2',
-        'default': '',
+        'default': None,
         'meta': 'file',
         'help': 'fastq file 2 input.'
     },
@@ -177,7 +178,7 @@ filter_parser, filter_group = register_group('Filter argumetns', [
     },
     {
         'name': 'keep_region',
-        'default': '',
+        'default': '-1,-1',
         'meta': 'beg,end',
         'help': 'only the BEG and the END will be read, leave blank for full length.'
     }
@@ -302,18 +303,76 @@ def all(topology='linear', usepre=False, disable_filter=False,
 
 @parse_func(func_help='filter out unqualified reads from fastq',
             parents=[fastq_parser, filter_parser])
-@arg_prop(dest='workname', help='work output name', required=True)
+@arg_prop(dest='workname', help='In where the filtered data will be put in.')
 def filter(workname=None,
 
            fastq1=None, fastq2=None, fastq_alter_format=False, fastq_read_length=150, fq_size=5,
 
            adapter1=None, adapter2=None, cleanq1=None, cleanq2=None, deduplication=False,
-           adapter_mismatch=3, adapter_length=15, keep_region=None, Ns_valve=10, quality_valve=50,
-           percentage_valve=20
+           adapter_mismatch=3, adapter_length=15, keep_region='-1,-1', Ns_valve=10, quality_valve=50,
+           percentage_valve=0.2
            ):
-    # TODO:To fill the blanks of filter method
-    pass
 
+    if fastq1 is None and fastq2 is not None:
+        fastq1, fastq2 = fastq2, fastq1
+        if cleanq1 is None and cleanq2 is not None:
+            cleanq1, cleanq2 = cleanq2, cleanq1
+    elif fastq1 is None and fastq2 is None:
+        collected_args['filter']['parser'].print_help()
+        sys.exit('Both fastq input file is not specified. Exiting.')
+
+    if cleanq1 is None and fastq1 is not None:
+        cleanq1 = 'filtered.' + fastq1
+
+    if cleanq2 is None and fastq2 is not None:
+        cleanq2 = 'filtered.' + fastq2
+
+    if workname is not None:
+        dump_dir = path.join(work_dir, workname, workname+'.tmp', 'clean_data')
+
+        cleanq1 = path.join(dump_dir, cleanq1)
+        if fastq2 is not None:
+            cleanq2 = path.join(dump_dir, cleanq2)
+
+    cleanq1 = path.abspath(cleanq1)
+    if fastq2 is not None:
+        cleanq2 = path.abspath(cleanq2)
+
+    # Validates the directories
+    try:
+        os.makedirs(path.dirname(cleanq1), exist_ok=True)
+        if fastq2 is not None:
+            os.makedirs(path.dirname(cleanq2), exist_ok=True)
+    except Exception as identifier:
+        sys.exit(
+            'Error occured when validating the directories, please check your permissions or things could be realted.')
+
+    fastq1 = path.abspath(fastq1)
+    if fastq2 is not None:
+        fastq2 = path.abspath(fastq2)
+
+    filtered1 = None
+    filtered2 = None
+
+    start, end, *_ = [int(x) if int(x) > -1 else None
+                      for x in keep_region.split(',')]
+
+    from filter.filter import filter_pe, filter_se
+
+    if fastq1 is not None and fastq2 is None:
+        filtered1 = filter_se(fqiabs=f'"{fastq1}"', fqoabs=f'"{cleanq1}"', Ns=Ns_valve,
+                              quality=quality_valve, limit=percentage_valve, start=start,
+                              end=end)
+    else:
+        filtered1, filtered2 = filter_pe(fq1=f'"{fastq1}"', fq2=f'"{fastq2}"',
+                                         o1=f'"{cleanq1}"', o2=f'"{cleanq2}"',
+                                         a1=f'"{adapter1}"' if adapter1 is not None else None,
+                                         a2=f'"{adapter2}"' if adapter2 is not None else None,
+                                         dedup=deduplication,
+                                         mis=adapter_mismatch, ali=adapter_length, start=start,
+                                         end=end, n=Ns_valve, q=quality_valve, l=percentage_valve)
+
+    return filtered1, filtered2
 
 @parse_func(func_help='assemble from input fastq reads, output mitochondrial sequences',
             parents=[universal_parser, fastq_parser, assembly_parser, search_parser, saa_parser])

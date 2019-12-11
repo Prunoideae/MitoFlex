@@ -84,6 +84,8 @@ inline bool filter_se(string input, string output, int start, int length,
     return false;
   }
 
+
+  
   while (fgets(head, 1024, ifile)) {
     fgets(bpseq, 1024, ifile);
     fgets(plus, 1024, ifile);
@@ -152,6 +154,7 @@ int main(int argc, char** argv) {
         ns = atoi(optarg);
       case '?':
         valid = false;
+        printf("Unrecognized argument.");
         break;
     }
   }
