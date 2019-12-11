@@ -57,9 +57,10 @@ bool has_suffix(const std::string& str, const std::string& suffix) {
 inline bool filter_pe(string input1, string input2, string output1,
                       string output2, string adapter1, string adapter2,
                       bool dedup, int mismatch, int align, int ns, int quality,
-                      int start, int length, double limit) {
+                      int start, int length, double limit, int seq_size) {
   set<string> adapters;
   unordered_set<string> duplications;
+  int sz = 0;
 
   if (!adapter1.empty()) {
     ifstream a1;
@@ -88,7 +89,7 @@ inline bool filter_pe(string input1, string input2, string output1,
       adapters.insert(temp);
     }
   }
-  
+
   bool filter_adpater = adapters.empty();
 
   FILE *ifile1 = NULL, *ifile2 = NULL;
@@ -162,9 +163,9 @@ inline bool filter_pe(string input1, string input2, string output1,
     }
 
     if (dedup) {
-      if (duplications.find(ns1) != duplications.end()) 
+      if (duplications.find(ns1) != duplications.end())
         continue;
-       else 
+      else
         duplications.insert(ns1);
     }
 
@@ -189,7 +190,14 @@ inline bool filter_pe(string input1, string input2, string output1,
     fputs("\n", ofile1);
     fputs(head1.c_str(), ofile1);
     fputs("\n", ofile2);
+
+    if (seq_size != -1) {
+      sz++;
+      if (sz >= seq_size) break;
+    }
   }
+
+  fcloseall();
 
   return true;
 }
@@ -203,10 +211,11 @@ int main(int argc, char** argv) {
   int ns = 10;
   int quality = 55;
   double limit = 0.2;
+  int seq_c = -1;
 
   bool valid = true;
   int i;
-  const char* optstring = "1:2:3:4:5:6:dm:a:s:e:n:q:l:";
+  const char* optstring = "1:2:3:4:5:6:dm:a:s:e:n:q:l:z:";
   while ((i = getopt(argc, argv, optstring)) != -1) {
     switch (i) {
       case '1':
@@ -251,6 +260,9 @@ int main(int argc, char** argv) {
       case 'l':
         limit = atof(optarg);
         break;
+      case 'z':
+        seq_c = atoi(optarg);
+        break;
       case '?':
         valid = false;
         break;
@@ -292,6 +304,14 @@ int main(int argc, char** argv) {
     valid = false;
   }
 
+  if (seq_c == 0) {
+    printf(
+        "Invalid sequence count %i. Output file should have sequences more "
+        "than 1.\n",
+        seq_c);
+    valid = false;
+  }
+
   int cal_start = start;
   int cal_length = end == -1 ? -1 : end - start + 1;
 
@@ -299,7 +319,7 @@ int main(int argc, char** argv) {
     printf("Error(s) found in arugments, exiting.\n");
     return -1;
   } else if (!filter_pe(i1, i2, o1, o2, a1, a2, dedup, mismatch, align, ns,
-                        quality, cal_start, cal_length, limit)) {
+                        quality, cal_start, cal_length, limit, seq_c)) {
     printf("Error occured in running filter method.\n");
     return -1;
   }

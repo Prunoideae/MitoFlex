@@ -57,7 +57,7 @@ inline bool quality_check(char* quaseq, int quality, double limit) {
 }
 
 inline bool filter_se(string input, string output, int start, int length,
-                      int ns, int quality, double limit) {
+                      int ns, int quality, double limit, int seq_c) {
   FILE *ifile = NULL, *ofile = NULL;
 
   char *head, *bpseq, *plus, *quaseq;
@@ -65,6 +65,8 @@ inline bool filter_se(string input, string output, int start, int length,
   bpseq = (char*)malloc(1024);
   plus = (char*)malloc(1024);
   quaseq = (char*)malloc(1024);
+
+  int sz = 0;
 
   ifile = has_suffix(input, string(".gz"))
               ? popen(string("gzip -dc ").append(input).c_str(), "r")
@@ -84,8 +86,6 @@ inline bool filter_se(string input, string output, int start, int length,
     return false;
   }
 
-
-  
   while (fgets(head, 1024, ifile)) {
     fgets(bpseq, 1024, ifile);
     fgets(plus, 1024, ifile);
@@ -116,7 +116,15 @@ inline bool filter_se(string input, string output, int start, int length,
     fputs("\n", ofile);
     fputs(quaseq, ofile);
     fputs("\n", ofile);
+
+    if (seq_c != -1) {
+      sz++;
+      if (sz >= seq_c) break;
+    }
   }
+
+  fcloseall();
+
   return true;
 }
 
@@ -127,6 +135,7 @@ int main(int argc, char** argv) {
   int quality = 55;
   double limit = 0.2;
   bool valid = true;
+  int seq_c = -1;
 
   int i;
   const char* optstring = "i:o:s:e:n:q:l:";
@@ -152,6 +161,8 @@ int main(int argc, char** argv) {
         break;
       case 'n':
         ns = atoi(optarg);
+      case 'z':
+        seq_c = atoi(optarg);
       case '?':
         valid = false;
         printf("Unrecognized argument.");
@@ -191,13 +202,21 @@ int main(int argc, char** argv) {
     valid = false;
   }
 
+  if (seq_c == 0) {
+    printf(
+        "Invalid sequence count %i. Output file should have sequences more "
+        "than 1.\n",
+        seq_c);
+    valid = false;
+  }
+
   int cal_start = start;
   int cal_length = end == -1 ? -1 : end - start + 1;
 
   if (!valid) {
     printf("Error(s) found, exiting.\n");
   } else if (!filter_se(input, output, cal_start, cal_length, ns, quality,
-                        limit)) {
+                        limit, seq_c)) {
     printf("Error occured when running filter function.\n");
   } else {
     return 0;

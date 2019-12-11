@@ -278,7 +278,7 @@ def freeze_arguments(prog, desc):
             arg_attrs = func['args'][arg]
             if arg_attrs['type'] is bool:
                 parser_func.add_argument(
-                    f'--{arg}',
+                    f'--{arg.replace("_", "-")}',
                     default=arg_attrs['default'],
                     action='store_false' if arg_attrs['default'] else 'store_true',
                     help=arg_attrs['help'],
@@ -286,7 +286,7 @@ def freeze_arguments(prog, desc):
                 )
             elif arg_attrs['choices'] is not None:
                 parser_func.add_argument(
-                    f'--{arg}',
+                    f'--{arg.replace("_", "-")}',
                     default=arg_attrs['default'],
                     choices=arg_attrs['choices'],
                     help=arg_attrs['help'],
@@ -294,7 +294,7 @@ def freeze_arguments(prog, desc):
                 )
             else:
                 parser_func.add_argument(
-                    f'--{arg}',
+                    f'--{arg.replace("_", "-")}',
                     default=arg_attrs['default'],
                     help=arg_attrs['help'],
                     required=arg_attrs['required'],
@@ -304,7 +304,7 @@ def freeze_arguments(prog, desc):
         func['parser'] = parser_func
     main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
                              help='use preconfigurated file to run program')
-    main_parser.add_argument("-g", "--generate_config", action="store_true", default=False,
+    main_parser.add_argument("-g", "--generate-config", action="store_true", default=False,
                              help=("if switched on, MitoX will not be run, but generate "
                                    "a configuration file with arguments input instead under current directory. "
                                    "must specify before any arugments."))
@@ -322,6 +322,8 @@ def parse_then_call(expr):
     '''
     args = expr.parse_args()
     parsed = vars(args)
+
+    parsed = {str(x).replace('-', '_'): parsed[x] for x in parsed}
 
     generate_config = parsed['generate_config']
 
@@ -375,10 +377,12 @@ def shell_call(*args, **kwargs):
     acceptable but not now.
     shell_call('python', 'fun.py', foo='bar') -> 'python fun.py --foo bar'
     shell_call('python', 'foo.py', bar='lorem ipsum') -> 'python foo.py --bar lorem ipsum'
+    shell_call('python', 'bar.py', wow_fun='method') -> 'python bar.py --wow-fun method'
     '''
     args = [str(x) for x in args]
-    kwargs = {x[1:]if x.startswith('_') else x: kwargs[x] for x in kwargs if kwargs[x] is not None}
-
+    kwargs = {x[1:]if x.startswith('_') else x: kwargs[x]
+              for x in kwargs if kwargs[x] is not None}
+    kwargs = {str(x).replace('_', '-'): kwargs[x] for x in kwargs}
     command = ' '.join(args)
     for arg in kwargs:
         if kwargs[arg] is None:

@@ -1,5 +1,3 @@
-filter/filter_se/.vscode/settings.json
-filter/filter_se/main
 __pycache__/
 .vscode/
 .pytest_cache/

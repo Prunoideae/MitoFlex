@@ -21,7 +21,6 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import subprocess
 import sys
 import os
 try:
@@ -34,20 +33,24 @@ except Exception as identifier:
 filter_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None):
+def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, seq_size=None):
     try:
         shell_call(filter_dir+'/filter_se', i=fqiabs, o=fqoabs,
-                   n=Ns, q=quality, l=limit, s=start, e=end)
+                   n=Ns, q=quality, l=limit, s=start, e=end, z=seq_size)
     except Exception as identifier:
         print("Error occured when running filter_se!")
 
     return fqoabs
 
 
-def filter_pe(fq1=None, fq2=None, o1=None, o2=None, a1=None, a2=None, dedup=False, mis=3, ali=15, start=None, end=None, n=10, q=55, l=0.2):
+def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
+              a1=None, a2=None, dedup=False, mis=3, ali=15,
+              start=None, end=None, n=10, q=55, l=0.2, seq_size=None):
     try:
         shell_call(filter_dir+'/filter_pe', _1=fq1,
-                   _2=fq2, _3=o1, _4=o2, _5=a1, _6=a2, d=dedup, m=mis, a=ali, s=start, e=end, n=n, q=q, l=l)
+                   _2=fq2, _3=o1, _4=o2, _5=a1, _6=a2,
+                   d=dedup, m=mis, a=ali, s=start,
+                   e=end, n=n, q=q, l=l, z=seq_size)
     except Exception as identifier:
         print("Error occured when running filter_pe!")
     return o1, o2
