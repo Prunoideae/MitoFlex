@@ -90,23 +90,23 @@ inline bool filter_pe(string input1, string input2, string output1,
   FILE *ofile1 = NULL, *ofile2 = NULL;
 
   ifile1 = has_suffix(input1, ".gz")
-               ? popen(string("gzip -dc ").append(input1).c_str(), "rb")
+               ? popen(string("gzip -dc ").append(input1).c_str(), "r")
                : fopen(input1.c_str(), "rb");
 
   ifile2 = has_suffix(input2, ".gz")
-               ? popen(string("gzip -dc ").append(input2).c_str(), "rb")
+               ? popen(string("gzip -dc ").append(input2).c_str(), "r")
                : fopen(input2.c_str(), "rb");
 
   ofile1 = has_suffix(output1, ".gz")
-               ? popen(("gzip -dc " + (output1)).c_str(), "wb")
-               : fopen(output1.c_str(), "rb");
+               ? popen(("gzip > " + (output1)).c_str(), "w")
+               : fopen(output1.c_str(), "wb");
 
   ofile2 = has_suffix(output2, ".gz")
-               ? popen(("gzip -dc " + (output2)).c_str(), "wb")
-               : fopen(output2.c_str(), "rb");
+               ? popen(("gzip > " + (output2)).c_str(), "w")
+               : fopen(output2.c_str(), "wb");
 
   if (ifile1 == NULL || ofile1 == NULL || ifile2 == NULL || ofile2 == NULL) {
-    printf("Unable to open file.");
+    printf("Unable to open file.\n");
     return false;
   }
 

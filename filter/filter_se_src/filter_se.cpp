@@ -67,11 +67,11 @@ inline bool filter_se(string input, string output, int start, int length,
   quaseq = (char*)malloc(1024);
 
   ifile = has_suffix(input, string(".gz"))
-              ? popen(string("gzip -dc ").append(input).c_str(), "rb")
+              ? popen(string("gzip -dc ").append(input).c_str(), "r")
               : fopen(input.c_str(), "rb");
 
   ofile = has_suffix(output, string(".gz"))
-              ? popen(string("gzip > ").append(output).c_str(), "wb")
+              ? popen(string("gzip > ").append(output).c_str(), "w")
               : fopen(output.c_str(), "wb");
 
   if (!ifile) {
