@@ -1,7 +1,8 @@
 {
     "files.associations": {
         "cstring": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "unordered_set": "cpp"
     },
     "python.testing.pytestArgs": [
         "."

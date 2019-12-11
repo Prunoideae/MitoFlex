@@ -74,6 +74,11 @@ universal_parser, universal_group = register_group('Universal arguments', [
         'name': 'threads',
         'default': '8',
         'help': 'thread numbers.'
+    },
+    {
+        'name': 'clean_temp',
+        'default': False,
+        'help': 'remove temporal files and folders after work done.'
     }
 ])
 
@@ -192,14 +197,46 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'help': 'insert size of input fastq files.'
     },
     {
+        'name': 'use_list',
+        'default': False,
+        'action': 'store_true',
+        'help': 'a k-mer list will be used if this switched on.'
+    },
+    {
+        'name': 'kmer_list',
+        'default': '21,29,39,59,79,99,119,141',
+        'help': 'list of kmer to use in sDBG building, all length must be odd.'
+    },
+    {
         'name': 'kmer_min',
-        'default': 31,
+        'default': 21,
         'help': 'the minimum length kmer used in MEGAHIT\'s multiple kmer assemble strategy.'
     },
     {
         'name': 'kmer_max',
-        'default': 63,
+        'default': 141,
         'help': 'the maximum length kmer used in MEGAHIT\'s multiple kmer assemble strategy.'
+    },
+    {
+        'name': 'kmer_step',
+        'default': 12,
+        'help': 'increment of kmer size of each iteration (<= 28), must be even number.'
+    },
+    {
+        'name': 'no_mercy',
+        'default': False,
+        'help': 'mercy edges are NOT allowed in sDBG if switched on.'
+    },
+    {
+        'name': 'prune_level',
+        'default': 2,
+        'choices': list(range(0, 4)),
+        'help': 'strength of low depth pruning.'
+    },
+    {
+        'name': 'prune_depth',
+        'default': 2,
+        'help': 'remove unitigs with avg kmer depth less than this value.'
     }
 ])
 
@@ -225,7 +262,7 @@ search_parser, search_group = register_group('Search mitochondrial sequences arg
     {
         'name': 'taxa_tolerance',
         'default': 0,
-        'choices': range(7),  # 0-6
+        'choices': list(range(7)),  # 0-6
         'help': 'a tolerance for non-target sequences.'
     }
 ])
@@ -271,35 +308,6 @@ Description
 Version
     1.0
 """
-
-
-@parse_func(func_help='run all the methods',
-            parents=[universal_parser, assembly_parser, fastq_parser, filter_parser,
-                     search_parser, saa_parser, annotation_parser])
-@arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on')
-@arg_prop(dest='usepre', help='use previous result if switched on, useful when testing out numbers')
-@arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS)
-def all(topology='linear', usepre=False, disable_filter=False,
-
-        workname=None, threads=8,
-
-        fastq1=None, fastq2=None, fastq_alter_format=None, fastq_read_length=150, fq_size=5,
-
-        adapter1=None, adapter2=None, cleanq1=None, cleanq2=None, deduplication=False,
-        adapter_mismatch=3, adapter_length=15, keep_region=None, Ns_valve=10, quality_valve=50,
-        percentage_valve=20,
-
-        insert_size=150, kmer_min=31, kmer_max=63,
-
-        filter_taxa=False, min_abundance=10, required_taxa='Platyhelminthes', taxa_tolerance=0,
-
-        genetic_code=9, clade='Platyhelminthes-flatworms',
-
-        disable_annotation=False, species_name='Test sp.'
-        ):
-    # TODO:To fill the blanks of all method
-    pass
-
 
 @parse_func(func_help='filter out unqualified reads from fastq',
             parents=[fastq_parser, filter_parser])
@@ -379,11 +387,12 @@ def filter(workname=None,
 @arg_prop(dest='usepre', help='use previous result if switched on, useful when testing out numbers')
 def assemble(usepre=False,
 
-             workname=None, threads=8,
+             workname=None, threads=8, clean_temp=False,
 
              fastq1=None, fastq2=None, fastq_alter_format=None, fastq_read_length=150, fq_size=5,
 
-             insert_size=250, kmer_min=31, kmer_max=63,
+             insert_size=150, kmer_min=31, kmer_max=63, kmer_list=None, use_list=False, no_mercy=False,
+             prune_level=2, prune_depth=2,
 
              filter_taxa=False, min_abundance=10, required_taxa='Platyhelminthes', taxa_tolerance=0,
 
@@ -392,9 +401,9 @@ def assemble(usepre=False,
     pass
 
 
-@parse_func(func_help='search for possible mitochondrial sequences from assembled data',
+@parse_func(func_help='search for the most possible mitochondrial sequences from assembled data',
             parents=[universal_parser, fasta_parser, fastq_parser, search_parser, saa_parser])
-def findmitoscaf(workname=None, threads=8,
+def findmitoscaf(workname=None, threads=8, clean_temp=False,
 
                  fastq1=None, fastq2=None, fastq_alter_format=None, fastq_read_length=150, fq_size=5,
 
@@ -415,7 +424,7 @@ def findmitoscaf(workname=None, threads=8,
 @arg_prop(dest='topology', choices=['linear', 'circular'], help='if the sequences are circular')
 def annotate(fastq1=None, fastq2=None, depth_file=None, topology='linear',
 
-             workname=None, threads=8,
+             workname=None, threads=8, clean_temp=False,
 
              fastafile=None,
 
@@ -430,6 +439,49 @@ def annotate(fastq1=None, fastq2=None, depth_file=None, topology='linear',
 def visualize():
     # TODO:To fill the blanks of visualize method
     pass
+
+
+@parse_func(func_help='run all the methods',
+            parents=[universal_parser, assembly_parser, fastq_parser, filter_parser,
+                     search_parser, saa_parser, annotation_parser])
+@arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on')
+@arg_prop(dest='usepre', help='use previous result if switched on, useful when testing out numbers')
+@arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS)
+def all(topology='linear', usepre=False, disable_filter=False,
+
+        workname=None, threads=8, clean_temp=False,
+
+        fastq1=None, fastq2=None, fastq_alter_format=None, fastq_read_length=150, fq_size=5,
+
+        adapter1=None, adapter2=None, cleanq1=None, cleanq2=None, deduplication=False,
+        adapter_mismatch=3, adapter_length=15, keep_region=None, Ns_valve=10, quality_valve=50,
+        percentage_valve=20,
+
+        insert_size=150, kmer_min=31, kmer_max=63, kmer_list=None, use_list=False, no_mercy=False,
+        prune_level=2, prune_depth=2,
+
+        filter_taxa=False, min_abundance=10, required_taxa='Platyhelminthes', taxa_tolerance=0,
+
+        genetic_code=9, clade='Platyhelminthes-flatworms',
+
+        disable_annotation=False, species_name='Test sp.'
+        ):
+
+    dataq1, dataq2 = fastq1, fastq2
+    working_folder = path.join(work_dir, workname)
+    temp_folder = path.join(working_folder, workname + '.tmp')
+
+    # Go filtering
+    if not disable_filter:
+        dataq1, dataq2 = filter(workname=workname, fastq1=fastq1, fastq2=fastq2, adapter1=adapter1,
+                                adapter2=adapter2, cleanq1=cleanq1, cleanq2=cleanq2, deduplication=deduplication,
+                                adapter_mismatch=adapter_mismatch, adapter_length=adapter_length,
+                                keep_region=keep_region, Ns_valve=Ns_valve, quality_valve=quality_valve,
+                                percentage_valve=percentage_valve)
+    elif dataq1 is None and dataq2 is not None:
+        dataq1, dataq2 = dataq2, dataq1
+
+    # TODO:Finish assembling methods.
 
 
 # Entry starts at here

@@ -26,6 +26,7 @@
 #include <fstream>
 #include <set>
 #include <string>
+#include <unordered_set>
 
 using namespace std;
 
@@ -58,6 +59,8 @@ inline bool filter_pe(string input1, string input2, string output1,
                       bool dedup, int mismatch, int align, int ns, int quality,
                       int start, int length, double limit) {
   set<string> adapters;
+  unordered_set<string> duplications;
+
   if (!adapter1.empty()) {
     ifstream a1;
     string temp;
@@ -71,6 +74,7 @@ inline bool filter_pe(string input1, string input2, string output1,
       adapters.insert(temp);
     }
   }
+
   if (!adapter2.empty()) {
     ifstream a2;
     string temp;
@@ -84,6 +88,7 @@ inline bool filter_pe(string input1, string input2, string output1,
       adapters.insert(temp);
     }
   }
+  
   bool filter_adpater = adapters.empty();
 
   FILE *ifile1 = NULL, *ifile2 = NULL;
@@ -154,6 +159,13 @@ inline bool filter_pe(string input1, string input2, string output1,
       ns2.erase(length);
       qua1.erase(length);
       qua2.erase(length);
+    }
+
+    if (dedup) {
+      if (duplications.find(ns1) != duplications.end()) 
+        continue;
+       else 
+        duplications.insert(ns1);
     }
 
     if (deny_ns(ns1, ns) || deny_ns(ns2, ns) ||
