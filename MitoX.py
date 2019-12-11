@@ -45,7 +45,6 @@ except ImportError as identifier:
     sys.exit()
 
 from helper import *
-from runner import *
 
 ncbi = NCBITaxa()
 
