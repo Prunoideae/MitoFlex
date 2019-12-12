@@ -28,7 +28,6 @@ from os import path
 import re
 import subprocess
 import time
-import cpufeature
 from glob import glob
 
 try:
@@ -36,6 +35,7 @@ try:
     from Bio import SeqIO
     from Bio import SeqRecord
     from ete3 import NCBITaxa
+    from helper import *
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoX installation!')
@@ -44,8 +44,6 @@ except ImportError as identifier:
     print(
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
-
-from helper import *
 
 ncbi = NCBITaxa()
 
@@ -366,7 +364,7 @@ def filter(workname=None, seq_size=None, basedir=None,
                                          seq_size=seq_size)
     return filtered1, filtered2
 
-@parse_func(func_help='assemble from input fastq reads, output mitochondrial sequences',
+@parse_func(func_help='assemble from input fastq reads, output contigs',
             parents=[universal_parser, fastq_parser, assembly_parser])
 def assemble(workname=None, threads=8, clean_temp=False, basedir=None,
 
@@ -375,14 +373,6 @@ def assemble(workname=None, threads=8, clean_temp=False, basedir=None,
              insert_size=150, kmer_min=21, kmer_max=141, kmer_step=12, kmer_list=None, use_list=False, no_mercy=False,
              prune_level=2, prune_depth=2, disable_acc=False,
              ):
-
-    if disable_acc:
-        print('CPU accerlation disabled by option --disable_acc.')
-    elif cpufeature.CPUFeature['BMI2'] and (cpufeature.CPUFeature['SSE4.2'] or cpufeature.CPUFeature['SSE4.a']):
-        print('Your CPU does not support the instructions needed.')
-
-    use_acc = not disable_acc and cpufeature.CPUFeature['BMI2'] and (
-        cpufeature.CPUFeature['SSE4.2'] or cpufeature.CPUFeature['SSE4.a'])
 
     if fastq1 is None and fastq2 is not None:
         fastq1, fastq2 = fastq2, fastq1
