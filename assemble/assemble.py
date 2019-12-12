@@ -45,7 +45,7 @@ def assemble(fastq1=None, fastq2=None, result_dir=None, temp_dir=None, work_pref
     else:
         klist = None
 
-    shell_call(megahit_dir, '/megahit.py', _1=fastq1, _2=fastq2,
+    shell_call('megahit', _1=fastq1, _2=fastq2,
                k_min=kmin, k_max=kmax, k_step=kstep, k_list=klist,
                no_mercy=no_mercy, prune_level=prune_level, prune_depth=prune_depth,
                keep_tmp_files=clean_temp, tmp_dir=temp_dir,
