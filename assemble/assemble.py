@@ -2,7 +2,7 @@
 assemble.py
 ========
 
-Copyright (c) 2019-2020 Henry Lee <2018301050@szu.edu.cn>.
+Copyright (c) 2019-2020 Li Junyu <2018301050@szu.edu.cn>.
 
 This file is part of MitoX.
 
