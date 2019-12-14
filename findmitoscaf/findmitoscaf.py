@@ -26,9 +26,12 @@ import sys
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from helper import shell_call, direct_call
+    from utility.helper import shell_call, direct_call
 except Exception as identifier:
-    print("Unable to import helper module, is the installation of MitoX valid?")
+    sys.exit("Unable to import helper module, is the installation of MitoX valid?")
 
 def findmitoscaf():
+    pass
+
+def nhmmer_search():
     pass

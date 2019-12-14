@@ -1,5 +1,5 @@
 """
-helper.py
+parser.py
 =========
 
 Copyright (c) 2019-2020 Li Junyu <2018301050@szu.edu.cn>.
@@ -21,20 +21,25 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import argparse
-import inspect
-import subprocess
-import sys
-import os
 from functools import wraps, partial
 from importlib import util as import_util
+import argparse
+import inspect
+import sys
 
 collected_args = {}
+group_callback = {}
 
 # Argument processing
 
 
-def register_group(group_name, argument_list):
+class arguments(object):
+    def __init__(self, init):
+        for k, v in init.items():
+            setattr(self, k, v)
+
+
+def register_group(group_name, argument_list, func=None):
     '''
     Create an argument group with group_name and dict argument_list. 
     Returns parser and group of this.
@@ -58,12 +63,13 @@ def register_group(group_name, argument_list):
         real_help = i['help'] if 'help' in i else ''
         real_help += f" Default {i['default']}." if 'default' in i and i['default'] != '' and real_help != '' else ''
 
-        if 'action' in i:
+        if real_type is bool:
+            real_value = i['default'] if 'default' in i else False
             group.add_argument(
                 f'--{i["name"]}',
                 required=i['required'] if 'required' in i else False,
-                action=i['action'],
-                default=i['default'] if 'default' in i else None,
+                action='store_false' if real_value else 'store_true',
+                default=real_value,
                 help=real_help)
         elif 'choices' in i:
             group.add_argument(
@@ -81,6 +87,9 @@ def register_group(group_name, argument_list):
                 default=i['default'] if 'default' in i else None,
                 help=real_help,
                 type=real_type)
+
+    if func is not None:
+        group_callback[parser] = func
 
     return parser, group
 
@@ -144,7 +153,7 @@ def parse_func(func=None, *, func_help='', parents=[]):
     return func
 
 
-def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, choices=None, meta=None):
+def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, choices=None, meta=None, default=None):
     '''
     Specify a destination var, then modify its attributes.\n
     Argument introduction:\n
@@ -176,13 +185,9 @@ def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, c
             'args': {}
         }
 
-    spec = inspect.getargspec(func)
     func_args = collected_args[func_name]['args']
-    if dest not in spec.args:
-        raise AttributeError(
-            f"Argument {dest} not found in function {func_name}!")
+    
     if dest not in func_args:
-        default = spec.defaults[spec.args.index(dest)]
         func_args[dest] = {
             'type': arg_type if arg_type is not None and type(default) is not bool
             else (type(default) if default is not None else str),
@@ -353,60 +358,32 @@ def parse_then_call(expr):
         command = parsed['command']
         if command in collected_args:
             parsed.pop('command')
-            func = collected_args[command]['func']
-            func(**parsed)
+            command_prop = collected_args[command]
+            func = command_prop['func']
+            final = arguments(parsed)
+            if 'parents' in command_prop:
+                valid = True
+                for parser in command_prop['parents']:
+                    if parser in group_callback:
+                        preprocessor = group_callback[parser]
+                        valid = valid and preprocessor(final)
+                valid or sys.exit("Error occured, exiting.")
+            final.__calling = command
+            func(final)
         else:
             expr.print_help()
     elif 'main' in collected_args:
-        func = collected_args['main']['func']
-        func(**parsed)
+        main_prop = collected_args['main']
+        func = main_prop['func']
+        final = arguments(parsed)
+        if 'parents' in main_prop:
+            valid = True
+            for parser in main_prop['parents']:
+                if parser in group_callback:
+                    preprocessor = group_callback[parser]
+                    valid = valid and preprocessor(final)
+            valid or sys.exit("Error occured, exiting")
+        func(final)
     else:
         raise Exception(
-            "Main entry parser specified, but main() function is not found in collected arguments!")
-
-
-# cmd runner
-
-
-def shell_call(*args, **kwargs):
-    '''
-    Concatenacte all the args and kwargs into a shell command string, then run it.\n
-    The input arguments are not limited, but rules should be told.
-    1. Positional arguments will always comes before the keyword arguments.
-    2. This func will always add '--' before the keyword, maybe other prefixes will be
-    acceptable but not now.
-    shell_call('python', 'fun.py', foo='bar') -> 'python fun.py --foo bar'
-    shell_call('python', 'foo.py', bar='lorem ipsum') -> 'python foo.py --bar lorem ipsum'
-    shell_call('python', 'bar.py', wow_fun='method') -> 'python bar.py --wow-fun method'
-    '''
-    args = [str(x) for x in args]
-    kwargs = {x[1:]if x.startswith('_') else x: kwargs[x]
-              for x in kwargs if kwargs[x] is not None}
-    kwargs = {str(x).replace('_', '-'): kwargs[x] for x in kwargs}
-    command = ' '.join(args)
-    for arg in kwargs:
-        if kwargs[arg] is None:
-            continue
-        if type(kwargs[arg]) is list:
-            command += f' {"--" if len(arg)>1 else "-"}{arg} {" ".join(kwargs[arg])}'
-        elif type(kwargs[arg]) is bool:
-            if kwargs[arg]:
-                command += f' {"--" if len(arg)>1 else "-"}{arg}'
-            else:
-                continue
-        else:
-            command += f' {"--" if len(arg)>1 else "-"}{arg} {kwargs[arg]}'
-    print(command)
-    direct_call(command)
-
-
-def direct_call(command):
-    '''
-    Call a command directly.
-    '''
-    try:
-        subprocess.check_call(command, shell=True)
-    except subprocess.CalledProcessError as err:
-        print(err)
-        sys.exit(f"Error when running command '{command}'. Exiting.")
-        pass
+            "Main entry parser specified, but function main() is not found in collected arguments!")
