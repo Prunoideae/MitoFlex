@@ -170,7 +170,7 @@ def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, c
     information, this will not influence how the argument works.\n
     '''
     if func is None:
-        return partial(arg_prop, dest=dest, help=help, required=required, choices=choices)
+        return partial(arg_prop, dest=dest, help=help, required=required, choices=choices, default=default)
 
     if dest is None:
         raise AttributeError('No arg specified to change properties!')

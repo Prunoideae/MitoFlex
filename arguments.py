@@ -35,17 +35,18 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
-# Parameters processing
+'''
 
+'''
 # Universal group
 
 
 def universal_regulator(args):
-    if args.threads <= 0:
-        tr = os.cpu_count()
-        tr = tr if tr is not None else 8
+    tr = os.cpu_count()
+    tr = tr if tr is not None else 8
+    if args.threads <= 0 or args.threads > tr:
         print(
-            f"Specified thread number lower than 1, using {tr} threads instead.")
+            f"Specified thread number not in range, using {tr} threads instead.")
         args.threads = tr
 
     args.work_dir = os.path.abspath(os.path.join(args.basedir, args.workname))

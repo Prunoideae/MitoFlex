@@ -52,15 +52,15 @@ ncbi = NCBITaxa()
 desc = """
 Description
 
-    MitoX - A rewrite toolkit of its ancestor MitoZ for faster and better 
+    MitoX - A rewritten toolkit of its ancestor MitoZ for faster and better 
     mitochondrial assembly, annotation and visualization, and for expandability and more.
 
 Version
-    1.0
+    0.0
 """
 
 @parse_func(func_help='filter out unqualified reads from fastq',
-            parents=[fastq_parser, filter_parser, universal_regulator])
+            parents=[fastq_parser, filter_parser, universal_parser])
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def filter(args):
 
@@ -113,7 +113,7 @@ def findmitoscaf(args):
 @parse_func(func_help='annotate PCGs, tRNA and rRNA genes',
             parents=[universal_parser, fasta_parser, annotation_parser, saa_parser, fastq_parser])
 @arg_prop(dest='depth_file', help=argparse.SUPPRESS)
-@arg_prop(dest='topology', choices=['linear', 'circular'], help='if the sequences are circular')
+@arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
 def annotate(args):
     # TODO:To fill the blanks of annotate method
     pass
@@ -129,10 +129,12 @@ def visualize(args):
             parents=[universal_parser, assembly_parser, fastq_parser, filter_parser,
                      search_parser, saa_parser, annotation_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on')
-@arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS)
+@arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def all(args):
 
+    print(args.topology)
+    return False
     # Go filtering
     if not args.disable_filter:
         args.fastq1, args.fastq2 = filter(args=args)
