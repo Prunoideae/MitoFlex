@@ -38,10 +38,12 @@ class Arguments(object):
         for k, v in init.items():
             setattr(self, k, v)
 
+
 class ParsingError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
+
 
 def register_group(group_name, argument_list, func=None):
     '''
@@ -190,7 +192,7 @@ def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, c
         }
 
     func_args = collected_args[func_name]['args']
-    
+
     if dest not in func_args:
         func_args[dest] = {
             'type': arg_type if arg_type is not None and type(default) is not bool
@@ -365,29 +367,33 @@ def parse_then_call(expr):
             command_prop = collected_args[command]
             func = command_prop['func']
             final = Arguments(parsed)
+            valid = True
             if 'parents' in command_prop:
-                valid = True
                 for parser in command_prop['parents']:
                     if parser in group_callback:
                         preprocessor = group_callback[parser]
                         valid = valid and preprocessor(final)
-                valid or sys.exit("Error occured, exiting.")
-            final.__calling = command
-            func(final)
+                valid or print("Error occured, exiting.")
+            if valid:
+                final.__calling = command
+                func(final)
+            return final
         else:
             expr.print_help()
     elif 'main' in collected_args:
         main_prop = collected_args['main']
         func = main_prop['func']
         final = Arguments(parsed)
+        valid = True
         if 'parents' in main_prop:
-            valid = True
             for parser in main_prop['parents']:
                 if parser in group_callback:
                     preprocessor = group_callback[parser]
                     valid = valid and preprocessor(final)
-            valid or sys.exit("Error occured, exiting")
-        func(final)
+            valid or print("Error occured, exiting")
+        if valid:
+            func(final)
+        return final
     else:
         raise Exception(
             "Main entry parser specified, but function main() is not found in collected arguments!")

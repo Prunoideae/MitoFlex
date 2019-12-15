@@ -103,6 +103,7 @@ def fastq_regulator(args):
         print("Both fastq file inputs are missing. Exiting the run.")
         return False
 
+    # Explicitly using cwd path here.
     args.fastq1 = os.path.abspath(args.fastq1)
     if args.fastq2 is not None:
         args.fastq2 = os.path.abspath(args.fastq2)
@@ -190,6 +191,18 @@ def filter_regulator(args):
     if args.adapter2 is not None:
         args.adapter2 = os.path.abspath(args.adapter2)
 
+    if hasattr(args, 'temp_dir'):
+        args.clean_dir = os.path.join(args.temp_dir, 'cleandata')
+    else:
+        args.clean_dir = os.getcwd()
+
+    try:
+        os.makedirs(args.clean_dir, exist_ok=True)
+    except Exception as identifier:
+        valid = False
+        print(
+            'Error occured when validating the directories, please check your permissions or things could be related.')
+
     if not ((args.adapter1 is None or os.path.isfile(args.adapter1) and (args.adapter2 is None or os.path.isfile(args.adapter2)))):
         print('Input adapter file is not valid.')
         valid = False
@@ -210,6 +223,16 @@ def filter_regulator(args):
 
 
 filter_parser, filter_group = register_group('Filter argumetns', [
+    {
+        'name': 'cleanq1',
+        'meta': 'file',
+        'help': 'cleandata output file 1'
+    },
+    {
+        'name': 'cleanq2',
+        'meta': 'file',
+        'help': 'cleandata output file 2'
+    },
     {
         'name': 'adapter1',
         'meta': 'file',
@@ -267,6 +290,18 @@ def assembly_regulator(args):
     if args.insert_size <= 0:
         valid = False
         print('Input insert size is not valid.')
+
+    if hasattr(args, 'temp_dir'):
+        args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
+    else:
+        args.assemble_dir = os.getcwd()
+
+    try:
+        os.makedirs(args.assemble_dir, exist_ok=True)
+    except Exception as identifier:
+        valid = False
+        print(
+            'Error occured when validating the directories, please check your permissions or things could be related.')
 
     if args.use_list:
         args.kmer_list = [int(x) for x in args.kmer_list.split(',')]
@@ -360,6 +395,19 @@ def search_regulator(args):
 
     from ete3 import NCBITaxa
     ncbi = NCBITaxa()
+
+    if hasattr(args, 'temp_dir'):
+        args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
+    else:
+        args.assemble_dir = os.getcwd()
+
+    try:
+        os.makedirs(args.assemble_dir, exist_ok=True)
+    except Exception as identifier:
+        valid = False
+        print(
+            'Error occured when validating the directories, please check your permissions or things could be related.')
+
 
     if args.required_taxa not in ncbi.get_name_translator([args.required_taxa]):
         print("Specified taxanomy name not in NCBI taxanomy database.")

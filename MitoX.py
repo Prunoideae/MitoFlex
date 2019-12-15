@@ -53,21 +53,23 @@ desc = """
 Description
 
     MitoX - A rewritten toolkit of its ancestor MitoZ for faster and better 
-    mitochondrial assembly, annotation and visualization, and for expandability and more.
+    mitochondrial assembly, annotation and visualization, for expandability and more.
 
 Version
     0.0
 """
 
 @parse_func(func_help='filter out unqualified reads from fastq',
-            parents=[fastq_parser, filter_parser, universal_parser])
+            parents=[universal_parser, fastq_parser, filter_parser])
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def filter(args):
 
-    dest = args.temp_folder if args.__calling == 'filter' else args.result_folder
-    cleanq1 = path.join(dest, 'filtered.1.fq.gz')
-    if args.fastq2 is not None:
-        cleanq2 = path.join(dest, 'filtered.2.fq.gz')
+    dest = args.result_folder if args.__calling == 'filter' else args.temp_folder
+    if not path.isabs(args.cleanq1):
+        args.cleanq1 = path.abspath(path.join(dest, args.cleanq1))
+    
+    if args.cleanq2 is not None and not path.isabs(args.cleanq2):
+        args.cleanq2 = path.abspath(path.join(dest, args.cleanq2))
 
     filtered1 = filtered2 = None
 
@@ -79,7 +81,7 @@ def filter(args):
                               end=args.end, seq_size=args.seq_size)
     else:
         filtered1, filtered2 = filter_pe(fq1=f'"{args.fastq1}"', fq2=f'"{args.fastq2}"',
-                                         o1=f'"{cleanq1}"', o2=f'"{cleanq2}"',
+                                         o1=f'"{args.cleanq1}"', o2=f'"{args.cleanq2}"',
                                          a1=f'"{args.adapter1}"' if args.adapter1 is not None else None,
                                          a2=f'"{args.adapter2}"' if args.adapter2 is not None else None,
                                          dedup=args.deduplication,
@@ -91,7 +93,7 @@ def filter(args):
 @parse_func(func_help='assemble from input fastq reads, output contigs',
             parents=[universal_parser, fastq_parser, assembly_parser])
 def assemble(args):
-
+    return False
     from assemble.assemble import assemble
 
     assembled_contigs = assemble(fastq1=args.fastq1, fastq2=args.fastq2, result_dir=args.result_folder,
@@ -126,15 +128,13 @@ def visualize(args):
 
 
 @parse_func(func_help='run all the methods',
-            parents=[universal_parser, assembly_parser, fastq_parser, filter_parser,
+            parents=[universal_parser, assembly_parser, filter_parser, fastq_parser, 
                      search_parser, saa_parser, annotation_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on')
 @arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def all(args):
 
-    print(args.topology)
-    return False
     # Go filtering
     if not args.disable_filter:
         args.fastq1, args.fastq2 = filter(args=args)
@@ -144,7 +144,12 @@ def all(args):
     # TODO:Finish findmitoscaf methods.
 
 
+def cleanup(args):
+    print(args)
+
+
 # Entry starts at here
 if __name__ == '__main__':
     parser = freeze_arguments('MitoX', desc)
-    parse_then_call(parser)
+    final_args = parse_then_call(parser)
+    cleanup(final_args)

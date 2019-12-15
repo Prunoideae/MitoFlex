@@ -1,6 +1,6 @@
 # MitoX
 
-MitoX is a Python3 based toolkit mitochondrial genome assembling rewritten from [MitoZ](https://github.com/linzhi2013/MitoZ), imporve the performance and result quality. And also for imporving the extendability. It accepts both single-end and pair-end data, and follows a filter-assemble-annotate-visualize workflow to output results. Working mechanism is highly flexible and can be easily configured here.
+MitoX is a Python3 based toolkit mitochondrial genome assembling rewritten from [MitoZ](https://github.com/linzhi2013/MitoZ), with improved performance and result quality. And also for better extendability. It accepts both single-end and pair-end data, and follows a filter-assemble-annotate-visualize workflow to output results. Working mechanism is highly flexible and can be easily configured here.
 
 # 1. System requirements
 
@@ -10,7 +10,7 @@ MitoX is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL)`
 
 ## 1.2 Storage
 
-Installing MitoX requires abount 1~2GB of disk space. Assembling needs about 50% of raw data's size to create and store temp files each run. Temp files could be deleted after the run, though you may find something usefule in it.
+Installing MitoX requires abount 1~2GB of disk space. Assembling needs about 50% to 200% of raw data's size to create and store temp files each run. Temp files could be deleted after the run, though you may find something useful in it.
 
 ## 1.3 Memory
 
@@ -34,11 +34,11 @@ MitoX does not explicitly requires GPU in the work, but a GPU will highly accele
 
 # 4. Specifying parameters in configuration file
 
-MitoX created a very flexible argument catching and processing mechanism, which is aimed to make it easier for further developing. [A example configuration file](example.config.py) is created under the main directory.
+MitoX created a very flexible argument catching and processing mechanism, which is aimed to make it easier for further developing. [An example configuration file](example.config.py) is created under the main directory.
 
 ## 4.1 Configuration file structure
 
-MitoX's configuration file is more like a dependent python file to a traditional configuration file (*.cfg or *.json or something).
+MitoX's configuration file is more like a independent python file than a traditional configuration file (*.cfg or *.json or something).
 
 ```python
 
@@ -66,8 +66,8 @@ fastq1 = path.abspath(
     path.join('~', 'data_folder', 'seq_paucumara_falcata', 'data.1.gz'))
 
 # Also, MitoX will NOT check additional parameters passed through this way,
-# only update and merge the parameters in config file into the commandline
-# parameters, so use temp variable as you favor.
+# only update and merge the parameters in config file with the commandline
+# parameters. Temp variables will be passed but not processed.
 foo = 'bar'
 
 ```
@@ -197,9 +197,9 @@ from utility.parser import register_group
 # every downstream processors.(e.g. other handlers or the main function)
 def handler(args):
     try:
-        args.arglist = args.strlist.split(',')
+        args.arglist = args.str_list.split(',')
     except Exception as i:
-        print('Error occured when parsing the argument strlist!')
+        print('Error occured when parsing the argument str-list!')
     # Returning value tells MitoX whether to run the process or not, returning
     # True means the processed arguments are valid, and vise versa.
         return False
@@ -209,13 +209,18 @@ foo_parser, foo_group = register_group('Test parser', [
     # Group arguments have almost the same options like the arg_prop function,
     # please refer to the arguments.py to check it out.
     {
-        'name':'strlist',
+        # The conversion rule applies here, because the arguments are quite
+        # separated from the processing codes.
+        # I much prefer - to _ because _ needs Shift + -, but - only needs one.
+        'name':'str-list',
         'default':'1,2,3,4,5',
         'help':'input a set of numbers separated by comma(,)'
     }
 ], func=handler) # Specify the needed processor here.
 
-@parse_func(func_help='test func', parents=[foo_parser])
+# When multiple parser are specified, they follows an order of list parents to
+# execute, this is important if there's a parser relies on other parser.
+@parse_func(func_help='test func', parents=[universal_parser, foo_parser])
 def bar(args):
     # Here we can use the argument directly created and processed by the handler.
     print(args.arglist)
