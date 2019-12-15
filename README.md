@@ -1,6 +1,6 @@
 # MitoX
 
-MitoX is a Python3 toolkit rewritten from [MitoZ](https://github.com/linzhi2013/MitoZ), a mitochondrial genome assembling toolkit to imporve the performance and result quality. And also for imporving the extendability. It accepts both single-end and pair-end data, and follows a filter-assemble-annotate-visualize workflow to output results.
+MitoX is a Python3 based toolkit mitochondrial genome assembling rewritten from [MitoZ](https://github.com/linzhi2013/MitoZ), imporve the performance and result quality. And also for imporving the extendability. It accepts both single-end and pair-end data, and follows a filter-assemble-annotate-visualize workflow to output results. Working mechanism is highly flexible and can be easily configured here.
 
 # 1. System requirements
 
@@ -22,13 +22,13 @@ MitoX makes use of a multi k-mer assemble strategy from [MEGAHIT](https://github
 
 ## 1.5 GPU
 
-MitoX does not explicitly requires GPU in the work, but a GPU will highly accelerate the process of sDBG building, about 3 times faster than normal. As the calculation could be done parallely
+MitoX does not explicitly requires GPU in the work, but a GPU will highly accelerate the process of sDBG building, about 3 times faster than normal.
 
 # 2. Installation
 
 ## 2.1 From Docker Image
 
-## 2.2 From git repository
+## 2.2 From git repository (Conda required)
 
 # 3. Data requirement
 
@@ -98,9 +98,44 @@ Most modules of MitoX are just the same as MitoZ. But some of the methods are re
 
 I tried my best to make the code structure of MitoX as easy as possible to increase its extendability and readability for users to extend it if they find the tools used by MitoX are not good enough or the workflow could be optimized. Extending the function should not be an hard task as MitoZ now.
 
+## 6.0 Calling the MitoX from other ways
+
+Bash is not always the solution, in a certain circumstances an integrated call could be better because it allows deeper profiling and monitoring, and controlling.
+
+Since the only goal of decorators is to expose the original methods of Python to the command line, calling the methods could be easy, but should be catious because a raw calling could bypass some of the fuse methods of MitoX, which could make the arguments parsed and processed not correctly, or even leads to an unknown end.
+
+All MitoX function takes an Argument object as the only arguments, it's from the [parser.py](utility/parser.py), and it's very simple because actually it's just a wrapping of `**kwargs` to reduce coding and improve code redability.
+Casting and passing the Argument instance is easy:
+
+```python
+from utility.parser import Arguments
+args = Arguments({'foo':'bar', 'lorem':'ipsum'})
+print(args.foo) # prints 'bar'
+```
+
+Once you obtain a Argument instance, you can directly call the function like this:
+
+```python
+import MitoX
+MitoX.all(args)
+```
+
+But this is strongly NOT recommended, because it didn't follow the parser mechanism of MitoX, which makes the raw arguments to be passed to the function.
+
+In here, a process function `process_arguments` is required from the [parser.py](utility/parser.py), it emulates how all the processer works and returns a processed Argument object, then you can call the subcommands in MitoX safely.
+
+```python
+from utility.parser import Arguments, process_arguments
+import MitoX
+# Assuming the groups and the handlers are all registered here.
+args = Arguments({'foo':'bar'})
+process_arguments(command='test', args=args)
+MitoX.test(args)
+```
+
 ## 6.1 Creating more subcommands
 
-MitoX mainly use two decorators, `parse_func` and `arg_prop` from [parser.py](utility/parser.py), to profile and collect functions needed to be a subcommand of MitoX runtime, which means that  attaching the `parse_func` decorator will expose the function to commandline, and using a `arg_prop` decorator will add a argument to it.
+MitoX mainly use two decorators, `@parse_func` and `@arg_prop` from [parser.py](utility/parser.py), to profile and collect functions needed to be a subcommand of MitoX runtime, which means that  attaching the `@parse_func` decorator will expose the function to commandline, and using a `@arg_prop` decorator will add a argument to it.
 
 ```python
 # Using a parse_func decorator will make this function 'visible' from command line.
@@ -117,6 +152,9 @@ MitoX mainly use two decorators, `parse_func` and `arg_prop` from [parser.py](ut
 # considering other things. 'store_true' will be applied to variables with a False
 # default value and vise versa.
 @arg_prop(dest='switch', help='switchy', default=False)
+# Another exception is the choices arguments, which will also disable specifying
+# the type and metavar because all the type should be determined through the list.
+@arg_prop(dest='list', help='of choices', choices=['foo', 'bar'], default='foo')
 # The commandline underscore conversion is not applied here for the consistency
 # of code.
 @arg_prop(dest='under_score', help='haha')
@@ -149,3 +187,38 @@ fun # print(under_score)
 ## 6.2 Creating parameter groups
 
 Most methods shares a set of parameters, like thread numbers or input fastq file. Specifying the parameters repeatedly could be a problem, and validation will be difficult. So MitoX implements a parameter group processing mechanism to make this progress easier to be defined.
+To create a argument group, you need to import and execute the method `register_group` from the module [parser.py](utility/parser.py):
+
+```python
+from utility.parser import register_group
+
+# Argument groups support a callback function to reduce the code repeatence.
+# You can modify and read the attributes straightforward and it will pass to the
+# every downstream processors.(e.g. other handlers or the main function)
+def handler(args):
+    try:
+        args.arglist = args.strlist.split(',')
+    except Exception as i:
+        print('Error occured when parsing the argument strlist!')
+    # Returning value tells MitoX whether to run the process or not, returning
+    # True means the processed arguments are valid, and vise versa.
+        return False
+    return True
+
+foo_parser, foo_group = register_group('Test parser', [
+    # Group arguments have almost the same options like the arg_prop function,
+    # please refer to the arguments.py to check it out.
+    {
+        'name':'strlist',
+        'default':'1,2,3,4,5',
+        'help':'input a set of numbers separated by comma(,)'
+    }
+], func=handler) # Specify the needed processor here.
+
+@parse_func(func_help='test func', parents=[foo_parser])
+def bar(args):
+    # Here we can use the argument directly created and processed by the handler.
+    print(args.arglist)
+```
+
+Actually you can `register_group` anywhere as long as your `@parser_func` decorator can reach there, but I strongly recommends to write all the argument settings into the [arguments.py](arguments.py) to keep the code structure clean.

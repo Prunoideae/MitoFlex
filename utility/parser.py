@@ -33,11 +33,15 @@ group_callback = {}
 # Argument processing
 
 
-class arguments(object):
+class Arguments(object):
     def __init__(self, init):
         for k, v in init.items():
             setattr(self, k, v)
 
+class ParsingError(Exception):
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
 
 def register_group(group_name, argument_list, func=None):
     '''
@@ -360,7 +364,7 @@ def parse_then_call(expr):
             parsed.pop('command')
             command_prop = collected_args[command]
             func = command_prop['func']
-            final = arguments(parsed)
+            final = Arguments(parsed)
             if 'parents' in command_prop:
                 valid = True
                 for parser in command_prop['parents']:
@@ -375,7 +379,7 @@ def parse_then_call(expr):
     elif 'main' in collected_args:
         main_prop = collected_args['main']
         func = main_prop['func']
-        final = arguments(parsed)
+        final = Arguments(parsed)
         if 'parents' in main_prop:
             valid = True
             for parser in main_prop['parents']:
@@ -387,3 +391,19 @@ def parse_then_call(expr):
     else:
         raise Exception(
             "Main entry parser specified, but function main() is not found in collected arguments!")
+
+
+def process_arguments(command, args):
+    if command in collected_args:
+        command_prop = collected_args[command]
+        if 'parents' in command_prop:
+            valid = True
+            for parser in command_prop['parents']:
+                if parser in group_callback:
+                    preprocessor = group_callback[parser]
+                    valid = valid and preprocessor(args)
+            if not valid:
+                raise ParsingError('Errors occured while parsing arguments')
+    else:
+        raise KeyError('Command not found in collected profiles.')
+    pass
