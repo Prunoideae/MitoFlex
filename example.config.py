@@ -24,31 +24,31 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 # # This is a example configuration, which contains all the argument
 # # modifiable in the MitoX.
 # # The configuration file doesn't have a mechanism to check out which
-# # one is the really 'valid' data, configuration will always override 
-# # command-line values, so be catious in checking values. The only one 
-# # way NOT to overwrite arguments passed is to comment out the values 
+# # one is the really 'valid' data, configuration will always override
+# # command-line values, so be catious in checking values. The only one
+# # way NOT to overwrite arguments passed is to comment out the values
 # # you don't want to.
-# # Also, this configuration used a trick to make python import and 
-# # execute it as an module, thus you may add your config with some 
+# # Also, this configuration used a trick to make python import and
+# # execute it as an module, thus you may add your config with some
 # # code to make it even more flexible...
 
 # # Global configuration
 # command = 'all'
-# 
+#
 # # Universal configuration
 # workname = ''
 # threads = 8
-# 
+#
 # # Fastq configuration
 # fastq1 = ''
 # fastq2 = ''
 # fastq_alter_format = False
 # fastq_read_length = 150
 # fq_size = 5
-# 
+#
 # # Fasta configuration
 # fastafile = ''
-# 
+#
 # # Filter configuration
 # adapter1 = ''
 # adapter2 = ''
@@ -61,22 +61,22 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 # quality_valve = 55
 # percentage_valve = 0.2
 # keep_region = ''
-# 
+#
 # #Assembly configuration
 # insert_size = 150
 # kmer_min = 31
 # kmer_max = 63
-# 
+#
 # # Search mitochondrial gene configuration
 # filter_taxa = False
 # min_abundance = 10
 # required_taxa = 'Platyhelminthes'
 # taxa_tolerance = 0
-# 
+#
 # # Search and annotation mitochondrial gene configuration
 # genetic_code = 9
 # clade = 'Platyhelminthes-flatworms'
-# 
+#
 # #Annotation group
 # disable_annotation = True
 # species_name = 'Test sp.'

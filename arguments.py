@@ -408,7 +408,6 @@ def search_regulator(args):
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
 
-
     if args.required_taxa not in ncbi.get_name_translator([args.required_taxa]):
         print("Specified taxanomy name not in NCBI taxanomy database.")
         return False
@@ -492,11 +491,21 @@ def saa_regulator(args):
     elif '-' + code in gene_code:
         print(
             f'Using genetic code {args.genetic_code} : {gene_code["-" + code]}!\nThey are obviously out of MitoX\'s range, so further calls needs your validation.')
-        answer = input("Continue? Y/[N] : ")
-        while answer not in ['Y', 'N', '', 'y', 'n']:
+        # Only args with recessive option y could bypass this, thus every dangerous method should be handled by hand unless a config say so.
+        if not hasattr(args, 'y') or not args.y:
             answer = input("Continue? Y/[N] : ")
-        if answer.upper() is not 'Y':
-            sys.exit('Exited.')
+            while answer not in ['Y', 'N', '', 'y', 'n']:
+                answer = input("Continue? Y/[N] : ")
+            if answer.upper() is not 'Y':
+                sys.exit('Exited.')
+    elif code == '1':
+        print('You are using Standard Code 1! Please make sure you really have the need to do this, because the standard code is NOT meant to be applied in most cases!')
+        if not hasattr(args, 'y') or not args.y:
+            answer = input("Continue? Y/[N] : ")
+            while answer not in ['Y', 'N', '', 'y', 'n']:
+                answer = input("Continue? Y/[N] : ")
+            if answer.upper() is not 'Y':
+                sys.exit('Exited.')
     else:
         print('Genetic code not found in the NCBI table!')
         return False
