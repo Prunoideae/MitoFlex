@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 MitoX.py
 ========
@@ -21,14 +23,17 @@ along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import argparse
-import sys
-import os
-from os import path
-import re
-import subprocess
-import time
 from glob import glob
+import time
+import subprocess
+import re
+from os import path
+import os
+import sys
+import argparse
+
+if sys.version_info[0] < 3:
+    sys.exit('Python 3 must be installed in current environment! Please check if any of your environment setup(like conda environment) is deactivated or wrong!')
 
 try:
     import Bio
@@ -46,6 +51,7 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
+# Environment initialization
 ncbi = NCBITaxa()
 
 # Command processing
@@ -57,6 +63,9 @@ Description
 
 Version
     0.0
+
+Citation
+
 """
 
 @parse_func(func_help='filter out unqualified reads from fastq',
@@ -67,7 +76,7 @@ def filter(args):
     dest = args.result_folder if args.__calling == 'filter' else args.temp_folder
     if not path.isabs(args.cleanq1):
         args.cleanq1 = path.abspath(path.join(dest, args.cleanq1))
-    
+
     if args.cleanq2 is not None and not path.isabs(args.cleanq2):
         args.cleanq2 = path.abspath(path.join(dest, args.cleanq2))
 
@@ -128,7 +137,7 @@ def visualize(args):
 
 
 @parse_func(func_help='run all the methods',
-            parents=[universal_parser, assembly_parser, filter_parser, fastq_parser, 
+            parents=[universal_parser, assembly_parser, filter_parser, fastq_parser,
                      search_parser, saa_parser, annotation_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on')
 @arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
@@ -144,12 +153,20 @@ def all(args):
     # TODO:Finish findmitoscaf methods.
 
 
+# This is a, a somehow not ideal method in the whole MitoFlex coding,
+# but it's done with the purpose of making the generated result
+# cool and good.
+# This acts as a cleaner, it cleans the generated empty folders (
+# validated but not used) and some temporal files, it is executed no
+# matter what the method is called, and even no matter if any the
+# exposed function is called or NOT.
 def cleanup(args):
     print(args)
 
 
 # Entry starts at here
 if __name__ == '__main__':
+
     parser = freeze_arguments('MitoX', desc)
     final_args = parse_then_call(parser)
     cleanup(final_args)

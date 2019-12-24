@@ -27,5 +27,10 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
+    from utility.profiler import profiling
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoX valid?")
+
+@profiling
+def annotation():
+    pass

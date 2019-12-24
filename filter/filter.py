@@ -27,12 +27,13 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
+    from utility.profiler import profiling
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoX valid?")
 
 filter_dir = os.path.dirname(os.path.abspath(__file__))
 
-
+@profiling
 def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, seq_size=None):
     try:
         shell_call(filter_dir+'/filter_se', i=fqiabs, o=fqoabs,
@@ -42,7 +43,7 @@ def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None
 
     return fqoabs
 
-
+@profiling
 def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
               a1=None, a2=None, dedup=False, mis=3, ali=15,
               start=None, end=None, n=10, q=55, l=0.2, seq_size=None):

@@ -54,12 +54,17 @@ def universal_regulator(args):
         args.work_dir, args.workname + '.result'))
     args.temp_dir = os.path.abspath(os.path.join(
         args.work_dir, args.workname + '.temp'))
+    if args.profiling:
+        args.profile_dir = os.path.abspath(os.path.join(
+            args.temp_dir, 'performance'))
 
     # Validates the folders
     try:
         os.makedirs(args.work_dir, exist_ok=True)
         os.makedirs(args.result_dir, exist_ok=True)
         os.makedirs(args.temp_dir, exist_ok=True)
+        if args.profiling:
+            os.makedirs(args.profile_dir, exist_ok=True)
     except Exception as identifier:
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
@@ -87,6 +92,11 @@ universal_parser, universal_group = register_group('Universal arguments', [
         'name': 'basedir',
         'default': os.getcwd(),
         'help': 'working folder will be generated in which directory.'
+    },
+    {
+        'name': 'profiling',
+        'default': False,
+        'help': 'a performance profiling will be generated if this is on.'
     }], func=universal_regulator
 )
 
