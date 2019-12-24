@@ -1,6 +1,6 @@
 # MitoFlex
 
-MitoFlex is a Python3 based toolkit mitochondrial genome assembling rewritten from [MitoZ](https://github.com/linzhi2013/MitoZ), with improved performance and result quality. And also for better extendability. It accepts both single-end and pair-end data, and follows a filter-assemble-annotate-visualize workflow to output results. Working mechanism is highly flexible and can be easily configured here.
+MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembling, it's inspired from [MitoZ](https://github.com/linzhi2013/MitoZ), but with improved performance and result quality. And also it implemented a both easy and flexible mechanism for extending the program feature. It accepts both single-end and pair-end data, and follows a filter-assemble-annotate-visualize workflow to output results. Working mechanism is highly flexible and can be easily configured here.
 
 # 1. System requirements
 
@@ -29,6 +29,57 @@ MitoFlex does not explicitly requires GPU in the work, but a GPU will highly acc
 ## 2.1 From Docker Image
 
 ## 2.2 From git repository (Conda required)
+
+For certain conditions, like if you don't have a sudo permission or root command, you can deploy MitoFlex from git without any.
+
+### 2.2.1 Installing Conda
+
+Conda is required to be present to create the environment MitoFlex needed instead, or you can install all the packages manually. Both [Anaconda](https://anaconda.org/anaconda/python) and [Miniconda](https://conda.io/miniconda.html) could be useful, but Miniconda is recommended if you don't need a big environment.
+
+### 2.2.2 Setting up channels
+
+These three channels should be the universal solution for any conda package installing.
+
+```bash
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+```
+
+As the network situation varies, mirror channels, or other alternative channels could be setup instead of the channels above for a better querying speed.
+
+### 2.2.3 Creating environment for MitoFlex
+
+Though you actually can setup the environment from the ground, using conda for creating virtual environment, as there may be other tools requiring different environment, and even requirements that are conflict to MitoFlex's, is actually a better choice.
+
+### 2.2.4 Installing MitoFlex from Git
+
+```bash
+git clone https://github.com/Prunoideae/MitoFlex
+cd MitoFlex
+```
+
+MitoFlex will be downloaded from the remote Git. Some further configuration will need to be done to make sure the environment is really ready to go.
+
+### 2.2.5 Setting up NCBI taxanomy database
+
+Running `ncbi.py` from command line automatically updates the local database from NCBI taxanomy database.
+
+```bash
+./ncbi.py
+```
+
+Updating database from network is not always stable. `ncbi.py` will fall back to the local `taxdump.tar.gz` if any error occurs in the process.
+
+### 2.2.6 Run MitoFlex
+
+To run MitoFlex, type :
+
+```bash
+./MitoFlex.py
+```
+
+Info should be printed if there's no error in your installation, otherwise you need to check the whole progress.
 
 # 3. Data requirement
 
@@ -78,9 +129,9 @@ Besides creating a highly customized configuration file from the earth, you can 
 
 Configuration generated in this way will have all the arguments needed by the specified subcommand (e.g. all or filter) in place, arguments passed latter will also be written into the config, overrides the default values predefined in scripts.
 
-# 5. Modules provided by default MitoFlex
+# 5. Modules provided by MitoFlex
 
-Most modules of MitoFlex are just the same as MitoZ. But some of the methods are rewritten or optimized.
+Most modules of MitoFlex are just the same as MitoZ. But some of the methods are rewritten and optimized.
 
 ## 5.1 all
 
@@ -96,15 +147,17 @@ Most modules of MitoFlex are just the same as MitoZ. But some of the methods are
 
 # 6. Extending the function of MitoFlex
 
-I tried my best to make the code structure of MitoFlex as easy as possible to increase its extendability and readability for users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be optimized. Extending the function should not be an hard task as MitoZ now.
+MitoFlex is designed for extendability and readability, to make users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be optimized. Extending the function should not be an hard task as MitoZ.
+
+MitoFlex is written in Python 3.6, so modifying the original workflow of MitoFlex requires a basic knowledge of the Python programming language.
 
 ## 6.0 Calling the MitoFlex from other ways
 
-Bash is not always the solution, in a certain circumstances an integrated call could be better because it allows deeper profiling and monitoring, and controlling.
+Bash is not always the solution, in a certain circumstances an call from python inside could be better because it allows deeper profiling and monitoring, and controlling. For example deploying and integrating the MitoFlex with environments like Jupyter or some web server.
 
 Since the only goal of decorators is to expose the original methods of Python to the command line, calling the methods could be easy, but should be catious because a raw calling could bypass some of the fuse methods of MitoFlex, which could make the arguments parsed and processed not correctly, or even leads to an unknown end.
 
-All MitoFlex function takes an Argument object as the only arguments, it's from the [parser.py](utility/parser.py), and it's very simple because actually it's just a wrapping of `**kwargs` to reduce coding and improve code redability.
+All MitoFlex function takes an Argument object as the only arguments, it's from the [parser.py](utility/parser.py), and it's very simple because actually it's just a wrapper of `**kwargs` to reduce coding and improve code redability.
 Casting and passing the Argument instance is easy:
 
 ```python

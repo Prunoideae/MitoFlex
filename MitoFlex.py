@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 MitoFlex.py
@@ -161,6 +161,8 @@ def all(args):
 # matter what the method is called, and even no matter if any the
 # exposed function is called or NOT.
 def cleanup(args):
+    if args is None:
+        return
     print(args)
 
 
