@@ -4,20 +4,20 @@ profiler.py
 
 Copyright (c) 2019-2020 Li Junyu <2018301050@szu.edu.cn>.
 
-This file is part of MitoX.
+This file is part of MitoFlex.
 
-MitoX is free software: you can redistribute it and/or modify
+MitoFlex is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-MitoX is distributed in the hope that it will be useful,
+MitoFlex is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
+along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
@@ -79,10 +79,10 @@ class Profiler():
         self._state = 2
         pass
 
-
+# Profiling decorator
 def profiling(func):
     '''
-    Quest a simple profiler for fetching data of running every method.
+    Quest a simple profiler for fetching data of running the method.
     This module is created to collect statistical data for further
     analysis and optimizing.
 
@@ -125,7 +125,7 @@ def profiling(func):
             profiler.stop()
             with open(path.join(profiling_path, func.__name__ + '.stat'), 'w') as f:
                 json.dump(obj=profiler.tickframes, fp=f)
-
+    wrapper.__name__ = func.__name__
     return wrapper
 
 

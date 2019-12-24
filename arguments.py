@@ -4,20 +4,20 @@ arguments.py
 
 Copyright (c) 2019-2020 Li Junyu <2018301050@szu.edu.cn>.
 
-This file is part of MitoX.
+This file is part of MitoFlex.
 
-MitoX is free software: you can redistribute it and/or modify
+MitoFlex is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-MitoX is distributed in the hope that it will be useful,
+MitoFlex is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
+along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
@@ -28,7 +28,7 @@ try:
     from utility.parser import register_group
 except ModuleNotFoundError as identifier:
     print(
-        f'Module {identifier.name} not found! Please check your MitoX installation!')
+        f'Module {identifier.name} not found! Please check your MitoFlex installation!')
     sys.exit()
 except ImportError as identifier:
     print(
@@ -500,7 +500,7 @@ def saa_regulator(args):
             f'Using genetic code {args.genetic_code} : {gene_code["_" + code]}.\nThese codes are thoretically suitable with current workflow, but it\'s NOT tested.')
     elif '-' + code in gene_code:
         print(
-            f'Using genetic code {args.genetic_code} : {gene_code["-" + code]}!\nThey are obviously out of MitoX\'s range, so further calls needs your validation.')
+            f'Using genetic code {args.genetic_code} : {gene_code["-" + code]}!\nThey are obviously out of MitoFlex\'s range, so further calls needs your validation.')
         # Only args with recessive option y could bypass this, thus every dangerous method should be handled by hand unless a config say so.
         if not hasattr(args, 'y') or not args.y:
             answer = input("Continue? Y/[N] : ")

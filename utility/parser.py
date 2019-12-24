@@ -4,20 +4,20 @@ parser.py
 
 Copyright (c) 2019-2020 Li Junyu <2018301050@szu.edu.cn>.
 
-This file is part of MitoX.
+This file is part of MitoFlex.
 
-MitoX is free software: you can redistribute it and/or modify
+MitoFlex is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-MitoX is distributed in the hope that it will be useful,
+MitoFlex is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
+along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
@@ -104,17 +104,23 @@ def parse_func(func=None, *, func_help='', parents=[]):
     '''
     Mark the decorated function as a valid 'argument acceptable' 
     function. Decorated function will be analysed once it's created, 
-    and it will further be examined and called.\n
+    and it will further be examined and called.
+
     Values' metavars and types are determined automatically unless it
     was modified before the parse_func decorator, but be careful, every 
     bool argument will NOT be treated as a normal argument but a switch, 
     thus you can't specify a metarvar or assign a type to it. Though modify 
     the argument attributes after the decoration is acceptable, it's 
-    not recommended for code structure.\n
-    Arguments introduction:\n
-    func : a preserved variant for further call, DO NOT MODIFY IT!\n
+    not recommended for code structure.
+
+    Arguments introduction:
+
+    func : a preserved variant for further call, DO NOT MODIFY IT!
+    
     func_help : give the function a help string, which will be shown
-    in --help or parser.print_help()\n
+
+    in --help or parser.print_help()
+
     parents : specify the parent argument parsers for this func.
     '''
     if func is None:
@@ -161,19 +167,28 @@ def parse_func(func=None, *, func_help='', parents=[]):
 
 def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, choices=None, meta=None, default=None):
     '''
-    Specify a destination var, then modify its attributes.\n
-    Argument introduction:\n
-    func : a preserved variant for further call, DO NOT MODIFY IT!\n
+    Specify a destination var, then modify its attributes.
+
+    Argument introduction:
+
+    func : a preserved variant for further call, DO NOT MODIFY IT!
+
     dest : specify the destination argument, leaving this to blank or specify 
-    a argument that's not existed will raise an error.\n
+
+    a argument that's not existed will raise an error.
+
     arg_type : specify the argument type of the argument, like you may change 
-    int to float, or something alike. A argument have a boolean default will not be changed.\n
-    help : add a help string to argument. This will appear in --help or parser.print_help().\n
-    required : mark this argument is required or not.\n
+    int to float, or something alike. A argument have a boolean default will not be changed.
+
+    help : add a help string to argument. This will appear in --help or parser.print_help().
+
+    required : mark this argument is required or not.
+
     choices : give the argument a certain choices, this is predefined and not immutable, neither 
-    it has a metavar nor undecleard value can be entered in this argument.\n
+    it has a metavar nor undecleard value can be entered in this argument.
+
     meta : specify the metavar of the argument, like str can be changed to file, for a more detailed 
-    information, this will not influence how the argument works.\n
+    information, this will not influence how the argument works.
     '''
     if func is None:
         return partial(arg_prop, dest=dest, help=help, required=required, choices=choices, default=default)
@@ -260,7 +275,7 @@ def freeze_main(prog, desc):
     main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
                              help='use preconfigurated file to run program')
     main_parser.add_argument("-g", "--generate_config", action="store_true", default=False,
-                             help=("if switched on, MitoX will not be run, but generate "
+                             help=("if switched on, MitoFlex will not be run, but generate "
                                    "a configuration file with arguments input instead under current directory. "
                                    "must specify before any arugments."))
     return main_parser
@@ -269,9 +284,12 @@ def freeze_main(prog, desc):
 def freeze_arguments(prog, desc):
     '''
     Collects all the information needed, and create a universal parser for all sub parser.
-    This will not lock the global argument data, so multiple parser may be created seperately.\n
-    Argument introduction:\n
-    prog : what is the program.\n
+    This will not lock the global argument data, so multiple parser may be created seperately.
+
+    Argument introduction:
+
+    prog : what is the program.
+    
     desc : add a description for the parser.
     '''
     global collected_args
@@ -316,7 +334,7 @@ def freeze_arguments(prog, desc):
     main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
                              help='use preconfigurated file to run program')
     main_parser.add_argument("-g", "--generate-config", action="store_true", default=False,
-                             help=("if switched on, MitoX will not be run, but generate "
+                             help=("if switched on, MitoFlex will not be run, but generate "
                                    "a configuration file with arguments input instead under current directory. "
                                    "must specify before any arugments."))
     return main_parser
@@ -325,11 +343,15 @@ def freeze_arguments(prog, desc):
 def parse_then_call(expr):
     '''
     Analyze the parser information, then call a certain function with the name 
-    registered with parse_func before.\n
-    Argument introduction:\n
+    registered with parse_func before.
+
+    Also it returns the arguments processed from every processor.
+
+    Argument introduction:
+
     expr : Accepts a parser created from freeze_argument. Other parsers could 
     be used, but unregistered function will make the program extremely unstable 
-    and may lead to an unhappy end.\n
+    and may lead to an unhappy end.
     '''
     args = expr.parse_args()
     parsed = vars(args)

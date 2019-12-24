@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 
 """
-MitoX.py
+MitoFlex.py
 ========
 
 Copyright (c) 2019-2020 Li Junyu <2018301050@szu.edu.cn>.
 
-This file is part of MitoX.
+This file is part of MitoFlex.
 
-MitoX is free software: you can redistribute it and/or modify
+MitoFlex is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-MitoX is distributed in the hope that it will be useful,
+MitoFlex is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with MitoX.  If not, see <http://www.gnu.org/licenses/>.
+along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
@@ -41,10 +41,11 @@ try:
     from Bio import SeqRecord
     from ete3 import NCBITaxa
     from utility.parser import *
+    from utility.profiler import profiling
     from arguments import *
 except ModuleNotFoundError as identifier:
     print(
-        f'Module {identifier.name} not found! Please check your MitoX installation!')
+        f'Module {identifier.name} not found! Please check your MitoFlex installation!')
     sys.exit()
 except ImportError as identifier:
     print(
@@ -58,7 +59,7 @@ ncbi = NCBITaxa()
 desc = """
 Description
 
-    MitoX - A rewritten toolkit of its ancestor MitoZ for faster and better 
+    MitoFlex - A rewritten toolkit of its ancestor MitoZ for faster and better 
     mitochondrial assembly, annotation and visualization, for expandability and more.
 
 Version
@@ -102,7 +103,6 @@ def filter(args):
 @parse_func(func_help='assemble from input fastq reads, output contigs',
             parents=[universal_parser, fastq_parser, assembly_parser])
 def assemble(args):
-    return False
     from assemble.assemble import assemble
 
     assembled_contigs = assemble(fastq1=args.fastq1, fastq2=args.fastq2, result_dir=args.result_folder,
@@ -153,7 +153,7 @@ def all(args):
     # TODO:Finish findmitoscaf methods.
 
 
-# This is a, a somehow not ideal method in the whole MitoFlex coding,
+# This is ah, a somehow not ideal method in the whole MitoFlex coding,
 # but it's done with the purpose of making the generated result
 # cool and good.
 # This acts as a cleaner, it cleans the generated empty folders (
@@ -167,6 +167,6 @@ def cleanup(args):
 # Entry starts at here
 if __name__ == '__main__':
 
-    parser = freeze_arguments('MitoX', desc)
+    parser = freeze_arguments('MitoFlex', desc)
     final_args = parse_then_call(parser)
     cleanup(final_args)
