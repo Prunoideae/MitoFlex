@@ -216,6 +216,7 @@ MitoFlex mainly use two decorators, `@parse_func` and `@arg_prop` from [parser.p
 def foo(args):
     print(args.bar)
     print(args.under_score)
+    print(args.switch)
 
     # For further consideration, attributes are modifiable in the object, and
     # this will not change outside the scope because it's actually accessing
@@ -232,9 +233,10 @@ Calling the new added method from bash will be just like this and with output:
 ```bash
 python3 MitoFlex.py foo --bar 2.0 --switch --under-score fun
 
-2.0 # print(args.bar)
-fun # print(under_score)
-1   # print(args.c)
+2.0     # print(args.bar)
+fun     # print(args.under_score)
+True    # print(args.switch)
+1       # print(args.c)
 ```
 
 ## 6.2 Creating parameter groups

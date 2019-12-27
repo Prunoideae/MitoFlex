@@ -39,6 +39,11 @@ def shell_call(*args, **kwargs):
     shell_call('python', 'foo.py', bar='lorem ipsum') -> 'python foo.py --bar lorem ipsum'
     shell_call('python', 'bar.py', wow_fun='method') -> 'python bar.py --wow-fun method'
     '''
+    command = concat_command(*args, **kwargs)
+    direct_call(command)
+
+
+def concat_command(*args, **kwargs):
     args = [str(x) for x in args]
     kwargs = {x[1:]if x.startswith('_') else x: kwargs[x]
               for x in kwargs if kwargs[x] is not None}
@@ -57,10 +62,7 @@ def shell_call(*args, **kwargs):
         else:
             command += f' {"--" if len(arg)>1 else "-"}{arg} {kwargs[arg]}'
 
-    # TODO:Clear debugging code, or turn to verbose mode or something.
-    print(command)
-
-    direct_call(command)
+    return command
 
 
 def direct_call(command):
