@@ -275,7 +275,7 @@ def freeze_main(prog, desc):
     main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
                              help='use preconfigurated file to run program')
     main_parser.add_argument("-g", "--generate_config", action="store_true", default=False,
-                             help=("if switched on, MitoFlex will not be run, but generate "
+                             help=("if switched on, the program will not be run, but generate "
                                    "a configuration file with arguments input instead under current directory. "
                                    "must specify before any arugments."))
     return main_parser
@@ -334,7 +334,7 @@ def freeze_arguments(prog, desc):
     main_parser.add_argument("-c", "--config", type=str, metavar='<FILE>',
                              help='use preconfigurated file to run program')
     main_parser.add_argument("-g", "--generate-config", action="store_true", default=False,
-                             help=("if switched on, MitoFlex will not be run, but generate "
+                             help=("if switched on, the program will not be run, but generate "
                                    "a configuration file with arguments input instead under current directory. "
                                    "must specify before any arugments."))
     return main_parser

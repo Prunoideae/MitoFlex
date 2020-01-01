@@ -27,6 +27,7 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import concat_command
+    from utility.parser import parse_func, parse_then_call, freeze_main, arg_prop
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -34,7 +35,7 @@ from Bio import Seq, SeqIO, SeqRecord
 import subprocess
 
 
-def check_circular(mininum_overlap=8, start_length=300, end_length=300, final_fasta=None):
+def check_circular(mininum_length=12000, start_length=300, end_length=300, final_fasta=None):
     try:
         records = list(SeqIO.parse(final_fasta, "fasta"))
     except Exception as i:
@@ -44,8 +45,12 @@ def check_circular(mininum_overlap=8, start_length=300, end_length=300, final_fa
     dp = os.path.abspath(os.path.join(
         os.path.dirname(__file__), 'dp_circle_check'))
 
+    finals = []
     for record in records:
         seq = str(record.seq)
+        if len(seq) < mininum_length:
+            finals.append(-1)
+            continue
         f = seq[:start_length]
         r = seq[-end_length:]
         p = subprocess.Popen(dp,
@@ -53,5 +58,84 @@ def check_circular(mininum_overlap=8, start_length=300, end_length=300, final_fa
         result = p.communicate((f + ' ' + r).encode('utf-8')
                                )[0].decode('utf-8').split('\n')[:-1]
         result[0] = [int(x) for x in result[0].split(' ')]
-        # TODO: Finish it.
-        print(result)
+        result[2] = record
+        finals.append(result)
+
+    return finals
+
+
+@parse_func
+@arg_prop(dest='overlay', default=16, help='the mininum overlay of two sequences')
+@arg_prop(dest='length', default=12000, help='the mininum length of sequences, others will be ignored')
+@arg_prop(dest='fasta', required=True, default=None, help='input fasta file for sequences being checked')
+@arg_prop(dest='start', default=300, help='how many bps will be read at the start of sequence')
+@arg_prop(dest='end', default=300, help='how many bps will be read at the end of sequence')
+@arg_prop(dest='format', default='std', choices=['std', 'json', 'text'], help='how the script will output the results')
+@arg_prop(dest='output', default=None, help='where to write results if there needs one')
+def main(args):
+    # TODO:test it.
+    results = check_circular(mininum_length=args.length, start_length=args.start,
+                             end_length=args.end, final_fasta=args.fasta)
+    if results is None:
+        sys.exit(1)
+
+    if args.format == 'std':
+        for idx, result in enumerate(results):
+            if result == -1:
+                print(
+                    f'Sequence {result[2].name} is too short and was ignored.')
+            else:
+                if result[0][1] > args.overlay:
+                    print(
+                        f'Sequence {result[2].name} hit at the position {result[0][0]} with a length of {result[0][1]}.')
+                else:
+                    print(
+                        f'Sequence {result[2].name}\'s overlay is too short and was thought to be linear.')
+    else:
+        try:
+            f = open(args.output, 'w')
+        except Exception as identifier:
+            sys.exit('Errors occured when opening output file.')
+
+        if args.format == 'json':
+            # Abusing the generator is fun
+            generated = {
+                result[2].name: {
+                    'start': result[0][0],
+                    'length': result[0][1],
+                    'overlay': result[1]
+                }
+                for result in results
+                if result[0][1] > args.length
+            }
+
+            import json
+            json.dump(generated, fp=f)
+
+        elif args.format == 'text':
+            for result in results:
+                if result[0][1] > args.length:
+                    print(result[2].name, 'START:', result[0]
+                          [0], 'LENGTH:', result[0][1], file=f)
+                    print('OVERLAY:', file=f)
+                    print(result[1], file=f)
+
+        f.close()
+
+
+desc = '''
+check_circular.py
+
+Description
+    This is a script written to check if a input of sequences could 
+    be a circle or just linear.
+    Input fasta file, print found sequences, or you can set output to 
+    json or something else.
+    This uses an algorithm of O(n^2) time complexity, and should be 
+    fast enough with any inputs with search regions from 300 to 3k bps.
+'''
+
+# Program entry starts at here
+if __name__ == '__main__':
+    parser = freeze_main(prog='check_circular.py', desc=desc)
+    parse_then_call(parser)
