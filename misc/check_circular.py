@@ -35,7 +35,7 @@ from Bio import Seq, SeqIO, SeqRecord
 import subprocess
 
 
-def check_circular(mininum_length=12000, start_length=300, end_length=300, final_fasta=None):
+def check_circular(mininum_length=10000, start_length=300, end_length=300, final_fasta=None):
     try:
         records = list(SeqIO.parse(final_fasta, "fasta"))
     except Exception as i:
@@ -49,7 +49,7 @@ def check_circular(mininum_length=12000, start_length=300, end_length=300, final
     for record in records:
         seq = str(record.seq)
         if len(seq) < mininum_length:
-            finals.append(-1)
+            finals.append([-1, record])
             continue
         f = seq[:start_length]
         r = seq[-end_length:]
@@ -58,14 +58,14 @@ def check_circular(mininum_length=12000, start_length=300, end_length=300, final
         result = p.communicate((f + ' ' + r).encode('utf-8')
                                )[0].decode('utf-8').split('\n')[:-1]
         result[0] = [int(x) for x in result[0].split(' ')]
-        result[2] = record
+        result.append(record)
         finals.append(result)
 
     return finals
 
 
 @parse_func
-@arg_prop(dest='overlay', default=16, help='the mininum overlay of two sequences')
+@arg_prop(dest='overlay', default=8, help='the mininum overlay of two sequences')
 @arg_prop(dest='length', default=12000, help='the mininum length of sequences, others will be ignored')
 @arg_prop(dest='fasta', required=True, default=None, help='input fasta file for sequences being checked')
 @arg_prop(dest='start', default=300, help='how many bps will be read at the start of sequence')
@@ -80,10 +80,9 @@ def main(args):
         sys.exit(1)
 
     if args.format == 'std':
-        for idx, result in enumerate(results):
-            if result == -1:
-                print(
-                    f'Sequence {result[2].name} is too short and was ignored.')
+        for result in results:
+            if result[0] == -1:
+                continue
             else:
                 if result[0][1] > args.overlay:
                     print(
@@ -106,19 +105,21 @@ def main(args):
                     'overlay': result[1]
                 }
                 for result in results
-                if result[0][1] > args.length
+                if result[0] != -1 and result[0][1] > args.overlay
             }
+
+            print(generated)
 
             import json
             json.dump(generated, fp=f)
 
         elif args.format == 'text':
-            for result in results:
-                if result[0][1] > args.length:
-                    print(result[2].name, 'START:', result[0]
-                          [0], 'LENGTH:', result[0][1], file=f)
-                    print('OVERLAY:', file=f)
-                    print(result[1], file=f)
+            # Abusing the generator is really fun...
+            [result[0] != -1 and
+             result[0][1] > args.overlay and
+             print(
+                 f'{result[2].name} START: {result[0][0]} LENGTH: {result[0][1]}\nOVERLAY:\n{result[1]}', file=f)
+             for result in results]
 
         f.close()
 

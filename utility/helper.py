@@ -47,18 +47,24 @@ def concat_command(*args, **kwargs):
     args = [str(x) for x in args]
     kwargs = {x[1:]if x.startswith('_') else x: kwargs[x]
               for x in kwargs if kwargs[x] is not None}
-    kwargs = {str(x).replace('_', '-'): kwargs[x] for x in kwargs}
+
+    useconv = 'useconv' not in kwargs or kwargs.pop('useconv')
+    if useconv:
+        kwargs = {str(x).replace('_', '-'): kwargs[x] for x in kwargs}
+
     command = ' '.join(args)
     for arg in kwargs:
         if kwargs[arg] is None:
             continue
-        if type(kwargs[arg]) is list:
+        if arg is not 'appending' and type(kwargs[arg]) is list:
             command += f' {"--" if len(arg)>1 else "-"}{arg} {" ".join(kwargs[arg])}'
         elif type(kwargs[arg]) is bool:
             if kwargs[arg]:
                 command += f' {"--" if len(arg)>1 else "-"}{arg}'
             else:
                 continue
+        elif arg is 'appending' and type(kwargs[arg]) is list:
+            command += ' ' + ' '.join(kwargs[arg])
         else:
             command += f' {"--" if len(arg)>1 else "-"}{arg} {kwargs[arg]}'
 

@@ -118,6 +118,7 @@ def assemble(args):
             parents=[universal_parser, fasta_parser, fastq_parser, search_parser, saa_parser])
 def findmitoscaf(args):
     # TODO:To fill the blanks of findmitoscaf method
+    
     pass
 
 
