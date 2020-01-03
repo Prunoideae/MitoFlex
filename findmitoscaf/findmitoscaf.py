@@ -75,10 +75,10 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
                                       'sqlen', 'strand', 'e', 'score',
                                       'bias'
                                   ])
-    hmm_frame.drop(columns=['accession1', 'accession2'])
+    hmm_frame = hmm_frame.drop(columns=['accession1', 'accession2'])
 
     # Deduplicate multiple hits on the same gene of same sequence
-    hmm_frame.drop_duplicates(subset=['target', 'query'], keep='first')
+    hmmframe = hmm_frame.drop_duplicates(subset=['target', 'query'], keep='first')
     hmm_frame.to_csv(f'{hmm_tbl}.dedup.csv')
 
     if taxa is not None:
