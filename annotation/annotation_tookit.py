@@ -27,6 +27,7 @@ import sys
 
 import pandas
 import numpy as np
+from Bio import SeqIO
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -56,35 +57,35 @@ def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
                    seg='no', db_gencode=genetic_code, db=infile,
                    query=dbfile)
 
+    return out_blast
+
+
+def blast_to_csv(blast_file, ident=30, score=25):
     blast_frame = pandas.read_table(
-        out_blast, delimiter='\t',
+        blast_file, delimiter='\t',
         names=['qseq', 'sseq', 'ident',
                'length', 'mismatch', 'gap',
                'qstart', 'qend', 'sstart',
                'send', 'evalue', 'score'])
 
     # Delete duplicated and unqualified results, then add extra informations about results.
-    blast_frame = blast_frame[blast_frame.ident < ident]
     blast_frame = blast_frame.drop_duplicates(keep='first')
-    blast_frame = blast_frame[blast_frame.score > 25]
+    blast_frame = blast_frame[blast_frame.ident > ident]
+    blast_frame = blast_frame[blast_frame.score > score]
     blast_frame['qmax'] = blast_frame.groupby('qseq')['qend'].transform(
         lambda x: max(x) if x.count() > 2 else x)
-    blast_frame = blast_frame[blast_frame.qstart - blast_frame.qend
+    blast_frame = blast_frame[blast_frame.qend - blast_frame.qstart
                               >= blast_frame.qmax*0.25]
-    blast_frame['qseq'] = blast_frame.groupby('qseq')['qseq'].transform(
-        lambda s: [f'{x}_{idx}' for idx, x in enumerate(s)]
-    )
 
     # For logging purpose
-    out_blast_csv = f'{prefix}.blast.csv'
+    out_blast_csv = f'{blast_file}.csv'
     blast_frame.to_csv(out_blast_csv)
 
-    return out_blast_csv, blast_frame
+    return blast_frame, out_blast_csv
 
 
-def genewise(basedir=None, prefix=None, blast_frame: pandas.DataFrame = None):
-
-    # Filter out the most important sequences for genewiseF
+# Filter out the most important sequences for genewise
+def wash_blast_results(blast_frame: pandas.DataFrame = None, ident=0.5):
     blast_frame['plus'] = blast_frame.send - blast_frame.sstart > 0
     blast_frame['sstart'], blast_frame['send'] = np.where(
         blast_frame['sstart'] > blast_frame['send'],
@@ -96,9 +97,60 @@ def genewise(basedir=None, prefix=None, blast_frame: pandas.DataFrame = None):
     by_sseq = {key: value.sort_values('sstart')
                for key, value in by_sseq.items()}
 
-    cluster = {}
+    results = []
 
-    for identifier, frame in by_sseq.items:
-        cluster = {}
-        for row in frame.iterrows():
-            pass
+    for identifier, frame in by_sseq.items():
+        # Find all highest score results which does not overlap with
+        # any other sequences.
+        while not frame.empty:
+            highest = frame[frame.score == frame.score.max()].head(1)
+            results.append(highest)
+
+            max_len = int(highest.send - highest.sstart)+1
+            max_start = int(highest.sstart)
+            max_end = int(highest.send)
+
+            frame = frame.drop(highest.index)
+            cutoffs = np.min(max_len, frame.send - frame.sstart) * ident
+            overlays = np.min(frame.send - max_start, max_end - frame.send)
+            frame = frame.drop(overlays > cutoffs)
+
+    wises = pandas.DataFrame(pandas.concat(results))
+    return wises
+
+
+def genewise(basedir=None, prefix=None, codon_table=None,
+             blast_frame: pandas.DataFrame = None, infile=None,
+             dbfile=None, ident=0.5):
+
+    wises = wash_blast_results(blast_frame, ident)
+    wises.to_csv(path.join(basedir, f'{prefix}.targets'))
+
+    wisedir = path.join(basedir, 'genewise')
+    dbdir = path.join(wisedir, 'sequences')
+    query_dir = path.join(wisedir, 'queries')
+
+    queries = {record.id: record
+               for record in SeqIO.parse(infile, 'fasta')
+               if record.id in set(wises.sseq)}
+
+    for record in SeqIO.parse(dbfile, 'fasta'):
+        if record.id in set(wises.qseq):
+            SeqIO.write(record, path.join(dbdir, f'{record.id}.fa'), 'fasta')
+
+    for index, wise in wises.iterrows():
+        query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
+        query_file = f'{query_prefix}.fa'
+        query_result = f'{query_prefix}.genewise'
+
+        SeqIO.write(queries[wise.sseq]
+                    [wise.sstart-1:wise.send], query_file, 'fasta')
+
+        truncated_call('genewise', condon=codon_table,
+                       trev=not wise.plus, genesf=True,
+                       gff=True, gum=True,
+                       appending=[
+                           path.join(dbdir, f'{wise.qseq}.fa'),
+                           query_file,
+                           '>', query_result
+                       ])

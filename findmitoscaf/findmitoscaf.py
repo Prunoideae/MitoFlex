@@ -32,6 +32,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
     from utility.profiler import profiling
+    from annotation.annotation_tookit import *
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -93,4 +94,4 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
             SeqIO.write(hmm_tbl, f, 'fasta')
         
         hmm_filtered_fa = f'{hmm_tbl}.filtered.fa'
-        
+    
