@@ -34,6 +34,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import concat_command, direct_call, shell_call
     from utility.profiler import profiling
+    from utility.seq import compile_seq, decompile
 except Exception as iden:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -43,7 +44,7 @@ bin_dir = path.dirname(__file__)
 
 
 def truncated_call(*args, **kwargs):
-    direct_call(concat_command(*args, **kwargs).replace('--', '-'))
+    return direct_call(concat_command(*args, **kwargs).replace('--', '-'))
 
 
 def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
@@ -85,7 +86,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
 
 # Filter out the most important sequences for genewise
-def wash_blast_results(blast_frame: pandas.DataFrame = None, ident=0.5):
+def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
     blast_frame['plus'] = blast_frame.send - blast_frame.sstart > 0
     blast_frame['sstart'], blast_frame['send'] = np.where(
         blast_frame['sstart'] > blast_frame['send'],
@@ -111,20 +112,19 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, ident=0.5):
             max_end = int(highest.send)
 
             frame = frame.drop(highest.index)
-            cutoffs = np.min(max_len, frame.send - frame.sstart) * ident
+            cutoffs = np.min(max_len, frame.send - frame.sstart) * cutoff
             overlays = np.min(frame.send - max_start, max_end - frame.send)
             frame = frame.drop(overlays > cutoffs)
 
-    wises = pandas.DataFrame(pandas.concat(results))
-    return wises
+    return pandas.concat(results)
 
 
 def genewise(basedir=None, prefix=None, codon_table=None,
-             blast_frame: pandas.DataFrame = None, infile=None,
-             dbfile=None, ident=0.5):
+             wises: pandas.DataFrame = None, infile=None,
+             dbfile=None, cutoff=0.5):
 
-    wises = wash_blast_results(blast_frame, ident)
-    wises.to_csv(path.join(basedir, f'{prefix}.targets'))
+    if codon_table is None:
+        codon_table = path.join(bin_dir, 'codon_InverMito.table')
 
     wisedir = path.join(basedir, 'genewise')
     dbdir = path.join(wisedir, 'sequences')
@@ -134,9 +134,16 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                for record in SeqIO.parse(infile, 'fasta')
                if record.id in set(wises.sseq)}
 
-    for record in SeqIO.parse(dbfile, 'fasta'):
-        if record.id in set(wises.qseq):
-            SeqIO.write(record, path.join(dbdir, f'{record.id}.fa'), 'fasta')
+    dbparsed = {record.id: record
+                for record in SeqIO.parse(dbfile, 'fasta')
+                if record.id in set(wises.qseq)}
+
+    for idx, record in dbparsed.items():
+        SeqIO.write(record, path.join(dbdir, f'{idx}.fa'), 'fasta')
+
+    wises = wises.assign(
+        result=np.nan, wise_min_start=np.nan, wise_max_end=np.nan,
+        wise_shift=np.nan, wise_cover=np.nan)
 
     for index, wise in wises.iterrows():
         query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
@@ -146,11 +153,50 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         SeqIO.write(queries[wise.sseq]
                     [wise.sstart-1:wise.send], query_file, 'fasta')
 
-        truncated_call('genewise', condon=codon_table,
-                       trev=not wise.plus, genesf=True,
-                       gff=True, gum=True,
-                       appending=[
-                           path.join(dbdir, f'{wise.qseq}.fa'),
-                           query_file,
-                           '>', query_result
-                       ])
+        result = truncated_call('genewise', codon=codon_table,
+                                trev=not wise.plus, genesf=True,
+                                gff=True, gum=True,
+                                appending=[
+                                    path.join(dbdir, f'{wise.qseq}.fa'),
+                                    query_file
+                                ])
+
+        # Parse the results
+        splited = result.split('//\n')
+        info = splited[0].split('\n')[1].split('\t')
+        wise.wise_cover = (info[3] - info[2] + 1)/len(dbparsed[wise.qseq])
+        wise_result = [x.split('\t')
+                       for x in splited[2].split('\n')
+                       if x[2] == 'cds']
+        for x in wise_result:
+            # Fix the actual position of seq
+            x[3] += wise.start-1
+            x[4] += wise.start-1
+        wise_result.sort(key=lambda x: x[3])
+        wise.result = wise_result
+        wise.wise_shift = sum(x[2] == 'match' for x in wise_result)-1
+        wise.wise_min_start = min(x[3] for x in wise_result)
+        wise.wise_max_end = max(x[4] for x in wise_result)
+    wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'))
+    return wises, queries, dbparsed
+
+
+def collect_result(output_file=None, wises: pandas.DataFrame = None, queries=None, data=None):
+    result_seq = []
+    for index, wise in wises.iterrows():
+        trait_string = compile_seq({
+            'qseq': wise.qseq,
+            'sseq': wise.sseq,
+            'qstart': wise.qstart,
+            'qend': wise.qend,
+            'sstart': wise.sstart,
+            'send': wise.send,
+            'plus': wise.plus
+        })
+
+        seq = queries[wise.sseq][wise.sstart-1:wise.send]
+        seq.description = trait_string
+        if wise.plus is 0:
+            seq.seq = seq.seq.reverse_complement()
+        result_seq.append(seq)
+    return SeqIO.write(result_seq, output_file, 'fasta')

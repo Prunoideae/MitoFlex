@@ -40,7 +40,7 @@ def shell_call(*args, **kwargs):
     shell_call('python', 'bar.py', wow_fun='method') -> 'python bar.py --wow-fun method'
     '''
     command = concat_command(*args, **kwargs)
-    direct_call(command)
+    return direct_call(command)
 
 
 def concat_command(*args, **kwargs):
@@ -76,7 +76,7 @@ def direct_call(command):
     Call a command directly.
     '''
     try:
-        subprocess.check_call(command, shell=True)
+        return subprocess.check_output(command, shell=True)
     except subprocess.CalledProcessError as err:
         print(err)
         sys.exit(f"Error when running command '{command}'. Exiting.")
