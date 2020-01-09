@@ -64,13 +64,47 @@ def get_rank(taxa_name=None):
 
 
 @profiling
-def findmitoscaf():
-    pass
+def findmitoscaf(thread_number=8, nhmmer_profile=None, prefix=None,
+                 basedir=None, gene_code=9, dbfile=None, taxa=None,
+                 contigs_file=None, relaxing=0, multi=10):
+
+    # do hmmer search
+    hmm_frame = nhmmer_search(fasta_file=contigs_file, thread_number=thread_number,
+                              nhmmer_profile=nhmmer_profile, prefix=prefix,
+                              basedir=basedir, gene_code=gene_code, dbfile=dbfile)
+    if taxa is not None:
+        filtered_fa, hmm_frame = filter_taxanomy(
+            taxa=taxa, fasta_file=contigs_file, hmm_frame=hmm_frame,
+            basedir=basedir, prefix=prefix, dbfile=dbfile, gene_code=gene_code,
+            relaxing=relaxing)
+
+    contig_data = {x.id: x
+                   for x in SeqIO.parse(contigs_file, 'fasta')
+                   if x.id in hmm_frame.sseq}
+
+    # filter by multi
+    contig_data_high = []
+    contig_data_low = []
+
+    for contig in contig_data:
+        if contig.description.startswith(contig.id + ' '):
+            contig.description = contig.description.replace(
+                contig.id + ' ', '', 1)
+        traits = decompile(contig.description, sep=' ')
+        if float(traits['multi']) >= multi:
+            contig_data_high.append(contig)
+        else:
+            contig_data_low.append(contig)
+
+    contigs_file_high = path.join(basedir, f'{prefix}.abundance.high.fa')
+    contigs_file_low = path.join(basedir, f'{prefix}.abundance.low.fa')
+
+    return contigs_file_high, contigs_file_low, hmm_frame
 
 
 @profiling
 def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
-                  prefix=None, basedir=None, gene_code=9, dbfile=None, taxa=None):
+                  prefix=None, basedir=None, gene_code=9, dbfile=None):
 
     # Decompress zipped files
     input_file = fasta_file
@@ -112,8 +146,8 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
     return hmm_frame
 
 
-def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame=None, basedir=None,
-                    prefix=None, dbfile=None, gene_code=9):
+def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = None, basedir=None,
+                    prefix=None, dbfile=None, gene_code=9, relaxing=0):
 
     # Extract sequences from input fasta file according to hmm frame
     records = SeqIO.parse(fasta_file, 'fasta')
@@ -126,6 +160,7 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame=None, basedir=None,
     with open(hmm_fa, 'w') as f:
         SeqIO.write(seqs, f, 'fasta')
 
+    # Do tblastn and genewise
     blast_file = tblastn(dbfile=dbfile, infile=hmm_fa,
                          genetic_code=gene_code, basedir=basedir, prefix=prefix)
     blast_frame, _ = blast_to_csv(blast_file)
@@ -136,12 +171,24 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame=None, basedir=None,
     if not collect_result(final_file, wise_frame, queries, database):
         return None, None
 
+    # Filter output sequences from predicted taxanomy class
     required_rank = get_rank(taxa)
     if not required_rank:
         return None, None
 
     valids = []
     records = SeqIO.parse(final_file, 'fasta')
+
+    rank_matched = {
+        'kindom': 0,
+        'phylum': 0,
+        'class': 0,
+        'order': 0,
+        'family': 0,
+        'genus': 0,
+        'species': 0
+    }
+
     for record in records:
         if record.description.startswith(record.id):
             record.description.replace(record.id + " ", '', 1)
@@ -153,8 +200,33 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame=None, basedir=None,
             qspecies = qspecies.split('.')[0]
 
         ranks = get_rank(qspecies)
-        valids.append((qspecies, sseq, ranks))
+        for key, item in ranks.items:
+            if item == required_rank[key] != 'NA':
+                rank_matched[key] += 1
+        valids.append((qspecies, sseq, ranks, record))
 
     valids.append((None, None, required_rank))
     valids = list(set(valids))
-    valids.sort(key=lambda x: '|'.join(str(i[1] for i in x[3].items())))
+    valids.sort(key=lambda x: '|'.join(str(i[1] for i in x[2].items())))
+
+    selected_taxa = "NA"
+    selected_rank = ""
+    rank_list = list(rank_matched)
+    reverse_rank_list = rank_list[::-1]
+    for rev_rank in reverse_ranks:
+        if rank_matched[rev_rank] >= 1:
+            selected_rank = max(0, rank_list.index(rev_rank)-relaxing)
+            selected_taxa = required_rank[selected_rank]
+            break
+
+    valids = [x
+              for x in valids
+              if x[2][selected_rank] == selected_taxa]
+
+    sseqs = set([x[1] for x in valids if x[1] is not None])
+    seqs = set([x[3] for x in valids])
+    filtered_fa = f'{prefix}.taxa.filtered.fa'
+    SeqIO.write(seqs, path.join(basedir, filtered_fa), 'fasta')
+    filtered_frame = hmm_frame[hmm_frame.target.isin(sseqs)]
+
+    return filtered_fa, filtered_frame
