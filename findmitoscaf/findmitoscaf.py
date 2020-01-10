@@ -75,21 +75,22 @@ def get_rank(taxa_name=None):
 
 @profiling
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
-                 basedir=None, gene_code=9, dbfile=None, taxa=None,
+                 basedir=None, gene_code=9, taxa=None,
                  contigs_file=None, relaxing=0, multi=10, cover_valve=1):
 
-    nhmmer_profile = f'{clade}_CDS.hmm'
+    nhmmer_profile = path.join(profile_dir_hmm, f'{clade}_CDS.hmm')
+    tbn_profile = path.join(profile_dir_tbn, f'{clade}_CDS_protein.fa')
 
     # do hmmer search
     hmm_frame = nhmmer_search(fasta_file=contigs_file, thread_number=thread_number,
                               nhmmer_profile=nhmmer_profile, prefix=prefix,
-                              basedir=basedir, gene_code=gene_code, dbfile=dbfile)
+                              basedir=basedir, gene_code=gene_code)
 
     # filter by taxanomy
     if taxa is not None:
         _, hmm_frame = filter_taxanomy(
             taxa=taxa, fasta_file=contigs_file, hmm_frame=hmm_frame,
-            basedir=basedir, prefix=prefix, dbfile=dbfile, gene_code=gene_code,
+            basedir=basedir, prefix=prefix, dbfile=tbn_profile, gene_code=gene_code,
             relaxing=relaxing)
 
     contig_data = {x.id: x
@@ -211,7 +212,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
 @profiling
 def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
-                  prefix=None, basedir=None, gene_code=9, dbfile=None):
+                  prefix=None, basedir=None, gene_code=9):
 
     # Decompress zipped files
     input_file = fasta_file

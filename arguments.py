@@ -65,7 +65,7 @@ def universal_regulator(args):
         os.makedirs(args.temp_dir, exist_ok=True)
         if args.profiling:
             os.makedirs(args.profile_dir, exist_ok=True)
-    except Exception as identifier:
+    except Exception:
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
         return False
@@ -192,7 +192,7 @@ def filter_regulator(args):
     try:
         args.start, args.end, *_ = [int(x) if int(x) > -1 else None
                                     for x in args.keep_region.split(',')]
-    except Exception as identifier:
+    except Exception:
         print('Input range is not valid.')
         valid = False
 
@@ -208,7 +208,7 @@ def filter_regulator(args):
 
     try:
         os.makedirs(args.clean_dir, exist_ok=True)
-    except Exception as identifier:
+    except Exception:
         valid = False
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
@@ -308,7 +308,7 @@ def assembly_regulator(args):
 
     try:
         os.makedirs(args.assemble_dir, exist_ok=True)
-    except Exception as identifier:
+    except Exception:
         valid = False
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
@@ -407,13 +407,13 @@ def search_regulator(args):
     ncbi = NCBITaxa()
 
     if hasattr(args, 'temp_dir'):
-        args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
+        args.findmitoscaf_dir = os.path.join(args.temp_dir, 'findmitoscaf')
     else:
-        args.assemble_dir = os.getcwd()
+        args.findmitoscaf_dir = os.getcwd()
 
     try:
-        os.makedirs(args.assemble_dir, exist_ok=True)
-    except Exception as identifier:
+        os.makedirs(args.findmitoscaf_dir, exist_ok=True)
+    except Exception:
         valid = False
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
@@ -442,7 +442,7 @@ search_parser, search_group = register_group('Search mitochondrial sequences arg
     {
         'name': 'required-taxa',
         'default': 'Platyhelminthes',
-        'help': 'taxa sequences other than this will not be selected.'
+        'help': 'taxa sequences other than this taxanomy class will not be selected.'
     },
     {
         'name': 'taxa-tolerance',

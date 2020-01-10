@@ -39,10 +39,12 @@ try:
     import Bio
     from Bio import SeqIO
     from Bio import SeqRecord
-    from ete3 import NCBITaxa
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility.profiler import profiling
-    from arguments import *
+    # We are using this for making the main file clean, so wildcard is
+    # not a problem here.
+    from arguments import *  # pylint: disable=unused-wildcard-import
+
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoFlex installation!')
@@ -52,8 +54,9 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
-# Environment initialization
-ncbi = NCBITaxa()
+# Constants
+base_dir = path.abspath(path.dirname(__file__))
+profile_dir = path.join(base_dir, 'profile')
 
 # Command processing
 desc = """
@@ -74,7 +77,7 @@ Citation
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def filter(args):
 
-    dest = args.result_folder if args.__calling == 'filter' else args.temp_folder
+    dest = args.result_folder if args.__calling == 'filter' else args.clean_dir
     if not path.isabs(args.cleanq1):
         args.cleanq1 = path.abspath(path.join(dest, args.cleanq1))
 
@@ -105,8 +108,8 @@ def filter(args):
 def assemble(args):
     from assemble.assemble import assemble as _assemble
 
-    assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, result_dir=args.result_folder,
-                                  temp_dir=args.temp_folder, work_prefix=args.workname, uselist=args.use_list,
+    assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, result_dir=args.assemble_dir,
+                                  temp_dir=args.assemble_dir, work_prefix=args.workname, uselist=args.use_list,
                                   kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
                                   no_mercy=args.no_mercy, disable_acc=args.disable_acc, prune_level=args.prune_level,
                                   prune_depth=args.prune_depth, clean_temp=args.clean_temp, threads=args.threads)
@@ -115,12 +118,15 @@ def assemble(args):
 
 
 @parse_func(func_help='search for the most possible mitochondrial sequences from assembled data',
-            parents=[universal_parser, fasta_parser, fastq_parser, search_parser, saa_parser])
+            parents=[universal_parser, fasta_parser, search_parser, saa_parser])
 def findmitoscaf(args):
     # TODO:To fill the blanks of findmitoscaf method
+
     from findmitoscaf.findmitoscaf import findmitoscaf as _findmitoscaf
     picked_fa, picked_ids, missing = _findmitoscaf(
-        thread_number=args.threads)
+        thread_number=args.threads, clade=args.clade, relaxing=args.taxa_tolerance, gene_code=args.genetic_code,
+        multi=args.min_abundance, taxa=args.required_taxa, prefix=args.workname, basedir=args.findmitoscaf_dir,
+        contigs_file=args.fasta_file, cover_valve=1)
 
     return picked_fa, picked_ids, missing
 
@@ -152,7 +158,7 @@ def all(args):
     if not args.disable_filter:
         args.fastq1, args.fastq2 = filter(args=args)
 
-    contigs_file = assemble(args)
+    args.fasta_file = assemble(args)
 
     # TODO:Finish findmitoscaf methods.
 
