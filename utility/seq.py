@@ -34,8 +34,7 @@ class seq_traits():
 def compile_seq(traits: dict, equ='=', sep='\t'):
     return sep.join(equ.join(key, value) for key, value in traits.items())
 
-
 # decompile a description to a dict
-def decompile(input: str, equ='=', sep='\t'):
-    return {trait.split(sep)[0]: trait.split(sep)[1]
-            for trait in input.split(sep)}
+def decompile(input_seq: str, equ='=', sep='\t'):
+    return {trait.split(equ)[0]: trait.split(equ)[1]
+            for trait in input_seq.split(sep)}

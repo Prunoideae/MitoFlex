@@ -23,10 +23,14 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import sys
+import json
 
 import pandas
+import numpy as np
 from Bio import SeqIO
 from ete3 import NCBITaxa
+from os import path
+
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -34,11 +38,16 @@ try:
     from utility.helper import shell_call, direct_call
     from utility.profiler import profiling
     from utility.seq import compile_seq, decompile
-    from annotation.annotation_tookit import *
+    from annotation.annotation_tookit import tblastn, genewise, blast_to_csv, wash_blast_results, collect_result
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 ncbi = NCBITaxa()
+mitoflex_dir = path.abspath(path.join(path.dirname(__file__), '..'))
+profile_dir = path.join(mitoflex_dir, 'profile')
+profile_dir_hmm = path.join(profile_dir, 'CDS_HMM')
+profile_dir_tbn = path.join(profile_dir, 'MT_database')
+profile_dir_rna = path.join(profile_dir, 'rRNA_CM')
 
 
 def get_rank(taxa_name=None):
@@ -64,23 +73,27 @@ def get_rank(taxa_name=None):
 
 
 @profiling
-def findmitoscaf(thread_number=8, nhmmer_profile=None, prefix=None,
+def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, dbfile=None, taxa=None,
                  contigs_file=None, relaxing=0, multi=10):
+
+    nhmmer_profile = f'{clade}_CDS.hmm'
 
     # do hmmer search
     hmm_frame = nhmmer_search(fasta_file=contigs_file, thread_number=thread_number,
                               nhmmer_profile=nhmmer_profile, prefix=prefix,
                               basedir=basedir, gene_code=gene_code, dbfile=dbfile)
+
+    # filter by taxanomy
     if taxa is not None:
-        filtered_fa, hmm_frame = filter_taxanomy(
+        _, hmm_frame = filter_taxanomy(
             taxa=taxa, fasta_file=contigs_file, hmm_frame=hmm_frame,
             basedir=basedir, prefix=prefix, dbfile=dbfile, gene_code=gene_code,
             relaxing=relaxing)
 
     contig_data = {x.id: x
                    for x in SeqIO.parse(contigs_file, 'fasta')
-                   if x.id in hmm_frame.sseq}
+                   if x.id in hmm_frame.target}
 
     # filter by multi
     contig_data_high = []
@@ -92,14 +105,56 @@ def findmitoscaf(thread_number=8, nhmmer_profile=None, prefix=None,
                 contig.id + ' ', '', 1)
         traits = decompile(contig.description, sep=' ')
         if float(traits['multi']) >= multi:
-            contig_data_high.append(contig)
+            # Append traits to avoid parsing again
+            contig_data_high.append((contig, traits))
         else:
             contig_data_low.append(contig)
+            # Here we dispose all the low abundance contigs,
+            # so only hmm_frame and contigs_file_high will be used.
+            hmm_frame = hmm_frame[hmm_frame.target != contig.id]
 
     contigs_file_high = path.join(basedir, f'{prefix}.abundance.high.fa')
     contigs_file_low = path.join(basedir, f'{prefix}.abundance.low.fa')
 
-    return contigs_file_high, contigs_file_low, hmm_frame
+    SeqIO.write([x[0] for x in contig_data_high], contigs_file_high, 'fasta')
+    SeqIO.write(contig_data_low, contigs_file_low, 'fasta')
+
+    # scoring by frame
+    # Using structure:
+    # id:{
+    #   score: int,
+    #   matches:[
+    #     ('cox1', score),
+    #     ('atp6', score)
+    # ]
+    # }
+
+    with open(path.join(profile_dir_hmm, 'lengths.json')) as d:
+        length_json = json.load(d)
+        length_clade = length_json[clade]
+
+    scores = {}
+    for seqdata, trait in contig_data_high:
+        seq_len = trait['len']
+        target_frame = hmm_frame[hmm_frame.target == seqdata.id]
+        # alifrom=target from, alito=target to, hmmfrom=query from, hmmto=query to
+        scoring = []
+        target_frame['plus'] = target_frame.alito - target_frame.alifrom > 0
+        target_frame['alifrom'], target_frame['alito'] = np.where(
+            target_frame['alifrom'] > target_frame['alito'],
+            [target_frame['alito'], target_frame['alifrom']],
+            [target_frame['alifrom'], target_frame['alito']]
+        )
+
+        for _, row in target_frame.iterrows():
+
+            pass
+        scores[seqdata.id] = {
+            'total': sum([x[1] for x in scoring]),
+            'details': scoring
+        }
+
+    return scores
 
 
 @profiling
@@ -139,7 +194,7 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
     hmm_frame = hmm_frame.drop(columns=['accession1', 'accession2'])
 
     # Deduplicate multiple hits on the same gene of same sequence
-    hmmframe = hmm_frame.drop_duplicates(
+    hmm_frame = hmm_frame.drop_duplicates(
         subset=['target', 'query'], keep='first')
     hmm_frame.to_csv(f'{hmm_tbl}.dedup.csv')
 
@@ -200,7 +255,7 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
             qspecies = qspecies.split('.')[0]
 
         ranks = get_rank(qspecies)
-        for key, item in ranks.items:
+        for key, item in ranks.items():
             if item == required_rank[key] != 'NA':
                 rank_matched[key] += 1
         valids.append((qspecies, sseq, ranks, record))
@@ -213,7 +268,7 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     selected_rank = ""
     rank_list = list(rank_matched)
     reverse_rank_list = rank_list[::-1]
-    for rev_rank in reverse_ranks:
+    for rev_rank in reverse_rank_list:
         if rank_matched[rev_rank] >= 1:
             selected_rank = max(0, rank_list.index(rev_rank)-relaxing)
             selected_taxa = required_rank[selected_rank]

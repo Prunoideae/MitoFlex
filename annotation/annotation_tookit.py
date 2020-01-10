@@ -100,7 +100,7 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
 
     results = []
 
-    for identifier, frame in by_sseq.items():
+    for frame in by_sseq.values():
         # Find all highest score results which does not overlap with
         # any other sequences.
         while not frame.empty:
@@ -145,10 +145,9 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         result=np.nan, wise_min_start=np.nan, wise_max_end=np.nan,
         wise_shift=np.nan, wise_cover=np.nan)
 
-    for index, wise in wises.iterrows():
+    for _, wise in wises.iterrows():
         query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
-        query_file = f'{query_prefix}.fa'
-        query_result = f'{query_prefix}.genewise'
+        query_file = path.join(query_dir, f'{query_prefix}.fa')
 
         SeqIO.write(queries[wise.sseq]
                     [wise.sstart-1:wise.send], query_file, 'fasta')
@@ -183,7 +182,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
 
 def collect_result(output_file=None, wises: pandas.DataFrame = None, queries=None, data=None):
     result_seq = []
-    for index, wise in wises.iterrows():
+    for _, wise in wises.iterrows():
         trait_string = compile_seq({
             'qseq': wise.qseq,
             'sseq': wise.sseq,
