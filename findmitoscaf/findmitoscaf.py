@@ -24,6 +24,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 import json
+import operator
 
 import pandas
 import numpy as np
@@ -35,7 +36,7 @@ from os import path
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, direct_call
+    from utility.helper import shell_call, direct_call, maxs
     from utility.profiler import profiling
     from utility.seq import compile_seq, decompile
     from annotation.annotation_tookit import tblastn, genewise, blast_to_csv, wash_blast_results, collect_result
@@ -75,7 +76,7 @@ def get_rank(taxa_name=None):
 @profiling
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, dbfile=None, taxa=None,
-                 contigs_file=None, relaxing=0, multi=10):
+                 contigs_file=None, relaxing=0, multi=10, cover_valve=1):
 
     nhmmer_profile = f'{clade}_CDS.hmm'
 
@@ -123,22 +124,26 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     # Using structure:
     # id:{
     #   score: int,
-    #   matches:[
-    #     ('cox1', score),
-    #     ('atp6', score)
+    #   details:[
+    #     'cox1':[
+    #       1,      //cover
+    #       1       //integrity
+    # ]
     # ]
     # }
-
     with open(path.join(profile_dir_hmm, 'lengths.json')) as d:
         length_json = json.load(d)
         length_clade = length_json[clade]
 
     scores = {}
     for seqdata, trait in contig_data_high:
-        seq_len = trait['len']
+
+        # Switch to all the hmm result with the same id as sequence data
         target_frame = hmm_frame[hmm_frame.target == seqdata.id]
+
         # alifrom=target from, alito=target to, hmmfrom=query from, hmmto=query to
-        scoring = []
+        # reformat the alignment structure for more calculation.
+
         target_frame['plus'] = target_frame.alito - target_frame.alifrom > 0
         target_frame['alifrom'], target_frame['alito'] = np.where(
             target_frame['alifrom'] > target_frame['alito'],
@@ -146,15 +151,62 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             [target_frame['alifrom'], target_frame['alito']]
         )
 
-        for _, row in target_frame.iterrows():
+        scoring = {}
+        for pcg, length_cds in length_clade.items():
+            if pcg in target_frame.query:
+                # Switch to all the target frame with query target pcg
+                pcg_frame = target_frame[target_frame.query == pcg]
+                pcg_frame['len'] = pcg_frame.alito - pcg_frame.alifrom + 1
 
-            pass
+                # Switch to the frame with maxinum alignment length
+                max_pcg = pcg_frame[pcg_frame.len == pcg_frame.len.max()]
+
+                aligned_max = int(max_pcg.len)
+                tolerate_length = length_cds * cover_valve
+                cover = aligned_max / length_cds
+                integrity = 2 if True in [
+                    cover >= cover_valve,
+                    int(max_pcg.alifrom) + aligned_max >= tolerate_length and
+                    int(max_pcg.alito) + aligned_max >= tolerate_length
+                ] else 1
+                scoring[pcg] = (cover, integrity)
+            else:
+                # pcg, pcg score, pcg integrity
+                scoring[pcg] = (0, 0)
+
         scores[seqdata.id] = {
-            'total': sum([x[1] for x in scoring]),
+            'multi': trait['multi'],
+            'integrity': sum(x[1] for x in scoring),
             'details': scoring
         }
 
-    return scores
+    # filter by score and matches
+    picked_pcgs = []
+    picked_ids = []
+    while scores:
+        # pick the gene with most gene integrity
+        best_results = maxs(list(scores.items()),
+                            key=lambda x: x[1]['integrity'])
+
+        # if multiple genes are returned, pick the one with most depth
+        picked = max(best_results, key=lambda x: x[1]['multi'])
+        picked_pcgs += [x
+                        for x in picked[1]['details']
+                        if picked[1]['details'][x] != 0]
+        picked_ids.append(picked)
+        scores.pop(picked[0])
+
+        # pop all the overlapped genes.
+        for key, value in scores.items():
+            if True in [value['details'][x] > 0 for x in picked_pcgs]:
+                scores.pop(key)
+
+    picked_fa = [contig[0]
+                 for contig in contig_data_high
+                 if contig[0].id in picked_ids[0]
+                 ]
+    pcg_missing = [x for x in length_clade if x not in picked_pcgs]
+    return picked_fa, dict(picked_ids), pcg_missing
 
 
 @profiling
@@ -264,6 +316,7 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     valids = list(set(valids))
     valids.sort(key=lambda x: '|'.join(str(i[1] for i in x[2].items())))
 
+    # determine taxanomy class for filtering
     selected_taxa = "NA"
     selected_rank = ""
     rank_list = list(rank_matched)
@@ -274,10 +327,12 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
             selected_taxa = required_rank[selected_rank]
             break
 
+    # filter out values that is not met with the taxanomy
     valids = [x
               for x in valids
               if x[2][selected_rank] == selected_taxa]
 
+    # collect all the valid taxanomy results
     sseqs = set([x[1] for x in valids if x[1] is not None])
     seqs = set([x[3] for x in valids])
     filtered_fa = f'{prefix}.taxa.filtered.fa'

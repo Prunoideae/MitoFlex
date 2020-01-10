@@ -81,3 +81,9 @@ def direct_call(command):
         print(err)
         sys.exit(f"Error when running command '{command}'. Exiting.")
         pass
+
+
+# playing with items
+def maxs(iterable, key=lambda x: x):
+    maxv = max(key(i) for i in iterable)
+    return [i for i in iterable if key(i) == maxv]

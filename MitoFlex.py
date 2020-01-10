@@ -40,7 +40,7 @@ try:
     from Bio import SeqIO
     from Bio import SeqRecord
     from ete3 import NCBITaxa
-    from utility.parser import *
+    from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility.profiler import profiling
     from arguments import *
 except ModuleNotFoundError as identifier:
@@ -103,13 +103,13 @@ def filter(args):
 @parse_func(func_help='assemble from input fastq reads, output contigs',
             parents=[universal_parser, fastq_parser, assembly_parser])
 def assemble(args):
-    from assemble.assemble import assemble
+    from assemble.assemble import assemble as _assemble
 
-    assembled_contigs = assemble(fastq1=args.fastq1, fastq2=args.fastq2, result_dir=args.result_folder,
-                                 temp_dir=args.temp_folder, work_prefix=args.workname, uselist=args.use_list,
-                                 kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
-                                 no_mercy=args.no_mercy, disable_acc=args.disable_acc, prune_level=args.prune_level,
-                                 prune_depth=args.prune_depth, clean_temp=args.clean_temp, threads=args.threads)
+    assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, result_dir=args.result_folder,
+                                  temp_dir=args.temp_folder, work_prefix=args.workname, uselist=args.use_list,
+                                  kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
+                                  no_mercy=args.no_mercy, disable_acc=args.disable_acc, prune_level=args.prune_level,
+                                  prune_depth=args.prune_depth, clean_temp=args.clean_temp, threads=args.threads)
 
     return assembled_contigs
 
@@ -118,8 +118,11 @@ def assemble(args):
             parents=[universal_parser, fasta_parser, fastq_parser, search_parser, saa_parser])
 def findmitoscaf(args):
     # TODO:To fill the blanks of findmitoscaf method
-    
-    pass
+    from findmitoscaf.findmitoscaf import findmitoscaf as _findmitoscaf
+    picked_fa, picked_ids, missing = _findmitoscaf(
+        thread_number=args.threads)
+
+    return picked_fa, picked_ids, missing
 
 
 @parse_func(func_help='annotate PCGs, tRNA and rRNA genes',
