@@ -120,7 +120,6 @@ def assemble(args):
 @parse_func(func_help='search for the most possible mitochondrial sequences from assembled data',
             parents=[universal_parser, fasta_parser, search_parser, saa_parser])
 def findmitoscaf(args):
-    # TODO:To fill the blanks of findmitoscaf method
 
     from findmitoscaf.findmitoscaf import findmitoscaf as _findmitoscaf
     picked_fa, picked_ids, missing = _findmitoscaf(
@@ -160,7 +159,7 @@ def all(args):
 
     args.fasta_file = assemble(args)
 
-    # TODO:Finish findmitoscaf methods.
+    # TODO:Integrate findmitoscaf method.
 
 
 # This is ah, a somehow not ideal method in the whole MitoFlex coding,

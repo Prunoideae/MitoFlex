@@ -38,7 +38,7 @@ import subprocess
 def check_circular(mininum_length=10000, start_length=300, end_length=300, final_fasta=None):
     try:
         records = list(SeqIO.parse(final_fasta, "fasta"))
-    except Exception as i:
+    except Exception:
         print("Error when loading Fasta file.")
         return None
 
@@ -93,7 +93,7 @@ def main(args):
     else:
         try:
             f = open(args.output, 'w')
-        except Exception as identifier:
+        except Exception:
             sys.exit('Errors occured when opening output file.')
 
         if args.format == 'json':

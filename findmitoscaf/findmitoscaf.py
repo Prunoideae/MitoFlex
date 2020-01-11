@@ -39,7 +39,7 @@ try:
     from utility.helper import shell_call, direct_call, maxs
     from utility.profiler import profiling
     from utility.seq import compile_seq, decompile
-    from annotation.annotation_tookit import tblastn, genewise, blast_to_csv, wash_blast_results, collect_result
+    from annotation import annotation_tookit as tk
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -79,7 +79,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  contigs_file=None, relaxing=0, multi=10, cover_valve=1):
 
     nhmmer_profile = path.join(profile_dir_hmm, f'{clade}_CDS.hmm')
-    tbn_profile = path.join(profile_dir_tbn, f'{clade}_CDS_protein.fa')
+    # We use an overall protein dataset to determine what clades diffrent seqs belonged to.
+    tbn_profile = path.join(profile_dir_tbn, f'Animal_CDS_protein.fa')
 
     # do hmmer search
     hmm_frame = nhmmer_search(fasta_file=contigs_file, thread_number=thread_number,
@@ -269,14 +270,14 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
         SeqIO.write(seqs, f, 'fasta')
 
     # Do tblastn and genewise
-    blast_file = tblastn(dbfile=dbfile, infile=hmm_fa,
-                         genetic_code=gene_code, basedir=basedir, prefix=prefix)
-    blast_frame, _ = blast_to_csv(blast_file)
-    blast_frame = wash_blast_results(blast_frame)
-    wise_frame, queries, database = genewise(basedir=basedir, prefix=prefix,
-                                             wises=blast_frame, infile=hmm_fa, dbfile=dbfile)
+    blast_file = tk.tblastn(dbfile=dbfile, infile=hmm_fa,
+                            genetic_code=gene_code, basedir=basedir, prefix=prefix)
+    blast_frame, _ = tk.blast_to_csv(blast_file)
+    blast_frame = tk.wash_blast_results(blast_frame)
+    wise_frame, queries, database = tk.genewise(basedir=basedir, prefix=prefix,
+                                                wises=blast_frame, infile=hmm_fa, dbfile=dbfile)
     final_file = path.join(basedir, f'{prefix}.genewise.cds.fa')
-    if not collect_result(final_file, wise_frame, queries, database):
+    if not tk.collect_result(final_file, wise_frame, queries, database):
         return None, None
 
     # Filter output sequences from predicted taxanomy class

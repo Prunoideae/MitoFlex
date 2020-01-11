@@ -204,7 +204,7 @@ def filter_regulator(args):
     if hasattr(args, 'temp_dir'):
         args.clean_dir = os.path.join(args.temp_dir, 'cleandata')
     else:
-        args.clean_dir = os.getcwd()
+        args.clean_dir = os.path.join(os.getcwd(), 'cleandata')
 
     try:
         os.makedirs(args.clean_dir, exist_ok=True)
@@ -304,7 +304,7 @@ def assembly_regulator(args):
     if hasattr(args, 'temp_dir'):
         args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
     else:
-        args.assemble_dir = os.getcwd()
+        args.assemble_dir = os.path.join(os.getcwd(), 'assemble')
 
     try:
         os.makedirs(args.assemble_dir, exist_ok=True)
@@ -408,11 +408,13 @@ def search_regulator(args):
 
     if hasattr(args, 'temp_dir'):
         args.findmitoscaf_dir = os.path.join(args.temp_dir, 'findmitoscaf')
+        args.annotation_dir = os.path.join(args.temp_dir, 'annotation')
     else:
-        args.findmitoscaf_dir = os.getcwd()
-
+        args.findmitoscaf_dir = os.path.join(os.getcwd(), 'findmitoscaf')
+        args.annotation_dir = os.path.join(os.getcwd(), 'annotation')
     try:
         os.makedirs(args.findmitoscaf_dir, exist_ok=True)
+        os.makedirs(args.annotation_dir, exist_ok=True)
     except Exception:
         valid = False
         print(

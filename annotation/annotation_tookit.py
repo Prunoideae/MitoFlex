@@ -199,3 +199,7 @@ def collect_result(output_file=None, wises: pandas.DataFrame = None, queries=Non
             seq.seq = seq.seq.reverse_complement()
         result_seq.append(seq)
     return SeqIO.write(result_seq, output_file, 'fasta')
+
+
+def reloc_genes():
+    pass
