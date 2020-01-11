@@ -3,3 +3,4 @@ __pycache__/
 .pytest_cache/
 filter/__pycache__/
 taxdump.tar.gz
+findmitoscaf/brutepacking/target/
