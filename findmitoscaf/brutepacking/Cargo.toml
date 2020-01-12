@@ -1,5 +1,5 @@
 [package]
-name = "brutepacking"
+name = "brute"
 version = "0.1.0"
 authors = ["Prunoideae <2018301050@.email.szu.edu.cn>"]
 edition = "2018"
@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "brutepacking"
+name = "brute"
 crate-type = ["cdylib"]
 
 [dependencies.cpython]

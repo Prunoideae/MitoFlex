@@ -49,8 +49,10 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code
     tbn_profile = path.join(profile_dir_tbn, f'{clade}_CDS_protein.fa')
     blast_file = tk.tblastn(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
                             basedir=basedir, prefix=prefix, ident=ident)
+
     blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
     blast_frame = tk.wash_blast_results(blast_frame)
+
     wise_frame, queries, database = tk.genewise(
         basedir=basedir, prefix=prefix, wises=blast_frame,
         infile=fastafile, dbfile=tbn_profile, cutoff=0.5)
@@ -60,3 +62,5 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code
 
     # TODO: finish the reloc_genes method
     tk.reloc_genes()
+
+    # TODO: finding tRNA and others
