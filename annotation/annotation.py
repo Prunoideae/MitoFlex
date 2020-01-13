@@ -24,14 +24,17 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 from os import path
+import subprocess
+import multiprocessing
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, direct_call
+    from utility.helper import shell_call, direct_call, concat_command
     from utility.profiler import profiling
     # TODO: remove annotation when testing
     from annotation import annotation_tookit as tk  # pylint: disable=import-error, no-name-in-module
+    from Bio import SeqIO
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -40,6 +43,14 @@ profile_dir = path.join(mitoflex_dir, 'profile')
 profile_dir_hmm = path.join(profile_dir, 'CDS_HMM')
 profile_dir_tbn = path.join(profile_dir, 'MT_database')
 profile_dir_rna = path.join(profile_dir, 'rRNA_CM')
+
+
+def concat_java(*args, **kwargs):
+    return concat_command(*args, **kwargs).replace('--', '-')
+
+
+def work(command):
+    return direct_call(command)
 
 
 @profiling
@@ -56,11 +67,33 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code
     wise_frame, queries, database = tk.genewise(
         basedir=basedir, prefix=prefix, wises=blast_frame,
         infile=fastafile, dbfile=tbn_profile, cutoff=0.5)
-    final_file = path.join(basedir, f'{prefix}.genewise.cds.fa')
+
+    # Output logging file
+    final_file = path.join(basedir, f'{prefix}.genewise.predicted.cds.fa')
     if not tk.collect_result(final_file, wise_frame, queries, database):
         return None, None
 
-    # TODO: finish the reloc_genes method
-    tk.reloc_genes()
+    reloc = tk.reloc_genes(fasta_file=fastafile, wises=wise_frame)
+    wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
+    reloc.to_csv(wise_csv)
 
     # TODO: finding tRNA and others
+    mitfi_bin_dir = path.join(mitoflex_dir, 'annotation', 'mitfi')
+    mitfi = 'mitfi.jar'
+
+    # Prepare single file
+    split_scaf_dir = path.join(basedir, 'split_scaf')
+    os.mkdir(split_scaf_dir)
+    for seq in SeqIO.parse(fastafile, 'fasta'):
+        SeqIO.write(seq, path.join(split_scaf_dir,
+                                   f'{seq.id}.splited.fa'), 'fasta')
+
+    trna_file = path.join(basedir, f'{prefix}.trna')
+    tasks = []
+    results = []
+    for f in [path.join(split_scaf_dir, x) for x in os.listdir(split_scaf_dir) if x.endswith('fa')]:
+        tasks.append(concat_java('java', f'-Xmx2048m',
+                                 jar=path.join(mitfi_bin_dir, mitfi),
+                                 cores=1, code=genetic_code, evalue=0.001, onlycutoff=True,
+                                 appending=[f]))
+    

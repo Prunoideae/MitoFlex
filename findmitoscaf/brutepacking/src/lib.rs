@@ -20,6 +20,7 @@ extern crate cpython;
 
 use cpython::{PyResult, Python};
 use std::clone::Clone;
+use std::cmp::Ordering;
 
 #[derive(Clone)]
 struct Unit {
@@ -60,7 +61,7 @@ py_module_initializer!(brute, initbrute, PyInit_brute, |py, m| {
     for this is n to 2^n-1, where the worst situtaion is all the sets are disjoint.
     Since low number of PCGs required and sequence output by genewise is always slow.
 */
-fn solution(sets: Vec<u32>) -> Vec<u32> {
+fn solution(sets: Vec<u32>) -> Vec<Vec<u32>> {
     let mut pool: Vec<Unit> = Vec::new();
     pool.push(Unit::new(Vec::new(), 0));
     for i in sets {
@@ -75,20 +76,28 @@ fn solution(sets: Vec<u32>) -> Vec<u32> {
         pool = [pool, pool_append].concat();
     }
 
-    let mut result: Unit = Unit::new(vec![], 0);
+    let mut result: Vec<Vec<u32>> = Vec::new();
+    let mut max_ones = 0;
     for r in pool {
-        if r.key.count_ones() > result.key.count_ones() {
-            result = r;
+        match max_ones.cmp(&r.key.count_ones()) {
+            Ordering::Less => {
+                max_ones = r.key.count_ones();
+                result.clear();
+            }
+            Ordering::Equal => {}
+            Ordering::Greater => continue,
         }
+        result.push(r.sets);
     }
-    result.sets
+    result
 }
 
 #[test]
 fn test_solution() {
-    assert_eq!(solution(vec![3, 24, 7]), vec![24, 7]);
+    assert_eq!(solution(vec![24, 7, 3]), vec![vec![24, 7]]);
+    assert_eq!(solution(vec![24, 7, 3, 28]), vec![vec![24, 7], vec![3, 28]]);
 }
 
-fn solution_py(_: Python, sets: Vec<u32>) -> PyResult<Vec<u32>> {
+fn solution_py(_: Python, sets: Vec<u32>) -> PyResult<Vec<Vec<u32>>> {
     Ok(solution(sets))
 }

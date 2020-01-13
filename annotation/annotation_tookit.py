@@ -201,5 +201,42 @@ def collect_result(output_file=None, wises: pandas.DataFrame = None, queries=Non
     return SeqIO.write(result_seq, output_file, 'fasta')
 
 
-def reloc_genes():
-    pass
+def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
+    wise_seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta')}
+    wises.assign(start_real=np.nan, end_real=np.nan)
+    for _, wise in wises.iterrows():
+        start_real = end_real = -1
+        seq = wise_seqs[wise.sseq][wise.sstart-29:wise.send+30]
+        if not wise.plus:
+            seq = seq.reverse_complement()
+        try:
+            trans = seq.translate(9, cds=True)
+        except:
+            trans = seq.translate(9)
+        # Finding stop
+        if trans.find('*') != -1:
+            offset = trans.find('*') * 3
+            end_real = (wise.sstart+1 + offset
+                        if wise.plus else
+                        wise.send - offset)
+        else:
+            mercy = seq[-30:] if wise.plus else seq[:30].reverse_complement()
+            offset = mercy.find('TA')
+            if offset == -1:
+                offset = mercy.find('T')
+
+            if offset != -1:
+                end_real = (
+                    wise.send+30 + offset if wise.plus else wise.sstart - 28 - offset)
+
+        # Finding start
+        # Find the last M of mercied part of translated seq, where it should be the start codon
+        mercy = trans[:10:-1].find('M')
+        if mercy != -1:
+            offset = (10-mercy) * 3
+            start_real = wise.sstart + offset - 29 if wise.plus else wise.send + 30 + offset
+
+        wise.start_real, wise.end_real = (
+            start_real, end_real) if wise.plus else (end_real, start_real)
+
+    return wises
