@@ -6,7 +6,7 @@ MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembli
 
 ## 1.1 Platform
 
-MitoFlex is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL)`, and tested under `Ubuntu`
+MitoFlex is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL2)`, compiled and tested under `CentOS release 7.3.1611`.
 
 ## 1.2 Storage
 
