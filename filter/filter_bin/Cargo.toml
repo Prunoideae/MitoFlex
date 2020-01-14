@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 flate2 = "1.0"
 itertools = "0.8"
+clap = "2.33"
+getopts = "0.2"
