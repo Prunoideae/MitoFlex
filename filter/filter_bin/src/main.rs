@@ -5,10 +5,7 @@ extern crate itertools;
 mod helper;
 
 use clap::{App, Arg};
-use flate2::read::GzDecoder;
 use itertools::Itertools;
-use std::fs::File;
-use std::io;
 use std::io::prelude::*;
 
 fn main() {
@@ -118,26 +115,18 @@ fn main() {
     let cleanq1 = matches.value_of("cleanq1").unwrap();
     let cleanq2 = matches.value_of("cleanq2").unwrap_or("");
 
-    let start: usize = match matches.value_of("start").unwrap_or("-1").parse() {
-        Ok(n) => {
-            if n < 0 {
-                0
-            } else {
-                n
-            }
-        }
-        Err(_) => panic!("Cannot parse start position!"),
-    };
+    let start: usize = matches
+        .value_of("start")
+        .unwrap_or("-1")
+        .parse()
+        .ok()
+        .expect("Cannot parse start position!");
     let end: usize = match matches.value_of("end").unwrap_or("-1").parse() {
         Ok(n) => {
-            if n <= 0 {
-                0
+            if start > n {
+                panic!("Start position comes after the end!")
             } else {
-                if start > n {
-                    panic!("Start position comes after the end!")
-                } else {
-                    n
-                }
+                n
             }
         }
         Err(_) => panic!("Cannot parse end position!"),
@@ -179,11 +168,84 @@ fn main() {
     if fastq2.is_empty() {
         filter_se(fastq1, cleanq1, start, end, ns, quality, limit);
     } else {
-        filter_pe();
+        filter_pe(
+            fastq1, fastq2, cleanq1, cleanq2, start, end, ns, quality, limit,
+        );
     }
 }
 
-fn filter_pe() {}
+fn filter_pe(
+    fastq1: &str,
+    fastq2: &str,
+    cleanq1: &str,
+    cleanq2: &str,
+    start: usize,
+    end: usize,
+    ns: usize,
+    quality: u8,
+    limit: f32,
+) {
+    let fq1 = helper::read_file(fastq1);
+    let fq2 = helper::read_file(fastq2);
+
+    let mut cl1 = helper::write_file(cleanq1);
+    let mut cl2 = helper::write_file(cleanq2);
+
+    let len = end - start;
+
+    for ((a1, b1), (a2, b2), _, (a4, b4)) in fq1.lines().zip(fq2.lines()).tuples() {
+        let head1: String = a1.ok().unwrap().trim().to_string();
+        let head2: String = b1.ok().unwrap().trim().to_string();
+        let mut seq1: String = a2.ok().unwrap().trim().to_string();
+        let mut seq2: String = b2.ok().unwrap().trim().to_string();
+        let mut qua1: String = a4.ok().unwrap().trim().to_string();
+        let mut qua2: String = b4.ok().unwrap().trim().to_string();
+
+        if start != 0 {
+            seq1 = seq1.get(start..).unwrap().to_string();
+            seq2 = seq2.get(start..).unwrap().to_string();
+            qua1 = qua1.get(start..).unwrap().to_string();
+            qua2 = qua2.get(start..).unwrap().to_string();
+        }
+
+        if end != 0 {
+            seq1 = seq1.get(..len).unwrap().to_string();
+            seq2 = seq2.get(..len).unwrap().to_string();
+            qua1 = qua1.get(..len).unwrap().to_string();
+            qua2 = qua2.get(..len).unwrap().to_string();
+        }
+
+        if seq1.matches("N").count() > ns || seq2.matches("N").count() > ns {
+            continue;
+        }
+
+        let cutoff = (seq1.len() as f32 * limit) as usize;
+        if qua1.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff
+            || qua2.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff
+        {
+            continue;
+        }
+
+        writeln!(cl1, "{}", head1);
+        writeln!(cl1, "{}", seq1);
+        writeln!(cl1, "+");
+        writeln!(cl1, "{}", qua1);
+        writeln!(cl2, "{}", head2);
+        writeln!(cl2, "{}", seq2);
+        writeln!(cl2, "+");
+        writeln!(cl2, "{}", qua2);
+    }
+}
+
+#[test]
+fn foo() {
+    let a = vec![1, 2, 3, 4];
+    let b = vec![1, 2, 3, 4];
+    for ((a, b), (c, d)) in a.iter().zip(b.iter()).tuples() {
+        assert_eq!(a, b);
+        assert_eq!(c, d);
+    }
+}
 
 fn filter_se(
     fastq1: &str,
@@ -197,40 +259,31 @@ fn filter_se(
     let fastq_file = helper::read_file(fastq1);
     let mut clean_file = helper::write_file(cleanq1);
     let len = end - start;
-    for mut lines in &fastq_file.lines().chunks(4) {
-        let head: String = lines.next().unwrap().unwrap().trim().to_string();
-        let mut bps: String = lines.next().unwrap().unwrap().trim().to_string();
-        let plus: String = lines.next().unwrap().unwrap().trim().to_string();
-        let mut quas: String = lines.next().unwrap().unwrap().trim().to_string();
-        let cutoff = quas.len() as f32 * limit;
+    for (l1, l2, _, l4) in fastq_file.lines().tuples() {
+        let head: String = l1.ok().unwrap().trim().to_string();
+        let mut bps: String = l2.ok().unwrap().trim().to_string();
+        let mut quas: String = l4.ok().unwrap().trim().to_string();
 
         if start != 0 {
             bps = bps.get(start..).unwrap().to_string();
             quas = quas.get(start..).unwrap().to_string();
         }
-
         if end != 0 {
             bps = bps.get(..len).unwrap().to_string();
             quas = quas.get(..len).unwrap().to_string();
         }
-
         if bps.matches("N").count() > ns {
             continue;
         }
 
+        let cutoff = quas.len() as f32 * limit;
         if quas.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff as usize {
             continue;
         }
 
         writeln!(clean_file, "{}", head);
         writeln!(clean_file, "{}", bps);
-        writeln!(clean_file, "{}", plus);
+        writeln!(clean_file, "+");
         writeln!(clean_file, "{}", quas);
     }
-}
-
-#[test]
-fn s() {
-    let a = 2;
-    assert_eq!(Some("12"), String::from("1234").get(0..0));
 }

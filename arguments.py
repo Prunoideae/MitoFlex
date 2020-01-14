@@ -190,7 +190,7 @@ def filter_regulator(args):
     valid = True
 
     try:
-        args.start, args.end, *_ = [int(x) if int(x) > -1 else None
+        args.start, args.end, *_ = [int(x) if int(x) > 0 else 0
                                     for x in args.keep_region.split(',')]
     except Exception:
         print('Input range is not valid.')
@@ -244,29 +244,9 @@ filter_parser, filter_group = register_group('Filter argumetns', [
         'help': 'cleandata output file 2'
     },
     {
-        'name': 'adapter1',
-        'meta': 'file',
-        'help': 'input adapter list file 1 to filter adapter contamination.'
-    },
-    {
-        'name': 'adapter2',
-        'meta': 'file',
-        'help': 'input adapter list file 1 to filter adapter contamination.'
-    },
-    {
         'name': 'deduplication',
         'default': False,
         'help': 'fitler duplication caused by adapter ligation if switched on.'
-    },
-    {
-        'name': 'adapter-mismatch',
-        'default': 3,
-        'help': 'cut-off adapter mismatch bases.'
-    },
-    {
-        'name': 'adapter-length',
-        'default': 15,
-        'help': 'cut-off adapter align length.'
     },
     {
         'name': 'Ns-valve',
@@ -285,7 +265,7 @@ filter_parser, filter_group = register_group('Filter argumetns', [
     },
     {
         'name': 'keep-region',
-        'default': '-1,-1',
+        'default': '0,0',
         'meta': 'beg,end',
         'help': 'only the BEG and the END will be read, leave blank for full length.'
     }

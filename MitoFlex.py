@@ -95,11 +95,9 @@ def filter(args):
     else:
         filtered1, filtered2 = filter_pe(fq1=f'"{args.fastq1}"', fq2=f'"{args.fastq2}"',
                                          o1=f'"{args.cleanq1}"', o2=f'"{args.cleanq2}"',
-                                         a1=f'"{args.adapter1}"' if args.adapter1 is not None else None,
-                                         a2=f'"{args.adapter2}"' if args.adapter2 is not None else None,
                                          dedup=args.deduplication,
-                                         mis=args.adapter_mismatch, ali=args.adapter_length, start=args.start,
-                                         end=args.end, n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve,
+                                         start=args.start, end=args.end,
+                                         n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve,
                                          seq_size=args.seq_size)
     return filtered1, filtered2
 

@@ -23,6 +23,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import sys
+from os import path
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
@@ -33,25 +34,26 @@ except Exception as identifier:
 
 filter_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 @profiling
 def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, seq_size=None):
     try:
-        shell_call(filter_dir+'/filter_se', i=fqiabs, o=fqoabs,
-                   n=Ns, q=quality, l=limit, s=start, e=end, z=seq_size)
-    except Exception as identifier:
-        print("Error occured when running filter_se!")
+        shell_call(path.join(filter_dir, 'filter_v2'), cleanq1=fqoabs, fastq1=fqiabs,
+                   n=Ns, q=quality, l=limit, s=start, e=end, t=seq_size)
+    except:
+        print("Error occured when running filter!")
 
     return fqoabs
+
 
 @profiling
 def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
               a1=None, a2=None, dedup=False, mis=3, ali=15,
               start=None, end=None, n=10, q=55, l=0.2, seq_size=None):
     try:
-        shell_call(filter_dir+'/filter_pe', _1=fq1,
-                   _2=fq2, _3=o1, _4=o2, _5=a1, _6=a2,
-                   d=dedup, m=mis, a=ali, s=start,
-                   e=end, n=n, q=q, l=l, z=seq_size)
-    except Exception as identifier:
-        print("Error occured when running filter_pe!")
+        shell_call(path.join(filter_dir, 'filter_v2'),
+                   _1=fq1, _2=fq2, _3=o1, _4=o2, d=dedup, s=start,
+                   e=end, n=n, q=q, l=l, t=seq_size)
+    except:
+        print("Error occured when running filter!")
     return o1, o2
