@@ -145,7 +145,17 @@ Most modules of MitoFlex are just the same as MitoZ. But some of the methods are
 
 ## 5.6 visualize
 
-# 6. Extending the function of MitoFlex
+# 6. Adding new sequence data to MitoFlex
+
+MitoFlex has already integrated protein and nucleic acid data into the profile, but it can't cover all the species for sure. So it's necessary to add data of other taxonomy classes if current MitoFlex doesn't have it for better assemble and annotation performance.
+
+## 6.1 Building nhmmer profile
+
+For official documentation refers to [here](http://www.csb.yale.edu/userguides/seq/hmmer/docs/node19.html).
+
+## 6.2 Adding CDS data
+
+# 7. Extending the function of MitoFlex
 
 MitoFlex is designed for extendability and readability, to make users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be optimized. Extending the function should not be an hard task as MitoZ.
 

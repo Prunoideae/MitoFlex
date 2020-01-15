@@ -50,12 +50,6 @@ class Profiler():
     A wrapper class to record performance usage of certain phase.
     '''
 
-    def __init__(self, tickrate=1):
-        self._runner = Thread(target=__loop, args=[self])
-        self._state = 0
-        self.tickframes = []
-        self.tickrate = tickrate
-
     def __loop(self):
         base_time = time.time()
         while self._state != 2:
@@ -69,6 +63,12 @@ class Profiler():
             )
             time.sleep(self.tickrate)
 
+    def __init__(self, tickrate=1):
+        self._runner = Thread(target=Profiler.__loop, args=[self])
+        self._state = 0
+        self.tickframes = []
+        self.tickrate = tickrate
+
     def start(self):
         if self._state != 0:
             raise RuntimeError('The profiler is already started or stopped.')
@@ -80,6 +80,8 @@ class Profiler():
         pass
 
 # Profiling decorator
+
+
 def profiling(func):
     '''
     Quest a simple profiler for fetching data of running the method.
@@ -116,15 +118,17 @@ def profiling(func):
             profiling_path = path.abspath(profiling_path)
             try:
                 os.makedirs(profiling_path, exist_ok=True)
-            except Exception as identifier:
+            except Exception:
                 sys.exit('Error occured when validating directories.')
 
-        func(*args, **kwargs)
+        result = func(*args, **kwargs)
 
         if profiling_path is not None:
             profiler.stop()
             with open(path.join(profiling_path, func.__name__ + '.stat'), 'w') as f:
                 json.dump(obj=profiler.tickframes, fp=f)
+
+        return result
     wrapper.__name__ = func.__name__
     return wrapper
 

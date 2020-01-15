@@ -196,11 +196,6 @@ def filter_regulator(args):
         print('Input range is not valid.')
         valid = False
 
-    if args.adapter1 is not None:
-        args.adapter1 = os.path.abspath(args.adapter1)
-    if args.adapter2 is not None:
-        args.adapter2 = os.path.abspath(args.adapter2)
-
     if hasattr(args, 'temp_dir'):
         args.clean_dir = os.path.join(args.temp_dir, 'cleandata')
     else:
@@ -232,7 +227,7 @@ def filter_regulator(args):
     return valid
 
 
-filter_parser, filter_group = register_group('Filter argumetns', [
+filter_parser, filter_group = register_group('Filter arguments', [
     {
         'name': 'cleanq1',
         'meta': 'file',

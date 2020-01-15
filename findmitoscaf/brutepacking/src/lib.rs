@@ -17,32 +17,63 @@
 
 #[macro_use]
 extern crate cpython;
+extern crate itertools;
 
 use cpython::{PyResult, Python};
 use std::clone::Clone;
-use std::cmp::Ordering;
+use std::cmp::{max, min};
 
 #[derive(Clone)]
 struct Unit {
-    sets: Vec<u32>,
-    key: u32,
+    sets: Vec<(u32, u32)>,
+    keys: Vec<Vec<(u32, u32)>>,
 }
 
 impl Unit {
-    fn new(init: Vec<u32>, key: u32) -> Unit {
+    fn new(init: Vec<(u32, u32)>, key: Vec<Vec<(u32, u32)>>) -> Unit {
         Unit {
             sets: init,
-            key: key,
+            keys: key,
         }
     }
 
-    fn push(&mut self, grate: u32) {
-        self.sets.push(grate);
-        self.key |= grate;
+    fn push(&mut self, key: Vec<(u32, u32)>) {
+        if self.sets.is_empty() {
+            self.sets = key.clone();
+        } else {
+            let mut new_sets: Vec<(u32, u32)> = Vec::new();
+            for (i, r) in key.iter().zip(&self.sets) {
+                if i.0 == 0 && i.1 == 0 {
+                    new_sets.push((r.0, r.1))
+                } else {
+                    let start = min(i.0, r.0);
+                    let end = max(i.1, r.1);
+                    new_sets.push((start, end));
+                }
+            }
+            self.sets = new_sets;
+        }
+        self.keys.push(key);
     }
 
-    fn check(&self, grate: u32) -> bool {
-        self.key & grate == 0
+    fn check(&self, grate: &Vec<(u32, u32)>) -> bool {
+        for (i, r) in grate.iter().zip(&self.sets) {
+            if i.0 == 0 && i.1 == 0 {
+                continue;
+            }
+            if overlapped((i.0, i.1), (r.0, r.1)) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn value(&self) -> u32 {
+        let mut total = 0;
+        for r in &self.sets {
+            total += r.1 - r.0;
+        }
+        total
     }
 }
 
@@ -52,52 +83,62 @@ py_module_initializer!(brute, initbrute, PyInit_brute, |py, m| {
         "__doc__",
         "A rust solution for brute-forcing set packing problems.",
     )?;
-    m.add(py, "solution", py_fn!(py, solution_py(sets: Vec<u32>)))?;
+    m.add(py, "__version__", "1.3")?;
+    m.add(
+        py,
+        "solution",
+        py_fn!(py, solution_py(sets: Vec<Vec<(u32, u32)>>)),
+    )?;
     Ok(())
 });
+
+fn overlapped(r1: (u32, u32), r2: (u32, u32)) -> bool {
+    max(r1.1, r2.1) - min(r1.0, r2.0) < ((r1.1 - r1.0) + (r2.1 - r2.0))
+}
 
 /*
     Use a brute-force method to break through everything. Proved time complexity
     for this is n to 2^n-1, where the worst situtaion is all the sets are disjoint.
     Since low number of PCGs required and sequence output by genewise is always slow.
 */
-fn solution(sets: Vec<u32>) -> Vec<Vec<u32>> {
+fn solution(sets: Vec<Vec<(u32, u32)>>) -> Vec<Vec<(u32, u32)>> {
     let mut pool: Vec<Unit> = Vec::new();
-    pool.push(Unit::new(Vec::new(), 0));
-    for i in sets {
-        let mut pool_append: Vec<Unit> = Vec::new();
-        for u in &pool {
-            if u.check(i) {
-                let mut new_key: Unit = u.clone();
-                new_key.push(i);
-                pool_append.push(new_key);
+    //Push a empty seed into it
+    pool.push(Unit::new(Vec::new(), Vec::new()));
+
+    for set in &sets {
+        let mut next_gen: Vec<Unit> = Vec::new();
+        for seed in &pool {
+            if seed.check(set) {
+                let mut son = seed.clone();
+                son.push(set.clone());
+                next_gen.push(son);
             }
         }
-        pool = [pool, pool_append].concat();
+        pool = [pool, next_gen].concat();
     }
 
-    let mut result: Vec<Vec<u32>> = Vec::new();
-    let mut max_ones = 0;
+    let mut result: Unit = Unit::new(Vec::new(), Vec::new());
     for r in pool {
-        match max_ones.cmp(&r.key.count_ones()) {
-            Ordering::Less => {
-                max_ones = r.key.count_ones();
-                result.clear();
-            }
-            Ordering::Equal => {}
-            Ordering::Greater => continue,
+        println!("{:?}", r.keys);
+        if r.value() > result.value() {
+            result = r;
         }
-        result.push(r.sets);
     }
-    result
+    result.keys
 }
 
 #[test]
 fn test_solution() {
-    assert_eq!(solution(vec![24, 7, 3]), vec![vec![24, 7]]);
-    assert_eq!(solution(vec![24, 7, 3, 28]), vec![vec![24, 7], vec![3, 28]]);
+    let a = vec![
+        vec![(1, 3), (5, 6)],
+        vec![(2, 3), (0, 0)],
+        vec![(4, 7), (9, 10)],
+    ];
+    let b = vec![vec![(2, 3), (0, 0)], vec![(4, 7), (9, 10)]];
+    assert_eq!(solution(a), b);
 }
 
-fn solution_py(_: Python, sets: Vec<u32>) -> PyResult<Vec<Vec<u32>>> {
+fn solution_py(_: Python, sets: Vec<Vec<(u32, u32)>>) -> PyResult<Vec<Vec<(u32, u32)>>> {
     Ok(solution(sets))
 }

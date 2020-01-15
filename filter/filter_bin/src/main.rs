@@ -239,12 +239,8 @@ fn filter_pe(
 
 #[test]
 fn foo() {
-    let a = vec![1, 2, 3, 4];
-    let b = vec![1, 2, 3, 4];
-    for ((a, b), (c, d)) in a.iter().zip(b.iter()).tuples() {
-        assert_eq!(a, b);
-        assert_eq!(c, d);
-    }
+    let a: usize = 150;
+    assert_eq!((a as f32 * 0.2) as usize, 30 as usize);
 }
 
 fn filter_se(

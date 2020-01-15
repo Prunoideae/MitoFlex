@@ -106,8 +106,8 @@ def filter(args):
 def assemble(args):
     from assemble.assemble import assemble as _assemble
 
-    assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, result_dir=args.assemble_dir,
-                                  temp_dir=args.assemble_dir, work_prefix=args.workname, uselist=args.use_list,
+    assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, base_dir=args.assemble_dir,
+                                  work_prefix=args.workname, uselist=args.use_list,
                                   kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
                                   no_mercy=args.no_mercy, disable_acc=args.disable_acc, prune_level=args.prune_level,
                                   prune_depth=args.prune_depth, clean_temp=args.clean_temp, threads=args.threads)

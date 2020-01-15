@@ -54,7 +54,7 @@ def work(command):
 
 
 @profiling
-def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code=9, clade=None, taxa=None):
+def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code=9, clade=None, taxa=None, thread_number=8):
     # Once we can confirm the sequences are from the clade we want to,
     # then we don't need to use overall database.
     tbn_profile = path.join(profile_dir_tbn, f'{clade}_CDS_protein.fa')
@@ -88,7 +88,7 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code
         SeqIO.write(seq, path.join(split_scaf_dir,
                                    f'{seq.id}.splited.fa'), 'fasta')
 
-    trna_file = path.join(basedir, f'{prefix}.trna')
+    # trna_file = path.join(basedir, f'{prefix}.trna')
     tasks = []
     results = []
     for f in [path.join(split_scaf_dir, x) for x in os.listdir(split_scaf_dir) if x.endswith('fa')]:
@@ -96,4 +96,7 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code
                                  jar=path.join(mitfi_bin_dir, mitfi),
                                  cores=1, code=genetic_code, evalue=0.001, onlycutoff=True,
                                  appending=[f]))
-    
+    pool = multiprocessing.Pool(thread_number)
+    res = pool.map_async(work, tasks, callback=results.append)
+    res.wait()
+    print(results)
