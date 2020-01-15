@@ -73,7 +73,6 @@ def check_circular(mininum_length=10000, start_length=300, end_length=300, final
 @arg_prop(dest='format', default='std', choices=['std', 'json', 'text'], help='how the script will output the results')
 @arg_prop(dest='output', default=None, help='where to write results if there needs one')
 def main(args):
-    # TODO:test it.
     results = check_circular(mininum_length=args.length, start_length=args.start,
                              end_length=args.end, final_fasta=args.fasta)
     if results is None:

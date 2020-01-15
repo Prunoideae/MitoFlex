@@ -153,6 +153,16 @@ def all(args):
 
     # Go filtering
     if not args.disable_filter:
+        # Why I'm NOT using .gz ext here even I have implemented this:
+        # 1. flate2 is slow, and obviously no other can be quicker.
+        # 2. plug in a SSD is much more easier than adding a CPU.
+        # 
+        # You can still set this to xx.gz then it will surely make a
+        # gzip for you, but this will have a great impact on the App's
+        # running time, and it's strongly not recommended to do this.
+        #  
+        args.cleanq1 = 'clean.1.fq'
+        args.cleanq2 = 'clean.2.fq'
         args.fastq1, args.fastq2 = filter(args=args)
 
     args.fasta_file = assemble(args)

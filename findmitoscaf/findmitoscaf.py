@@ -137,7 +137,6 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         length_json = json.load(d)
         length_clade = length_json[clade]
 
-    scores = {}
     for seqdata, trait in contig_data_high:
 
         # Switch to all the hmm result with the same id as sequence data
@@ -152,64 +151,6 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             [target_frame['alito'], target_frame['alifrom']],
             [target_frame['alifrom'], target_frame['alito']]
         )
-
-        scoring = {}
-        for pcg, length_cds in length_clade.items():
-            if pcg in target_frame.query:
-                # Switch to all the target frame with query target pcg
-                pcg_frame = target_frame[target_frame.query == pcg]
-                pcg_frame['len'] = pcg_frame.alito - pcg_frame.alifrom + 1
-
-                # Switch to the frame with maxinum alignment length
-                max_pcg = pcg_frame[pcg_frame.len == pcg_frame.len.max()]
-
-                aligned_max = int(max_pcg.len)
-                tolerate_length = length_cds * cover_valve
-                cover = aligned_max / length_cds
-                integrity = 2 if True in [
-                    cover >= cover_valve,
-                    int(max_pcg.alifrom) + aligned_max >= tolerate_length and
-                    int(max_pcg.alito) + aligned_max >= tolerate_length
-                ] else 1
-                scoring[pcg] = (cover, integrity)
-            else:
-                # pcg, pcg score, pcg integrity
-                scoring[pcg] = (0, 0)
-
-        scores[seqdata.id] = {
-            'multi': trait['multi'],
-            'integrity': sum(x[1] for x in scoring),
-            'details': scoring
-        }
-
-    # filter by score and matches
-    picked_pcgs = []
-    picked_ids = []
-    while scores:
-        # pick the gene with most gene integrity
-        best_results = maxs(list(scores.items()),
-                            key=lambda x: x[1]['integrity'])
-
-        # if multiple genes are returned, pick the one with most depth
-        picked = max(best_results, key=lambda x: x[1]['multi'])
-        picked_pcgs += [x
-                        for x in picked[1]['details']
-                        if picked[1]['details'][x] != 0]
-        picked_ids.append(picked)
-        scores.pop(picked[0])
-
-        # pop all the overlapped genes.
-        for key, value in scores.items():
-            if True in [value['details'][x] > 0 for x in picked_pcgs]:
-                scores.pop(key)
-
-    picked_fa = [contig[0]
-                 for contig in contig_data_high
-                 if contig[0].id in picked_ids[0]
-                 ]
-    pcg_missing = [x for x in length_clade if x not in picked_pcgs]
-    return picked_fa, dict(picked_ids), pcg_missing
-
 
 @profiling
 def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
