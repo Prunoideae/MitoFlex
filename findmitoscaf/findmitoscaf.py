@@ -76,8 +76,19 @@ def get_rank(taxa_name=None):
 @profiling
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None,
-                 contigs_file=None, relaxing=0, multi=10, cover_valve=1):
+                 contigs_file=None, relaxing=0, multi=10, cover_valve=1, min_multi=3.0):
 
+    # Drop all the sequences where multi is too low to do further analysis
+    filtered_fa = f'{prefix}.contigs.filtered.fa'
+    filtered_contigs = []
+    for seq in SeqIO.parse(contigs_file, 'fasta'):
+        trait_string = seq.description.replace(seq.id + ' ', '', 1)
+        trait = decompile(trait_string, sep=' ')
+        if float(trait['multi']) >= min_multi:
+            filtered_contigs.append(seq)
+    SeqIO.write(filtered_contigs, filtered_fa, 'fasta')
+
+    # Do nhmmer search and collect, filter results
     nhmmer_profile = path.join(profile_dir_hmm, f'{clade}_CDS.hmm')
     # We use an overall protein dataset to determine what clades diffrent seqs belonged to.
     tbn_profile = path.join(profile_dir_tbn, f'Animal_CDS_protein.fa')
@@ -85,7 +96,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     # do hmmer search
     hmm_frame = nhmmer_search(fasta_file=contigs_file, thread_number=thread_number,
                               nhmmer_profile=nhmmer_profile, prefix=prefix,
-                              basedir=basedir, gene_code=gene_code)
+                              basedir=basedir)
 
     # filter by taxanomy
     if taxa is not None:
@@ -152,21 +163,16 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             [target_frame['alifrom'], target_frame['alito']]
         )
 
+
 @profiling
 def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
-                  prefix=None, basedir=None, gene_code=9):
-
-    # Decompress zipped files
-    input_file = fasta_file
-    if input_file.endswith(".gz"):
-        input_file = f'{prefix}.tmp.nhmmer.dat'
-        shell_call('gzip', '-dc', fasta_file, '>', input_file)
+                  prefix=None, basedir=None):
 
     # Call nhmmer
     hmm_out = os.path.join(basedir, f'{prefix}.nhmmer.out')
     hmm_tbl = os.path.join(basedir, f'{prefix}.nhmmer.tblout')
     shell_call('nhmmer', o=hmm_out, tblout=hmm_tbl,
-               cpu=thread_number, appending=[nhmmer_profile, input_file])
+               cpu=thread_number, appending=[nhmmer_profile, fasta_file])
 
     # Process data to pandas readable table
     hmm_tbl_pd = f'{hmm_tbl}.readable'
@@ -191,7 +197,7 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
     # Deduplicate multiple hits on the same gene of same sequence
     hmm_frame = hmm_frame.drop_duplicates(
         subset=['target', 'query'], keep='first')
-    hmm_frame.to_csv(f'{hmm_tbl}.dedup.csv')
+    hmm_frame.to_csv(f'{hmm_tbl}.dedup.csv', index=False)
 
     return hmm_frame
 
@@ -200,11 +206,13 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
                     prefix=None, dbfile=None, gene_code=9, relaxing=0):
 
     # Extract sequences from input fasta file according to hmm frame
-    records = SeqIO.parse(fasta_file, 'fasta')
-    seqs = [record for record in records if record.name in set(
-        hmm_frame['target'])]
+
+    seqs = [record
+            for record in SeqIO.parse(fasta_file, 'fasta')
+            if record.id in set(hmm_frame['target'])
+            ]
     if not seqs:
-        return None, None
+        raise Exception("Parsed fasta file is empty!")
 
     hmm_fa = path.join(basedir, f'{prefix}.hmm.filtered.fa')
     with open(hmm_fa, 'w') as f:

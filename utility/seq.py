@@ -32,7 +32,7 @@ class seq_traits():
 
 # compile a dict to a description
 def compile_seq(traits: dict, equ='=', sep='\t'):
-    return sep.join(equ.join(key, value) for key, value in traits.items())
+    return sep.join(equ.join((key, value)) for key, value in traits.items())
 
 # decompile a description to a dict
 def decompile(input_seq: str, equ='=', sep='\t'):

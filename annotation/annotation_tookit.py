@@ -24,6 +24,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from os import path
 import sys
+import subprocess
 
 import pandas
 import numpy as np
@@ -49,14 +50,19 @@ def truncated_call(*args, **kwargs):
 
 def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
             prefix=None, ident=30):
+
+    # Make sure input path IS absolute path
+    infile = path.abspath(infile)
+    dbfile = path.abspath(dbfile)
+
     # Since 'in' is the preserve keyword
-    truncated_call('makeblastdb', '-in', dbfile, dbtype='nucl')
+    truncated_call('makeblastdb', '-in', infile, dbtype='nucl')
 
     # Go tblastn
     out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
     truncated_call('tblastn', useconv=False, evalue='1e-5', outfmt=6,
                    seg='no', db_gencode=genetic_code, db=infile,
-                   query=dbfile)
+                   query=dbfile, appending=['>', out_blast])
 
     return out_blast
 
@@ -80,7 +86,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
     # For logging purpose
     out_blast_csv = f'{blast_file}.csv'
-    blast_frame.to_csv(out_blast_csv)
+    blast_frame.to_csv(out_blast_csv, index=False)
 
     return blast_frame, out_blast_csv
 
@@ -108,13 +114,14 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
             results.append(highest)
 
             max_len = int(highest.send - highest.sstart)+1
-            max_start = int(highest.sstart)
+            max_start = int(highest.sstart)+1
             max_end = int(highest.send)
 
             frame = frame.drop(highest.index)
-            cutoffs = np.min(max_len, frame.send - frame.sstart) * cutoff
-            overlays = np.min(frame.send - max_start, max_end - frame.send)
-            frame = frame.drop(overlays > cutoffs)
+            cutoffs = np.minimum(max_len, frame.send - frame.sstart) * cutoff
+            overlays = np.minimum(frame.send - max_start,
+                                  max_end - frame.sstart)
+            frame = frame[overlays <= cutoffs]
 
     return pandas.concat(results)
 
@@ -142,8 +149,12 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         SeqIO.write(record, path.join(dbdir, f'{idx}.fa'), 'fasta')
 
     wises = wises.assign(
-        result=np.nan, wise_min_start=np.nan, wise_max_end=np.nan,
+        wise_min_start=np.nan, wise_max_end=np.nan,
         wise_shift=np.nan, wise_cover=np.nan)
+
+    wise_cfg_dir = path.join(bin_dir, 'wisecfg')
+    env_var = dict(os.environ)
+    env_var["WISECONFIGDIR"] = wise_cfg_dir
 
     for _, wise in wises.iterrows():
         query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
@@ -152,31 +163,32 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         SeqIO.write(queries[wise.sseq]
                     [wise.sstart-1:wise.send], query_file, 'fasta')
 
-        result = truncated_call('genewise', codon=codon_table,
-                                trev=not wise.plus, genesf=True,
-                                gff=True, gum=True,
-                                appending=[
-                                    path.join(dbdir, f'{wise.qseq}.fa'),
-                                    query_file
-                                ])
+        result = subprocess.check_output(
+            concat_command('genewise', codon=codon_table,
+                           trev=not wise.plus, genesf=True, gff=True, gum=True,
+                           appending=[
+                               path.join(dbdir, f'{wise.qseq}.fa'), query_file]
+                           ).replace("--", '-'), env=env_var, shell=True).decode('utf-8')
 
         # Parse the results
         splited = result.split('//\n')
-        info = splited[0].split('\n')[1].split('\t')
-        wise.wise_cover = (info[3] - info[2] + 1)/len(dbparsed[wise.qseq])
+        info = splited[0].split('\n')[1].split()
+        wise.wises.at[idx, 'wise_cover'] = (
+            int(info[3]) - int(info[2]) + 1)/len(dbparsed[wise.qseq])
         wise_result = [x.split('\t')
-                       for x in splited[2].split('\n')
-                       if x[2] == 'cds']
+                       for x in splited[2].split('\n')[:-1]
+                       if x.split('\t')[2] == 'cds']
         for x in wise_result:
             # Fix the actual position of seq
-            x[3] += wise.start-1
-            x[4] += wise.start-1
-        wise_result.sort(key=lambda x: x[3])
-        wise.result = wise_result
-        wise.wise_shift = sum(x[2] == 'match' for x in wise_result)-1
-        wise.wise_min_start = min(x[3] for x in wise_result)
-        wise.wise_max_end = max(x[4] for x in wise_result)
-    wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'))
+            x[3] = str(int(x[3]) + wise.sstart-1)
+            x[4] = str(int(x[4]) + wise.sstart-1)
+        wise_result.sort(key=lambda x: int(x[3]))
+        wises.at[idx, 'wise_shift'] = sum(
+            x[2] == 'match' for x in wise_result)-1
+        wises.at[idx, 'wise_min_start'] = min(int(x[3]) for x in wise_result)
+        wises.at[idx, 'wise_max_end'] = max(int(x[4]) for x in wise_result)
+
+    wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'), index=False)
     return wises, queries, dbparsed
 
 
