@@ -233,13 +233,14 @@ fn filter_pe(
             continue;
         }
 
-        let hash = calculate_hash(&seq1);
+        if dedup {
+            let hash = calculate_hash(&seq1);
 
-        if dup.contains(&hash) {
-            continue;
+            if dup.contains(&hash) {
+                continue;
+            }
+            dup.insert(hash);
         }
-
-        dup.insert(hash);
 
         writeln!(cl1, "{}", head1);
         writeln!(cl1, "{}", seq1);
