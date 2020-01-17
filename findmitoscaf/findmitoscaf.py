@@ -143,11 +143,31 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         json.load(open(path.join(profile_dir, 'required_cds.json')))[clade])
 
     # First, collect the matching range of single sseq
+    seq_dict = {}
     by_seqid = dict(tuple(hmm_frame.groupby['target']))
     for key, frame in by_seqid.items():
         found_cds = [(0, 0)] * len(cds_indexes)
-        
+        for _, row in frame.iterrows():
+            query = str(row.query)
+            query_start = int(row.hmmstart)
+            query_end = int(row.hmmend)
+            found_cds[cds_indexes.index(query)] = (query_start, query_end)
+        seq_dict[found_cds] = key
 
+    # Then, solve the problem by brute
+    best = brute.solution(list(seq_dict.keys()))
+
+    # Finally, convert returned solution to cds
+    picked_ids = [seq_dict[seq_id] for seq_id in best]
+    picked_seq = [seq for seq in contig_data if seq.id in picked_ids]
+    missing_pcgs = [cds_indexes[zero] for zero in best if zero == (0, 0)]
+    found_pcgs = [
+        others for others in cds_indexes if others not in missing_pcgs]
+
+    picked_fasta = path.join(basedir, f'{prefix}.picked.fa')
+    SeqIO.write(picked_seq, picked_fasta, 'fasta')
+    print(f'pcgs found : {found_pcgs}\nMissing pcgs : {missing_pcgs}')
+    return picked_fasta, found_pcgs, missing_pcgs
 
 @profiling
 def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
