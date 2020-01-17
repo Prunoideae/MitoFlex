@@ -6,6 +6,9 @@ mod helper;
 
 use clap::{App, Arg};
 use itertools::Itertools;
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 use std::io::prelude::*;
 
 fn main() {
@@ -106,7 +109,8 @@ fn main() {
             Arg::with_name("deduplication")
                 .short("d")
                 .long("deduplication")
-                .help("Filter out duplicated sequences"),
+                .help("Filter out duplicated sequences")
+                .requires("fastq2"),
         )
         .get_matches();
 
@@ -169,7 +173,7 @@ fn main() {
         filter_se(fastq1, cleanq1, start, end, ns, quality, limit);
     } else {
         filter_pe(
-            fastq1, fastq2, cleanq1, cleanq2, start, end, ns, quality, limit,
+            fastq1, fastq2, cleanq1, cleanq2, start, end, ns, quality, limit, dedup,
         );
     }
 }
@@ -184,12 +188,15 @@ fn filter_pe(
     ns: usize,
     quality: u8,
     limit: f32,
+    dedup: bool,
 ) {
     let fq1 = helper::read_file(fastq1);
     let fq2 = helper::read_file(fastq2);
 
     let mut cl1 = helper::write_file(cleanq1);
     let mut cl2 = helper::write_file(cleanq2);
+
+    let mut dup: HashSet<u64> = HashSet::new();
 
     let len = end - start;
 
@@ -225,6 +232,14 @@ fn filter_pe(
         {
             continue;
         }
+
+        let hash = calculate_hash(&seq1);
+
+        if dup.contains(&hash) {
+            continue;
+        }
+
+        dup.insert(hash);
 
         writeln!(cl1, "{}", head1);
         writeln!(cl1, "{}", seq1);
@@ -282,4 +297,10 @@ fn filter_se(
         writeln!(clean_file, "+");
         writeln!(clean_file, "{}", quas);
     }
+}
+
+fn calculate_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }

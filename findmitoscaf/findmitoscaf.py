@@ -40,7 +40,7 @@ try:
     from utility.profiler import profiling
     from utility.seq import compile_seq, decompile
     from annotation import annotation_tookit as tk
-except Exception as identifier:
+except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 ncbi = NCBITaxa()
@@ -49,6 +49,9 @@ profile_dir = path.join(mitoflex_dir, 'profile')
 profile_dir_hmm = path.join(profile_dir, 'CDS_HMM')
 profile_dir_tbn = path.join(profile_dir, 'MT_database')
 profile_dir_rna = path.join(profile_dir, 'rRNA_CM')
+
+rank_list = ['kindom', 'phylum', 'class',
+             'order', 'family', 'genus', 'species']
 
 
 def get_rank(taxa_name=None):
@@ -70,7 +73,7 @@ def get_rank(taxa_name=None):
         if rank in rank_dict:
             rank_dict[rank] = taxa
 
-    return rank_dict
+    return [(tax_class, tax_id) for tax_class, tax_id in rank_dict.items()]
 
 
 @profiling
@@ -90,8 +93,6 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     # Do nhmmer search and collect, filter results
     nhmmer_profile = path.join(profile_dir_hmm, f'{clade}_CDS.hmm')
-    # We use an overall protein dataset to determine what clades diffrent seqs belonged to.
-    tbn_profile = path.join(profile_dir_tbn, f'Animal_CDS_protein.fa')
 
     # do hmmer search
     hmm_frame = nhmmer_search(fasta_file=contigs_file, thread_number=thread_number,
@@ -100,7 +101,9 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     # filter by taxanomy
     if taxa is not None:
-        _, hmm_frame = filter_taxanomy(
+        # We use an overall protein dataset to determine what clades diffrent seqs belonged to.
+        tbn_profile = path.join(profile_dir_tbn, f'Animal_CDS_protein.fa')
+        hmm_frame = filter_taxanomy(
             taxa=taxa, fasta_file=contigs_file, hmm_frame=hmm_frame,
             basedir=basedir, prefix=prefix, dbfile=tbn_profile, gene_code=gene_code,
             relaxing=relaxing)
@@ -133,35 +136,17 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     SeqIO.write([x[0] for x in contig_data_high], contigs_file_high, 'fasta')
     SeqIO.write(contig_data_low, contigs_file_low, 'fasta')
 
-    # scoring by frame
-    # Using structure:
-    # id:{
-    #   score: int,
-    #   details:[
-    #     'cox1':[
-    #       1,      //cover
-    #       1       //integrity
-    # ]
-    # ]
-    # }
-    with open(path.join(profile_dir_hmm, 'lengths.json')) as d:
-        length_json = json.load(d)
-        length_clade = length_json[clade]
+    # Here we pick out the last sequences by using the brute
+    import brute
 
-    for seqdata, trait in contig_data_high:
+    cds_indexes = list(
+        json.load(open(path.join(profile_dir, 'required_cds.json')))[clade])
 
-        # Switch to all the hmm result with the same id as sequence data
-        target_frame = hmm_frame[hmm_frame.target == seqdata.id]
-
-        # alifrom=target from, alito=target to, hmmfrom=query from, hmmto=query to
-        # reformat the alignment structure for more calculation.
-
-        target_frame['plus'] = target_frame.alito - target_frame.alifrom > 0
-        target_frame['alifrom'], target_frame['alito'] = np.where(
-            target_frame['alifrom'] > target_frame['alito'],
-            [target_frame['alito'], target_frame['alifrom']],
-            [target_frame['alifrom'], target_frame['alito']]
-        )
+    # First, collect the matching range of single sseq
+    by_seqid = dict(tuple(hmm_frame.groupby['target']))
+    for key, frame in by_seqid.items():
+        found_cds = [(0, 0)] * len(cds_indexes)
+        
 
 
 @profiling
@@ -218,76 +203,35 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     with open(hmm_fa, 'w') as f:
         SeqIO.write(seqs, f, 'fasta')
 
-    # Do tblastn and genewise
+    # Do tblastn to search out the possible taxanomy of the gene
     blast_file = tk.tblastn(dbfile=dbfile, infile=hmm_fa,
                             genetic_code=gene_code, basedir=basedir, prefix=prefix)
     blast_frame, _ = tk.blast_to_csv(blast_file)
     blast_frame = tk.wash_blast_results(blast_frame)
-    wise_frame, queries, database = tk.genewise(basedir=basedir, prefix=prefix,
-                                                wises=blast_frame, infile=hmm_fa, dbfile=dbfile)
-    final_file = path.join(basedir, f'{prefix}.genewise.cds.fa')
-    if not tk.collect_result(final_file, wise_frame, queries, database):
-        return None, None
 
-    # Filter output sequences from predicted taxanomy class
-    required_rank = get_rank(taxa)
-    if not required_rank:
-        return None, None
+    # Drop the sequences which don't have even a gene related to taxa
+    by_seqid = dict(tuple(blast_frame.groupby(['sseq'])))
+    to_drop = []
+    for key, frame in by_seqid.items():
+        is_in = False
+        for _, row in frame.iterrows():
+            qseq = str(row.qseq).split('_')
+            taxa_name = ' '.join([qseq[4], qseq[5]])
+            taxa_rank = get_rank(taxa_name)
+            required_rank = get_rank(taxa)
+            required_id = ncbi.get_name_translator([taxa])[taxa][0]
+            required_class = ncbi.get_rank([required_id])[required_id]
+            required_index = rank_list.index(required_class)
+            # Get last index for the matching rank
+            matched_rank = max(idx
+                               for idx, (tax_id, tax_name), (required_id, required_name)
+                               in enumerate(zip(taxa_rank, required_rank))
+                               if required_name == taxa_name != 'NA')
+            if matched_rank + relaxing >= required_index:
+                is_in = True
+                break
+        if not is_in:
+            to_drop.append(key)
 
-    valids = []
-    records = SeqIO.parse(final_file, 'fasta')
-
-    rank_matched = {
-        'kindom': 0,
-        'phylum': 0,
-        'class': 0,
-        'order': 0,
-        'family': 0,
-        'genus': 0,
-        'species': 0
-    }
-
-    for record in records:
-        if record.description.startswith(record.id):
-            record.description.replace(record.id + " ", '', 1)
-        traits = decompile(record.description)
-        qseq = traits['qseq'].split('_')
-        sseq = traits['sseq']
-        qspecies = ' '.join(qseq[4:6])
-        if qspecies.endswith('.'):
-            qspecies = qspecies.split('.')[0]
-
-        ranks = get_rank(qspecies)
-        for key, item in ranks.items():
-            if item == required_rank[key] != 'NA':
-                rank_matched[key] += 1
-        valids.append((qspecies, sseq, ranks, record))
-
-    valids.append((None, None, required_rank))
-    valids = list(set(valids))
-    valids.sort(key=lambda x: '|'.join(str(i[1] for i in x[2].items())))
-
-    # determine taxanomy class for filtering
-    selected_taxa = "NA"
-    selected_rank = ""
-    rank_list = list(rank_matched)
-    reverse_rank_list = rank_list[::-1]
-    for rev_rank in reverse_rank_list:
-        if rank_matched[rev_rank] >= 1:
-            selected_rank = max(0, rank_list.index(rev_rank)-relaxing)
-            selected_taxa = required_rank[selected_rank]
-            break
-
-    # filter out values that is not met with the taxanomy
-    valids = [x
-              for x in valids
-              if x[2][selected_rank] == selected_taxa]
-
-    # collect all the valid taxanomy results
-    sseqs = set([x[1] for x in valids if x[1] is not None])
-    seqs = set([x[3] for x in valids])
-    filtered_fa = f'{prefix}.taxa.filtered.fa'
-    SeqIO.write(seqs, path.join(basedir, filtered_fa), 'fasta')
-    filtered_frame = hmm_frame[hmm_frame.target.isin(sseqs)]
-
-    return filtered_fa, filtered_frame
+    filtered_frame = hmm_frame[~hmm_frame['target'].isin(to_drop)]
+    return filtered_frame
