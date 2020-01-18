@@ -121,12 +121,12 @@ def assemble(args):
 def findmitoscaf(args):
 
     from findmitoscaf.findmitoscaf import findmitoscaf as _findmitoscaf
-    picked_fa, picked_ids, missing = _findmitoscaf(
+    picked_fa = _findmitoscaf(
         thread_number=args.threads, clade=args.clade, relaxing=args.taxa_tolerance, gene_code=args.genetic_code,
         multi=args.min_abundance, taxa=args.required_taxa, prefix=args.workname, basedir=args.findmitoscaf_dir,
         contigs_file=args.fasta_file, cover_valve=1)
 
-    return picked_fa, picked_ids, missing
+    return picked_fa
 
 
 @parse_func(func_help='annotate PCGs, tRNA and rRNA genes',
@@ -168,7 +168,7 @@ def all(args):
 
     args.fasta_file = assemble(args)
 
-    args.fasta_file, picked_pcg, missing_pcg = findmitoscaf(args)
+    args.fasta_file = findmitoscaf(args)
 
     annotate(args)
 

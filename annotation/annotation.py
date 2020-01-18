@@ -50,7 +50,8 @@ def concat_java(*args, **kwargs):
 
 
 @profiling
-def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code=9, clade=None, taxa=None, thread_number=8):
+def annotation(basedir=None, prefix=None, ident=30, fastafile=None,
+               genetic_code=9, clade=None, taxa=None, thread_number=8):
     # Once we can confirm the sequences are from the clade we want to,
     # then we don't need to use overall database.
     tbn_profile = path.join(profile_dir_tbn, f'{clade}_CDS_protein.fa')

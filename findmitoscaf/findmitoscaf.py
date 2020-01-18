@@ -194,8 +194,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     picked_fasta = path.join(basedir, f'{prefix}.picked.fa')
     SeqIO.write(picked_seq, picked_fasta, 'fasta')
     logger.log(2, f'PCGs found : {found_pcgs}')
-    logger.log(2, f'Missing PCGs : {missing_pcgs}')
-    return picked_fasta, found_pcgs, missing_pcgs
+    logger.log(3, f'Missing PCGs : {missing_pcgs}')
+    return picked_fasta
 
 
 @profiling
