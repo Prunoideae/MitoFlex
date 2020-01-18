@@ -29,6 +29,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
     from utility.profiler import profiling
+    from utility import logger
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -37,11 +38,26 @@ filter_dir = os.path.dirname(os.path.abspath(__file__))
 
 @profiling
 def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, seq_size=None):
+    fsin = path.getsize(fqiabs)
+    logger.log(level=1, info='Start filtering single-end rawdata.')
+    logger.log(level=0, info=f'Input file has {fsin} bytes.')
+    logger.log(level=1,
+               info=f'Using argument : Ns={Ns}, quality={quality}, limit={limit}, start={start}, end={end}, seq_size={seq_size}')
     try:
         shell_call(path.join(filter_dir, 'filter_v2'), cleanq1=fqoabs, fastq1=fqiabs,
                    n=Ns, q=quality, l=limit, s=start, e=end, t=seq_size)
-    except:
-        print("Error occured when running filter!")
+    except Exception as identifier:
+        logger.log(
+            level=4, info=f'Error occured when running filter, cause : {identifier}')
+        logger.log(level=1, info=f'Input file : {fqiabs}')
+        logger.log(level=1, info=f'Output file : {fqoabs}')
+
+        sys.exit("Error occured when running filter!")
+
+    fsot = path.getsize(fqoabs)
+    logger.log(level=0, info=f'Output file has {fsot} bytes.')
+    logger.log(level=0,
+               info=f'Filtered {fsin - fsot} bytes, ratio {fsot/fsin}.')
 
     return fqoabs
 
@@ -50,10 +66,28 @@ def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None
 def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
               a1=None, a2=None, dedup=False, mis=3, ali=15,
               start=None, end=None, n=10, q=55, l=0.2, seq_size=None):
+    fsin1, fsin2 = path.getsize(fq1), path.getsize(fq2)
+    logger.log(level=1, info='Start filtering pair-end rawdata.')
+    logger.log(
+        level=0, info=f'Input file 1 has {fsin1} bytes, 2 has {fsin2} bytes.')
+    if fsin1 != fsin2:
+        logger.log(
+            level=3, info=f'Input file 1 and 2 have different sizes! This could cause loss on rawdata, or even crash the program.')
+    logger.log(
+        level=1, info=f'Using argument : Ns={n}, quality={q}, start={start}, end={end},limit={l}, seqsize={seq_size}')
     try:
         shell_call(path.join(filter_dir, 'filter_v2'),
                    _1=fq1, _2=fq2, _3=o1, _4=o2, d=dedup, s=start,
                    e=end, n=n, q=q, l=l, t=seq_size)
-    except:
-        print("Error occured when running filter!")
+    except Exception as identifier:
+        logger.log(
+            level=1, info=f'Error occured when running filter, cause : {identifier}')
+        logger.log(level=1, info=f'Input file : {fq1} , {fq2}')
+        logger.log(level=1, info=f'Output file : {o1} , {o2}')
+        sys.exit("Error occured when running filter!")
+
+    fsot1 = path.getsize(o1)
+    logger.log(level=0, info=f'Output file has {fsot1} bytes.')
+    logger.log(level=0,
+               info=f'Filtered {fsin1 - fsot1} bytes, ratio {fsot1/fsin1}.')
     return o1, o2

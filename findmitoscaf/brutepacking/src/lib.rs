@@ -71,7 +71,7 @@ impl Unit {
     fn value(&self) -> u32 {
         let mut total = 0;
         for r in &self.sets {
-            total += r.1 - r.0;
+            total += ((r.1 - r.0) as i32).abs() as u32;
         }
         total
     }
@@ -120,7 +120,6 @@ fn solution(sets: Vec<Vec<(u32, u32)>>) -> Vec<Vec<(u32, u32)>> {
 
     let mut result: Unit = Unit::new(Vec::new(), Vec::new());
     for r in pool {
-        println!("{:?}", r.keys);
         if r.value() > result.value() {
             result = r;
         }

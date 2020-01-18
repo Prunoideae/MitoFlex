@@ -25,6 +25,7 @@ import os
 from os import path
 import sys
 import subprocess
+import multiprocessing
 
 import pandas
 import numpy as np
@@ -48,8 +49,37 @@ def truncated_call(*args, **kwargs):
     return direct_call(concat_command(*args, **kwargs).replace('--', '-'))
 
 
+def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
+                  prefix=None, threads=8):
+    # TODO: Replace single-threaded tblastn to use a pseudomultithreaded method
+
+    # README: 
+    # This requires a rearrange of the MitoFlex's profile structure. So 
+    # it will be a updated feature if most of the MitoFlex's code is done. 
+    infile = path.abspath(infile)
+    dbfile = path.abspath(dbfile)
+
+    truncated_call('makeblastdb', '-in', infile, dbtype='nucl')
+
+    tasks = []
+    results = []
+
+    def work(command):
+        return direct_call(command)
+
+    pool = multiprocessing.Pool(threads)
+    res = pool.map_async(work, tasks, callback=results.append)
+    res.wait()
+
+    out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
+    with open(out_blast) as f:
+        f.write('\n'.join(results))
+
+    return out_blast
+
+
 def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
-            prefix=None, ident=30):
+            prefix=None):
 
     # Make sure input path IS absolute path
     infile = path.abspath(infile)

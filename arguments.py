@@ -26,6 +26,7 @@ import os
 
 try:
     from utility.parser import register_group
+    from utility import logger
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoFlex installation!')
@@ -42,14 +43,10 @@ except ImportError as identifier:
 
 
 def universal_regulator(args):
-    tr = os.cpu_count()
-    tr = tr if tr is not None else 8
-    if args.threads <= 0 or args.threads > tr:
-        print(
-            f"Specified thread number not in range, using {tr} threads instead.")
-        args.threads = tr
 
     args.work_dir = os.path.abspath(os.path.join(args.basedir, args.workname))
+    logger.init(os.path.join(args.work_dir, 'log'))
+
     args.result_dir = os.path.abspath(os.path.join(
         args.work_dir, args.workname + '.result'))
     args.temp_dir = os.path.abspath(os.path.join(
@@ -69,6 +66,14 @@ def universal_regulator(args):
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
         return False
+
+    tr = os.cpu_count()
+    tr = tr if tr is not None else 8
+    if args.threads <= 0 or args.threads > tr:
+        print(
+            f"Specified thread number not in range, using {tr} threads instead.")
+        args.threads = tr
+
     return True
 
 
@@ -110,7 +115,8 @@ def fastq_regulator(args):
         args.fastq1, args.fastq2 = args.fastq2, args.fastq1
 
     if args.fastq1 is None and args.fastq2 is None:
-        print("Both fastq file inputs are missing. Exiting the run.")
+        logger.log(
+            level=4, info="Both fastq file inputs are missing. Exiting the run.")
         return False
 
     # Explicitly using cwd path here.
@@ -120,18 +126,19 @@ def fastq_regulator(args):
 
     if not (os.path.isfile(args.fastq1) and (args.fastq2 is None or os.path.isfile(args.fastq2))):
         valid = False
-        print("Input FASTQ file is not valid.")
+        logger.log(level=4, info="Input FASTQ file is not valid.")
 
     if args.fastq_read_length <= 0:
         valid = False
-        print("Specified fastq read length is not valid.")
+        logger.log(level=4, info="Specified fastq read length is not valid.")
 
     if hasattr(args, 'use_list'):
         min_kmer = int(args.kmer_list.split(
             ',')[0]) if args.use_list else args.kmer_min
         if min_kmer >= args.fastq_read_length:
             valid = False
-            print("Specified fastq read length lower than the mininum kmer.")
+            logger.log(
+                level=4, info="Specified fastq read length lower than the mininum kmer.")
 
     return valid
 
@@ -166,7 +173,7 @@ fastq_parser, fastq_group = register_group('Fastq arguments', [
 def fasta_regulator(args):
     args.fastafile = os.path.abspath(args.fastafile)
     if not os.path.isfile(args.fastafile):
-        print("Input FASTA file not valid.")
+        logger.log(level=4, info="Input FASTA file not valid.")
         return False
     return True
 
@@ -193,7 +200,7 @@ def filter_regulator(args):
         args.start, args.end, *_ = [int(x) if int(x) > 0 else 0
                                     for x in args.keep_region.split(',')]
     except Exception:
-        print('Input range is not valid.')
+        logger.log(level=4, info='Input range is not valid.')
         valid = False
 
     if hasattr(args, 'temp_dir'):
@@ -205,23 +212,23 @@ def filter_regulator(args):
         os.makedirs(args.clean_dir, exist_ok=True)
     except Exception:
         valid = False
-        print(
-            'Error occured when validating the directories, please check your permissions or things could be related.')
+        logger.log(level=4,
+                   info='Error occured when validating the directories, please check your permissions or things could be related.')
 
     if not ((args.adapter1 is None or os.path.isfile(args.adapter1) and (args.adapter2 is None or os.path.isfile(args.adapter2)))):
-        print('Input adapter file is not valid.')
+        logger.log(level=4, info='Input adapter file is not valid.')
         valid = False
 
     if args.quality_valve <= 0 or args.quality_valve >= 255:
-        print('Input quality limit is not valid.')
+        logger.log(level=4, info='Input quality limit is not valid.')
         valid = False
 
     if args.Ns_valve <= 0:
-        print('Input N limit is not valid.')
+        logger.log(level=4, info='Input N limit is not valid.')
         valid = False
 
     if args.percentage_valve <= 0 or args.percentage_valve >= 1:
-        print('Input percentage limit is not valid.')
+        logger.log(level=4, info='Input percentage limit is not valid.')
         valid = False
 
     return valid
@@ -274,7 +281,7 @@ def assembly_regulator(args):
 
     if args.insert_size <= 0:
         valid = False
-        print('Input insert size is not valid.')
+        logger.log(level=4, info='Input insert size is not valid.')
 
     if hasattr(args, 'temp_dir'):
         args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
@@ -285,14 +292,14 @@ def assembly_regulator(args):
         os.makedirs(args.assemble_dir, exist_ok=True)
     except Exception:
         valid = False
-        print(
-            'Error occured when validating the directories, please check your permissions or things could be related.')
+        logger.log(
+            level=4, info='Error occured when validating the directories, please check your permissions or things could be related.')
 
     if args.use_list:
         args.kmer_list = [int(x) for x in args.kmer_list.split(',')]
         args.kmer_list.sort()
         if 0 in [x % 2 for x in args.kmer_list]:
-            print('All kmer length must be odd.')
+            logger.log(level=4, info='All kmer length must be odd.')
             valid = False
     else:
         if True in [
@@ -301,15 +308,16 @@ def assembly_regulator(args):
             args.kmer_step <= 0,
             args.kmer_max < args.kmer_min
         ]:
-            print('Input kmer arguments have invalid values.')
+            logger.log(
+                level=4, info='Input kmer arguments have invalid values.')
             valid = False
 
         if args.kmer_min % 2 == 0 or (args.kmer_min + args.kmer_step) % 2 == 0:
-            print('All kmer length must be odd.')
+            logger.log(level=4, info='All kmer length must be odd.')
             valid = False
 
     if args.prune_depth < 0:
-        print('Prune depth lower than 0.')
+        logger.log(level=4, info='Prune depth lower than 0.')
 
     return valid
 
@@ -375,7 +383,7 @@ def search_regulator(args):
     valid = True
 
     if args.min_abundance <= 0:
-        print("Input minimum abundance is not valid.")
+        logger.log(level=4, info="Input minimum abundance is not valid.")
         valid = False
 
     from ete3 import NCBITaxa
@@ -392,11 +400,12 @@ def search_regulator(args):
         os.makedirs(args.annotation_dir, exist_ok=True)
     except Exception:
         valid = False
-        print(
-            'Error occured when validating the directories, please check your permissions or things could be related.')
+        logger.log(
+            level=4, info='Error occured when validating the directories, please check your permissions or things could be related.')
 
     if args.required_taxa not in ncbi.get_name_translator([args.required_taxa]):
-        print("Specified taxanomy name not in NCBI taxanomy database.")
+        logger.log(
+            level=4, info="Specified taxanomy name not in NCBI taxanomy database.")
         return False
     args.taxa_ids = ncbi.get_name_translator([args.required_taxa])[
         args.required_taxa]
@@ -471,10 +480,11 @@ def saa_regulator(args):
     code = str(args.genetic_code)
 
     if code in gene_code:
-        print(f'Using genetic code {args.genetic_code} : {gene_code[code]}')
+        logger.log(
+            level=2, info=f'Using genetic code {args.genetic_code} : {gene_code[code]}')
     elif '_' + code in gene_code:
-        print(
-            f'Using genetic code {args.genetic_code} : {gene_code["_" + code]}.\nThese codes are thoretically suitable with current workflow, but it\'s NOT tested.')
+        logger.log(
+            level=3, info=f'Using genetic code {args.genetic_code} : {gene_code["_" + code]}.\nThese codes are thoretically suitable with current workflow, but it\'s NOT tested.')
     elif '-' + code in gene_code:
         print(
             f'Using genetic code {args.genetic_code} : {gene_code["-" + code]}!\nThey are obviously out of MitoFlex\'s range, so further calls needs your validation.')
@@ -484,7 +494,10 @@ def saa_regulator(args):
             while answer not in ['Y', 'N', '', 'y', 'n']:
                 answer = input("Continue? Y/[N] : ")
             if answer.upper() is not 'Y':
+                logger.log(2, 'Exited.')
                 sys.exit('Exited.')
+        logger.log(
+            3, f'Using genetic code {code} : {gene_code["-" + code]}, assembling quality may not be guaranteed.')
     elif code == '1':
         print('You are using Standard Code 1! Please make sure you really have the need to do this, because the standard code is NOT meant to be applied in most cases!')
         if not hasattr(args, 'y') or not args.y:
@@ -493,8 +506,10 @@ def saa_regulator(args):
                 answer = input("Continue? Y/[N] : ")
             if answer.upper() is not 'Y':
                 sys.exit('Exited.')
+        logger.log(
+            4, f'Using genetic code 1, assembling quality can\'t be guaranteed!')
     else:
-        print('Genetic code not found in the NCBI table!')
+        logger.log(level=4, info='Genetic code not found in the NCBI table!')
         return False
     return True
 

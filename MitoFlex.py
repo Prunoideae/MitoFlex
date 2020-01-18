@@ -41,6 +41,7 @@ try:
     from Bio import SeqRecord
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility.profiler import profiling
+    from utility import logger
     # We are using this for making the main file clean, so wildcard is
     # not a problem here.
     from arguments import *  # pylint: disable=unused-wildcard-import
@@ -156,18 +157,20 @@ def all(args):
         # Why I'm NOT using .gz ext here even I have implemented this:
         # 1. flate2 is slow, and obviously no other can be quicker.
         # 2. plug in a SSD is much more easier than adding a CPU.
-        # 
+        #
         # You can still set this to xx.gz then it will surely make a
         # gzip for you, but this will have a great impact on the App's
         # running time, and it's strongly not recommended to do this.
-        #  
+        #
         args.cleanq1 = 'clean.1.fq'
         args.cleanq2 = 'clean.2.fq'
         args.fastq1, args.fastq2 = filter(args=args)
 
     args.fasta_file = assemble(args)
 
-    # TODO:Integrate findmitoscaf method.
+    args.fasta_file, picked_pcg, missing_pcg = findmitoscaf(args)
+
+    annotate(args)
 
 
 # This is ah, a somehow not ideal method in the whole MitoFlex coding,
@@ -185,7 +188,7 @@ def cleanup(args):
 
 # Entry starts at here
 if __name__ == '__main__':
-
     parser = freeze_arguments('MitoFlex', desc)
     final_args = parse_then_call(parser)
     cleanup(final_args)
+    logger.finalize()

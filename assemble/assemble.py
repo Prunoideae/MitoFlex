@@ -30,6 +30,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
     from utility.profiler import profiling
+    from utility import logger
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -41,10 +42,17 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              prune_level=2, prune_depth=2, clean_temp=False,
              threads=8):
 
+    logger.log(2, 'Start assembling mitochondrial sequences.')
+
     if(uselist):
         kmin = kmax = kstep = None
+        logger.log(1, f'Using step list : {klist}')
     else:
         klist = None
+        logger.log(1, f'Using step parameters : min={kmin}, max={kmax}')
+
+    logger.log(
+        1, f'Using arguments : mercy={not no_mercy}, acc={disable_acc}, p_lv = {prune_level}, p_dep = {prune_depth}')
 
     shell_call('megahit', _1=fastq1, _2=fastq2,
                k_min=kmin, k_max=kmax, k_step=kstep, k_list=klist,
@@ -53,4 +61,14 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
                out_dir=path.join(base_dir, 'result'), out_prefix=work_prefix,
                no_hw_accel=disable_acc, num_cpu_threads=threads)
 
-    return os.path.join(base_dir, 'result', work_prefix + '.contigs.fa')
+    contigs_file = os.path.join(
+        base_dir, 'result', work_prefix + '.contigs.fa')
+
+    if logger.get_level() <= 1:
+        from Bio import SeqIO
+        contigs = [x for x in SeqIO.parse(contigs_file, 'fasta')]
+        logger.log(
+            1, f'Output contigs file size : {path.getsize(contigs_file)}')
+        logger.log(1, f'Contig number : {len(contigs)}')
+
+    return contigs_file

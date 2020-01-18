@@ -49,10 +49,6 @@ def concat_java(*args, **kwargs):
     return concat_command(*args, **kwargs).replace('--', '-')
 
 
-def work(command):
-    return direct_call(command)
-
-
 @profiling
 def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code=9, clade=None, taxa=None, thread_number=8):
     # Once we can confirm the sequences are from the clade we want to,
@@ -77,7 +73,6 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code
     wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
     reloc.to_csv(wise_csv)
 
-    # TODO: finding tRNA and others
     mitfi_bin_dir = path.join(mitoflex_dir, 'annotation', 'mitfi')
     mitfi = 'mitfi.jar'
 
@@ -97,6 +92,11 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None, genetic_code
                                  cores=1, code=genetic_code, evalue=0.001, onlycutoff=True,
                                  appending=[f]))
     pool = multiprocessing.Pool(thread_number)
+
+    def work(command):
+        return direct_call(command)
+
     res = pool.map_async(work, tasks, callback=results.append)
     res.wait()
     print(results)
+    # TODO: Analyze results
