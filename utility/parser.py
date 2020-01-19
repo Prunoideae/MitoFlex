@@ -116,7 +116,7 @@ def parse_func(func=None, *, func_help='', parents=[]):
     Arguments introduction:
 
     func : a preserved variant for further call, DO NOT MODIFY IT!
-    
+
     func_help : give the function a help string, which will be shown
 
     in --help or parser.print_help()
@@ -289,7 +289,7 @@ def freeze_arguments(prog, desc):
     Argument introduction:
 
     prog : what is the program.
-    
+
     desc : add a description for the parser.
     '''
     global collected_args
@@ -431,7 +431,8 @@ def process_arguments(command, args):
                     preprocessor = group_callback[parser]
                     valid = valid and preprocessor(args)
             if not valid:
-                raise ParsingError('Errors occured while parsing arguments')
+                raise ParsingError(
+                    expression=None, message='Errors occured while parsing arguments')
     else:
         raise KeyError('Command not found in collected profiles.')
     pass

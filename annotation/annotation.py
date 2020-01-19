@@ -101,3 +101,7 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None,
     res.wait()
     print(results)
     # TODO: Analyze results
+
+    # TODO: Finish the rRNA
+    
+    
