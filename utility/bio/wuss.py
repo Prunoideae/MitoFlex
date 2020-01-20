@@ -57,8 +57,12 @@ class Sequence():
     def push(self, base: Single):
         self.sequence.append(base)
 
+    def to_str(self):
+        return ''.join([single.base for single in self.sequence])
+
     def __repr__(self):
         return ''.join([single.base for single in self.sequence])
+        
 
 
 class Sets():
@@ -123,6 +127,7 @@ class HairpinLoop():
         self.loop = InteriorLoop(set())
         self.hairpin = Hairpin([])
         self.stem = Stem([], [])
+        self.unknown = Sets(set())
         stack = []
         for idx, cha in enumerate(foldseq):
             sequence[idx].parent.append(self)
@@ -139,6 +144,10 @@ class HairpinLoop():
             elif cha == '-':
                 sequence[idx].parent.append(self.loop)
                 self.loop.insert(sequence[idx])
+            else:
+                self.unknown.insert(sequence[idx])
+                sequence[idx].parent.append(self.unknown)
+
         son_level = sequence[0].parent.index(self)+1
         translated = [base.parent[son_level] for base in sequence]
         self.components = [x[0] for x in groupby(translated)]
@@ -157,6 +166,7 @@ class MultiLoop():
         self.stem = Stem([], [])
         self.multi = MultiBranchLoop(set())
         self.interior = InteriorLoop(set())
+        self.unknown = Sets(set())
 
         stack = []
 
@@ -183,6 +193,10 @@ class MultiLoop():
                 if '<' not in [x[0] for x in stack]:
                     self.interior.insert(sequence[idx])
                     sequence[idx].parent.append(self.interior)
+            else:
+                if '<' not in [x[0] for x in stack]:
+                    self.unknown.insert(sequence[idx])
+                    sequence[idx].parent.append(self.unknown)
 
         son_level = sequence[0].parent.index(self)+1
         translated = [base.parent[son_level] for base in sequence]
@@ -203,6 +217,7 @@ class ComplexLoop():
         self.stem = Stem([], [])
         self.interior = InteriorLoop(set())
         self.mismatch = Sets(set())
+        self.unknown = Sets(set())
 
         stack = []
 
@@ -241,6 +256,10 @@ class ComplexLoop():
             elif cha == ':':
                 self.mismatch.insert(sequence[idx])
                 sequence[idx].parent.append(self.mismatch)
+            else:
+                if not (False in [x[0] == '[' for x in stack]):
+                    self.unknown.insert(sequence[idx])
+                    sequence[idx].parent.append(self.unknown)
 
         son_level = sequence[0].parent.index(self)+1
         translated = [base.parent[son_level] for base in sequence]
@@ -266,6 +285,7 @@ class GenericLoop():
         self.stem = Stem([], [])
         self.interior = InteriorLoop(set())
         self.mismatch = Sets(set())
+        self.unknown = Sets(set())
 
         stack = []
 
@@ -312,6 +332,10 @@ class GenericLoop():
             elif cha == ':':
                 self.mismatch.insert(sequence[idx])
                 sequence[idx].parent.append(self.mismatch)
+            else:
+                if not(False in [x[0] == '{' for x in stack]):
+                    self.unknown.insert(sequence[idx])
+                    sequence[idx].parent.append(self.unknown)
 
         son_level = sequence[0].parent.index(self)+1
         translated = [base.parent[son_level] for base in sequence]

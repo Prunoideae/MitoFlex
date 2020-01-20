@@ -27,16 +27,19 @@ import sys
 import subprocess
 import multiprocessing
 
-import pandas
-import numpy as np
-from Bio import SeqIO
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import concat_command, direct_call, shell_call
     from utility.profiler import profiling
-    from utility.seq import compile_seq, decompile
+    from utility.bio.seq import compile_seq, decompile
+    from utility.bio import wuss, infernal
+    import pandas
+    import numpy as np
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.Data import CodonTable
 except Exception as iden:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -53,9 +56,9 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
                   prefix=None, threads=8):
     # TODO: Replace single-threaded tblastn to use a pseudomultithreaded method
 
-    # README: 
-    # This requires a rearrange of the MitoFlex's profile structure. So 
-    # it will be a updated feature if most of the MitoFlex's code is done. 
+    # README:
+    # This requires a rearrange of the MitoFlex's profile structure. So
+    # it will be a updated feature if most of the MitoFlex's code is done.
     infile = path.abspath(infile)
     dbfile = path.abspath(dbfile)
 
@@ -282,3 +285,73 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
             start_real, end_real) if wise.plus else (end_real, start_real)
 
     return wises
+
+
+def cmsearch(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_code=9, e_value=0.001):
+    # Make sure it's the absolute path
+    fasta_file = path.abspath(fasta_file)
+    profile_dir = path.abspath(profile_dir)
+    basedir = path.abspath(basedir)
+
+    codon_table = CodonTable.generic_by_id[gene_code]
+    forward_table = codon_table.forward_table
+
+    infernal_file = path.join(basedir, f'{prefix}.infernal.out')
+
+    query_results = []
+    for idx, cm in enumerate(os.listdir(profile_dir)):
+        indexed = f'{infernal_file}.{idx}'
+        truncated_call('cmsearch', E=0.001, o=indexed, appending=[
+                       path.join(profile_dir, cm), fasta_file])
+        query_results.append(infernal.Infernal(indexed))
+
+    query_dict = {}
+
+    for result in query_results:
+        for align in result.alignments:
+            loop = align.alignment
+
+            # Get the main loop of tRNA
+            main = [x for x in loop.components if isinstance(
+                x, wuss.MultiLoop)]
+            if not main:
+                continue
+            main = main[0]
+
+            # Get the three hairpin loops of the main loop
+            hairpins = [x for x in main.components if isinstance(
+                x, wuss.HairpinLoop)]
+            if len(hairpins) < 2:
+                continue
+
+            # Get the center hairpin loop (anticodon arm)
+            # No gap is allowed
+            center = hairpins[1]
+            if len(center.hairpin.sequence) != 7:
+                continue
+
+            if '-' in center.hairpin.to_str()[2:5]:
+                continue
+
+            code = Seq(center.hairpin.to_str()[2:5]).reverse_complement()
+            amino = forward_table[code]
+
+            if amino in query_dict \
+                    and align.score <= query_dict[amino].score \
+                    and amino not in 'LS':
+                continue
+
+            if amino in 'LS' and amino in query_dict:
+                if query_dict[amino].seqfrom == align.seqfrom and query_dict[amino].seqto == align.seqto:
+                    continue
+                if f'{amino}2' in query_dict and align.score <= query_dict[f'{amino}2'].score:
+                    continue
+                query_dict[f'{amino}2'] = align
+            else:
+                query_dict[amino] = align
+
+    # Debug code
+    # print('\n'.join(['\n'.join([key + ':', str(value), ''])
+    #                 for key, value in query_dict.items()]))
+    # print(query_dict.keys())
+    return query_dict
