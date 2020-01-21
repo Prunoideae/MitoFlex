@@ -78,12 +78,11 @@ Citation
 @arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def filter(args):
 
-    dest = args.result_folder if args.__calling == 'filter' else args.clean_dir
     if not path.isabs(args.cleanq1):
-        args.cleanq1 = path.abspath(path.join(dest, args.cleanq1))
+        args.cleanq1 = path.abspath(path.join(args.clean_dir, args.cleanq1))
 
     if args.cleanq2 is not None and not path.isabs(args.cleanq2):
-        args.cleanq2 = path.abspath(path.join(dest, args.cleanq2))
+        args.cleanq2 = path.abspath(path.join(args.clean_dir, args.cleanq2))
 
     filtered1 = filtered2 = None
 
@@ -105,6 +104,7 @@ def filter(args):
 @parse_func(func_help='assemble from input fastq reads, output contigs',
             parents=[universal_parser, fastq_parser, assembly_parser])
 def assemble(args):
+
     from assemble.assemble import assemble as _assemble
 
     assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, base_dir=args.assemble_dir,
@@ -134,8 +134,9 @@ def findmitoscaf(args):
 @arg_prop(dest='depth_file', help=argparse.SUPPRESS)
 @arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
 def annotate(args):
-    # TODO:To fill the blanks of annotate method
-    pass
+    from annotation.annotation import annotate as _annotate
+    wise_csv, query_dict, result_12, result_16 = _annotate()
+    return wise_csv, query_dict, result_12, result_16
 
 
 @parse_func(func_help='visualization of GenBank file')
@@ -167,10 +168,11 @@ def all(args):
         args.fastq1, args.fastq2 = filter(args=args)
 
     args.fasta_file = assemble(args)
-
     args.fasta_file = findmitoscaf(args)
 
-    annotate(args)
+    if not args.disable_annotation:
+        print(annotate(args))
+        # visualize(args)
 
 
 # This is ah, a somehow not ideal method in the whole MitoFlex coding,

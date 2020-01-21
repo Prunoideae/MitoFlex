@@ -55,10 +55,9 @@ class Infernal():
             self.seqto = int(paras[10])
             self.plus = paras[11] == '+'
             self.acc = float(paras[13])
-            self.truncated = paras[14] == 'no'
+            self.full = paras[14] == 'no'
             self.gc = float(paras[15])
             self.alignment = None
-
 
             seq = lines[7].split(maxsplit=2)[2].rsplit(maxsplit=1)[0]
             fold = lines[4].split()[0]
@@ -99,3 +98,45 @@ class Infernal():
 
         alignments = ''.join(alignments).split('>> ')[1:]
         self.alignments = [Infernal.Result(data) for data in alignments]
+
+
+class Queries():
+
+    class Query():
+        def __init__(self, data: str):
+            splited = data.split()
+            self.rank = int(splited[0].translate({ord(i): None for i in '()'}))
+            self.e_value = float(splited[2])
+            self.score = float(splited[3])
+            self.bias = float(splited[4])
+            self.seqfrom = int(splited[6])
+            self.seqto = int(splited[7])
+            self.plus = splited[8] == '+'
+            self.full = splited[10] == 'no'
+            self.gc = float(splited[11])
+
+    def __init__(self, data: str):
+        queries = []
+        try:
+            with open(data, 'r') as f:
+                stage = 0
+                for line in f:
+                    if line != '\n':
+                        if line.startswith('#'):
+                            continue
+                        elif line.startswith('Query'):
+                            stage = 1
+                            continue
+                        elif line.startswith('Hit alignments'):
+                            break
+
+                        if stage == 1:
+                            queries.append(line)
+
+        except Exception:
+            raise IOError("Cannot read infernal file!")
+        
+        queries = queries[3:]
+        queries = ''.join(queries).split('\n')[:-1]
+        self.queries = [Queries.Query(x) for x in queries]
+        

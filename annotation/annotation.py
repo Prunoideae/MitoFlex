@@ -35,6 +35,7 @@ try:
     # TODO: remove annotation when testing
     from annotation import annotation_tookit as tk  # pylint: disable=import-error, no-name-in-module
     from Bio import SeqIO
+    from utility import logger
     from utility.bio import infernal
     from utility.bio import wuss
 except Exception as identifier:
@@ -53,7 +54,7 @@ def concat_java(*args, **kwargs):
 
 
 @profiling
-def annotation(basedir=None, prefix=None, ident=30, fastafile=None,
+def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
                genetic_code=9, clade=None, taxa=None, thread_number=8):
 
     # Once we can confirm the sequences are from the clade we want to,
@@ -78,8 +79,23 @@ def annotation(basedir=None, prefix=None, ident=30, fastafile=None,
     wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
     reloc.to_csv(wise_csv)
 
-    # TODO: Finish the tRNA
-    infernal_out_dir = path.join(basedir, 'infernal')
-    query_dict = tk.cmsearch(fastafile, profile_dir_trna, infernal_out_dir, prefix, genetic_code, 0.01)
+    trna_out_dir = path.join(basedir, 'trna')
+    os.makedirs(trna_out_dir, exist_ok=True)
+    query_dict, missing_trna = tk.trna_search(
+        fastafile, profile_dir_trna, trna_out_dir, prefix, genetic_code, 0.01)
 
-    # TODO: Finish the rRNA
+    if missing_trna:
+        logger.log(3, f'Missing tRNAs for AAs : {missing_trna}')
+
+    rrna_out_dir = path.join(basedir, 'rrna')
+    os.makedirs(rrna_out_dir, exist_ok=True)
+    result_12, result_16 = tk.rrna_search(
+        fastafile, profile_dir_rrna, rrna_out_dir, prefix, 0.01)
+
+    if not result_12:
+        logger.log(3, '12s rRNA is not found!')
+
+    if not result_16:
+        logger.log(3, '16s rRNA is not found!')
+
+    return wise_csv, query_dict, result_12, result_16

@@ -391,13 +391,10 @@ def search_regulator(args):
 
     if hasattr(args, 'temp_dir'):
         args.findmitoscaf_dir = os.path.join(args.temp_dir, 'findmitoscaf')
-        args.annotation_dir = os.path.join(args.temp_dir, 'annotation')
     else:
         args.findmitoscaf_dir = os.path.join(os.getcwd(), 'findmitoscaf')
-        args.annotation_dir = os.path.join(os.getcwd(), 'annotation')
     try:
         os.makedirs(args.findmitoscaf_dir, exist_ok=True)
-        os.makedirs(args.annotation_dir, exist_ok=True)
     except Exception:
         valid = False
         logger.log(
@@ -528,6 +525,21 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
     }
 ], func=saa_regulator)
 
+
+def annotation_regulator(args):
+    if hasattr(args, 'temp_dir'):
+        args.annotation_dir = os.path.join(args.temp_dir, 'annotation')
+    else:
+        args.annotation_dir = os.path.join(os.getcwd(), 'annotation')
+
+    try:
+        os.makedirs(args.annotation_dir, exist_ok=True)
+    except Exception:
+        print('Cannot make annotation temp folder!')
+        return False
+    return True
+
+
 # Annotation group
 annotation_parser, annotation_group = register_group('Annotation arguments', [
     {
@@ -540,4 +552,4 @@ annotation_parser, annotation_group = register_group('Annotation arguments', [
         'default': 'Test sp.',
         'help': 'species name to use in genbank file.'
     }
-])
+], func=annotation_regulator)

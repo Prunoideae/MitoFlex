@@ -287,7 +287,7 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
     return wises
 
 
-def cmsearch(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_code=9, e_value=0.001):
+def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_code=9, e_value=0.001):
     # Make sure it's the absolute path
     fasta_file = path.abspath(fasta_file)
     profile_dir = path.abspath(profile_dir)
@@ -301,7 +301,7 @@ def cmsearch(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_
     query_results = []
     for idx, cm in enumerate(os.listdir(profile_dir)):
         indexed = f'{infernal_file}.{idx}'
-        truncated_call('cmsearch', E=0.001, o=indexed, appending=[
+        truncated_call('cmsearch', E=e_value, o=indexed, appending=[
                        path.join(profile_dir, cm), fasta_file])
         query_results.append(infernal.Infernal(indexed))
 
@@ -354,4 +354,31 @@ def cmsearch(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_
     # print('\n'.join(['\n'.join([key + ':', str(value), ''])
     #                 for key, value in query_dict.items()]))
     # print(query_dict.keys())
-    return query_dict
+
+    missing_trnas = [x for x in codon_table.back_table if x not in query_dict]
+    return query_dict, missing_trnas
+
+
+def rrna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, e_value=None):
+    # Just make sure.
+    fasta_file = path.abspath(fasta_file)
+    profile_dir = path.abspath(profile_dir)
+    basedir = path.abspath(basedir)
+
+    # Defined 12s and 16s cm file. Changed if needed.
+    cm_12s = path.join(profile_dir, '12s.cm')
+    cm_16s = path.join(profile_dir, '16s.cm')
+
+    query_12 = path.join(basedir, '12s.out')
+    query_16 = path.join(basedir, '16s.out')
+
+    truncated_call('cmsearch', E=e_value, o=query_12,
+                   appending=[cm_12s, fasta_file])
+    truncated_call('cmsearch', E=e_value, o=query_16,
+                   appending=[cm_16s, fasta_file])
+
+    result_12 = infernal.Queries(query_12)
+    result_16 = infernal.Queries(query_16)
+
+    return (result_12.queries[0] if result_12.queries else None,
+            result_16.queries[0] if result_16.queries else None)
