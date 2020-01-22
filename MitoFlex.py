@@ -153,15 +153,19 @@ def annotate(args):
     from annotation.annotation import annotate as _annotate
     annotate_json, _, _ = _annotate(basedir=args.annotation_dir, prefix=args.workname,
                                     ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
-                                    clade=args.clade, taxa=args.required_taxa, thread_number=args.threads)
+                                    clade=args.clade, taxa=args.required_taxa, thread_number=args.threads,
+                                    wildcard_profile=args.wider_taxa)
     if args.__calling == 'annotate':
         import json
         with open(annotate_json, 'r') as f:
             pos_dict = json.load(f)
         with open(path.join(args.result_dir, 'annotated.txt'), 'w') as f:
-            pcgs = {key: value for key, value in pos_dict.items() if value[2] == 0}
-            trna = {key: value for key, value in pos_dict.items() if value[2] == 1}
-            rrna = {key: value for key, value in pos_dict.items() if value[2] == 2}
+            pcgs = {key: value for key, value in pos_dict.items()
+                    if value[2] == 0}
+            trna = {key: value for key, value in pos_dict.items()
+                    if value[2] == 1}
+            rrna = {key: value for key, value in pos_dict.items()
+                    if value[2] == 2}
 
             print('PCGs found :')
             for key, value in pcgs.items():

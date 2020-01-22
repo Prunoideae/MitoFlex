@@ -56,11 +56,16 @@ def concat_java(*args, **kwargs):
 
 @profiling
 def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
-             genetic_code=9, clade=None, taxa=None, thread_number=8):
+             genetic_code=9, clade=None, taxa=None, thread_number=8,
+             wildcard_profile=False):
+    if wildcard_profile:
+        logger.log(
+            3, 'Wildcard protein profile is used, results may not be accurate.')
 
     # Once we can confirm the sequences are from the clade we want to,
     # then we don't need to use overall database.
-    tbn_profile = path.join(profile_dir_tbn, f'{clade}_CDS_protein.fa')
+    tbn_profile = path.join(
+        profile_dir_tbn, f'{clade if not wildcard_profile else "Animal"}_CDS_protein.fa')
     blast_file = tk.tblastn(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
                             basedir=basedir, prefix=prefix)
 

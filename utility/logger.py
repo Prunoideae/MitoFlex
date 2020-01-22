@@ -46,7 +46,7 @@ def init(file_path: str):
     else:
         if file_path:
             try:
-                __logger = open(file_path, 'a')
+                __logger = open(file_path, 'w')
             except IOError:
                 print(
                     f'Logger is failed to open file {file_path}, the initialization is not valid.')

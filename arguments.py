@@ -512,6 +512,11 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
         'default': 'Platyhelminthes-flatworms',
         'choices': ['Chordata', "Platyhelminthes-flatworms"],
         'help': 'which clade\'s nhmmer profile and cds will be used in the run.'
+    },
+    {
+        'name': 'wider-taxa',
+        'default': False,
+        'help': 'to use the general protein profile for annotation, only used if no reports and cannot add addtional profile.'
     }
 
 

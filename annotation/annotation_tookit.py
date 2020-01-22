@@ -373,7 +373,7 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
     #                 for key, value in query_dict.items()]))
     # print(query_dict.keys())
 
-    missing_trnas = [x for x in codon_table.back_table if x not in query_dict]
+    missing_trnas = [x for x in codon_table.back_table if x not in query_dict and x]
     return query_dict, missing_trnas
 
 
