@@ -33,6 +33,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import concat_command, direct_call, shell_call
     from utility.profiler import profiling
+    from utility import logger
     from utility.bio.seq import compile_seq, decompile
     from utility.bio import wuss, infernal
     import pandas
@@ -97,6 +98,9 @@ def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
                    seg='no', db_gencode=genetic_code, db=infile,
                    query=dbfile, appending=['>', out_blast])
 
+    os.remove(f'{infile}.nhr')
+    os.remove(f'{infile}.nin')
+    os.remove(f'{infile}.nsq')
     return out_blast
 
 
@@ -169,6 +173,13 @@ def genewise(basedir=None, prefix=None, codon_table=None,
     wisedir = path.join(basedir, 'genewise')
     dbdir = path.join(wisedir, 'sequences')
     query_dir = path.join(wisedir, 'queries')
+    try:
+        os.makedirs(wisedir, exist_ok=True)
+        os.makedirs(dbdir, exist_ok=True)
+        os.makedirs(query_dir, exist_ok=True)
+    except:
+        logger.log(4, 'Cannot validate folders for genewise, exiting.')
+        sys.exit(-1)
 
     queries = {record.id: record
                for record in SeqIO.parse(infile, 'fasta')
@@ -181,14 +192,11 @@ def genewise(basedir=None, prefix=None, codon_table=None,
     for idx, record in dbparsed.items():
         SeqIO.write(record, path.join(dbdir, f'{idx}.fa'), 'fasta')
 
-    wises = wises.assign(
-        wise_min_start=np.nan, wise_max_end=np.nan,
-        wise_shift=np.nan, wise_cover=np.nan)
-
     wise_cfg_dir = path.join(bin_dir, 'wisecfg')
     env_var = dict(os.environ)
     env_var["WISECONFIGDIR"] = wise_cfg_dir
 
+    wise_dict = {}
     for _, wise in wises.iterrows():
         query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
         query_file = path.join(query_dir, f'{query_prefix}.fa')
@@ -198,7 +206,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
 
         result = subprocess.check_output(
             concat_command('genewise', codon=codon_table,
-                           trev=not wise.plus, genesf=True, gff=True, gum=True,
+                           trev=not wise.plus, genesf=True, gff=True, sum=True,
                            appending=[
                                path.join(dbdir, f'{wise.qseq}.fa'), query_file]
                            ).replace("--", '-'), env=env_var, shell=True).decode('utf-8')
@@ -206,8 +214,10 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         # Parse the results
         splited = result.split('//\n')
         info = splited[0].split('\n')[1].split()
-        wise.wises.at[idx, 'wise_cover'] = (
-            int(info[3]) - int(info[2]) + 1)/len(dbparsed[wise.qseq])
+
+        wise_cover = float(
+            int(info[3]) - int(info[2]) + 1) / len(dbparsed[str(wise.qseq)])
+
         wise_result = [x.split('\t')
                        for x in splited[2].split('\n')[:-1]
                        if x.split('\t')[2] == 'cds']
@@ -216,11 +226,19 @@ def genewise(basedir=None, prefix=None, codon_table=None,
             x[3] = str(int(x[3]) + wise.sstart-1)
             x[4] = str(int(x[4]) + wise.sstart-1)
         wise_result.sort(key=lambda x: int(x[3]))
-        wises.at[idx, 'wise_shift'] = sum(
-            x[2] == 'match' for x in wise_result)-1
-        wises.at[idx, 'wise_min_start'] = min(int(x[3]) for x in wise_result)
-        wises.at[idx, 'wise_max_end'] = max(int(x[4]) for x in wise_result)
+        wise_shift = sum(x[2] == 'match' for x in wise_result)-1
+        wise_start = min(int(x[3]) for x in wise_result)
+        wise_end = max(int(x[4]) for x in wise_result)
+        wise_dict[(wise.qseq, wise.sseq)] = (
+            wise_cover, wise_shift, wise_start, wise_end)
 
+    wises.assign(wise_cover=np.nan)
+    for (qseq, sseq), (cover, shift, start, end) in wise_dict.items():
+        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_cover'] = cover
+        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_shift'] = int(shift)
+        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_min_start'] = int(start)
+        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_max_end'] = int(end)
+        
     wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'), index=False)
     return wises, queries, dbparsed
 
@@ -238,7 +256,7 @@ def collect_result(output_file=None, wises: pandas.DataFrame = None, queries=Non
             'plus': wise.plus
         })
 
-        seq = queries[wise.sseq][wise.sstart-1:wise.send]
+        seq = queries[wise.sseq][wise.sstart-1: wise.send]
         seq.description = trait_string
         if wise.plus is 0:
             seq.seq = seq.seq.reverse_complement()
@@ -251,7 +269,7 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
     wises.assign(start_real=np.nan, end_real=np.nan)
     for _, wise in wises.iterrows():
         start_real = end_real = -1
-        seq = wise_seqs[wise.sseq][wise.sstart-29:wise.send+30]
+        seq = wise_seqs[wise.sseq][wise.sstart-29: wise.send+30]
         if not wise.plus:
             seq = seq.reverse_complement()
         try:

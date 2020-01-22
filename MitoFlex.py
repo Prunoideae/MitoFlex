@@ -55,19 +55,23 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
+# Debug only
+logger.set_level(0)
+
 # Constants
+VERSION = '0.0.5'
 base_dir = path.abspath(path.dirname(__file__))
 profile_dir = path.join(base_dir, 'profile')
 
 # Command processing
-desc = """
+desc = f"""
 Description
 
     MitoFlex - A rewritten toolkit of its ancestor MitoZ for faster and better 
     mitochondrial assembly, annotation and visualization, for expandability and more.
 
 Version
-    0.0
+    {VERSION}
 
 Citation
 
@@ -99,6 +103,11 @@ def filter(args):
                                          start=args.start, end=args.end,
                                          n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve,
                                          seq_size=args.seq_size)
+    if args.__calling == 'filter':
+        os.rename(filtered1, path.join(
+            args.result_dir, path.basename(filtered1)))
+        os.rename(filtered2, path.join(
+            args.result_dir, path.basename(filtered2)))
     return filtered1, filtered2
 
 @parse_func(func_help='assemble from input fastq reads, output contigs',
@@ -111,7 +120,11 @@ def assemble(args):
                                   work_prefix=args.workname, uselist=args.use_list,
                                   kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
                                   no_mercy=args.no_mercy, disable_acc=args.disable_acc, prune_level=args.prune_level,
-                                  prune_depth=args.prune_depth, clean_temp=args.clean_temp, threads=args.threads)
+                                  prune_depth=args.prune_depth, keep_temp=not args.clean_temp, threads=args.threads)
+
+    if args.__calling == 'assemble':
+        os.rename(assembled_contigs, path.join(
+            args.result_dir, path.basename(assembled_contigs)))
 
     return assembled_contigs
 
@@ -124,19 +137,43 @@ def findmitoscaf(args):
     picked_fa = _findmitoscaf(
         thread_number=args.threads, clade=args.clade, relaxing=args.taxa_tolerance, gene_code=args.genetic_code,
         multi=args.min_abundance, taxa=args.required_taxa, prefix=args.workname, basedir=args.findmitoscaf_dir,
-        contigs_file=args.fasta_file, cover_valve=1)
+        contigs_file=args.fastafile, cover_valve=1)
 
+    if args.__calling == 'findmitoscaf':
+        os.rename(picked_fa, path.join(
+            args.result_dir, path.basename(picked_fa)))
     return picked_fa
 
 
 @parse_func(func_help='annotate PCGs, tRNA and rRNA genes',
-            parents=[universal_parser, fasta_parser, annotation_parser, saa_parser, fastq_parser])
+            parents=[universal_parser, fasta_parser, annotation_parser, saa_parser, search_parser])
 @arg_prop(dest='depth_file', help=argparse.SUPPRESS)
 @arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
 def annotate(args):
     from annotation.annotation import annotate as _annotate
-    wise_csv, query_dict, result_12, result_16 = _annotate()
-    return wise_csv, query_dict, result_12, result_16
+    annotate_json, _, _ = _annotate(basedir=args.annotation_dir, prefix=args.workname,
+                                    ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
+                                    clade=args.clade, taxa=args.required_taxa, thread_number=args.threads)
+    if args.__calling == 'annotate':
+        import json
+        with open(annotate_json, 'r') as f:
+            pos_dict = json.load(f)
+        with open(path.join(args.result_dir, 'annotated.txt'), 'w') as f:
+            pcgs = {key: value for key, value in pos_dict.items() if value[2] == 0}
+            trna = {key: value for key, value in pos_dict.items() if value[2] == 1}
+            rrna = {key: value for key, value in pos_dict.items() if value[2] == 2}
+
+            print('PCGs found :')
+            for key, value in pcgs.items():
+                print(key, ':', value[0], '-', value[1], 'from', value[3])
+            print('\ntRNAs found :')
+            for key, value in trna.items():
+                print(key, ':', value[0], '-', value[1], 'from', value[3])
+            print('\nrRNAs found :')
+            for key, value in rrna.items():
+                print(key, ':', value[0], '-', value[1], 'from', value[3])
+
+    return annotate_json
 
 
 @parse_func(func_help='visualization of GenBank file')
@@ -155,8 +192,9 @@ def all(args):
 
     # Go filtering
     if not args.disable_filter:
+        #
         # Why I'm NOT using .gz ext here even I have implemented this:
-        # 1. flate2 is slow, and obviously no other can be quicker.
+        # 1. flate2 is slow, it takes much compressing data.
         # 2. plug in a SSD is much more easier than adding a CPU.
         #
         # You can still set this to xx.gz then it will surely make a
@@ -167,30 +205,39 @@ def all(args):
         args.cleanq2 = 'clean.2.fq'
         args.fastq1, args.fastq2 = filter(args=args)
 
-    args.fasta_file = assemble(args)
-    args.fasta_file = findmitoscaf(args)
+    args.fastafile = assemble(args)
+    args.fastafile = findmitoscaf(args)
 
     if not args.disable_annotation:
         print(annotate(args))
+        # Visualization is of no way if not annotated.
         # visualize(args)
 
 
-# This is ah, a somehow not ideal method in the whole MitoFlex coding,
-# but it's done with the purpose of making the generated result
-# cool and good.
-# This acts as a cleaner, it cleans the generated empty folders (
-# validated but not used) and some temporal files, it is executed no
-# matter what the method is called, and even no matter if any the
-# exposed function is called or NOT.
-def cleanup(args):
+def pre(args):
+    # Initialize the logger.
+    if hasattr(args, 'work_dir') and hasattr(args, 'workname'):
+        logger.init(path.join(args.work_dir, f'{args.workname}.log'))
+    else:
+        logger.init(path.join(os.getcwd(), 'summary.log'))
+
+    if hasattr(args, 'workname'):
+        logger.log(2, f'MitoFlex {VERSION}, run {args.workname}')
+
+    if hasattr(args, 'disable_filter') and args.disable_filter:
+        logger.log(3, 'Warning : Filtering is not enabled.')
+
+    if hasattr(args, 'disable_annotation') and args.disable_annotation:
+        logger.log(3, 'Warning : Annotation is not enabled.')
+
+
+def post(args):
     if args is None:
         return
-    print(args)
+    logger.finalize()
 
 
 # Entry starts at here
 if __name__ == '__main__':
     parser = freeze_arguments('MitoFlex', desc)
-    final_args = parse_then_call(parser)
-    cleanup(final_args)
-    logger.finalize()
+    parse_then_call(parser, pre=pre, post=post)

@@ -95,7 +95,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     logger.log(2, 'Finding mitochondrial scaffold.')
 
     # Drop all the sequences where multi is too low to do further analysis
-    filtered_fa = f'{prefix}.contigs.filtered.fa'
+    filtered_fa = path.join(basedir, f'{prefix}.contigs.filtered.fa')
     filtered_contigs = []
     for seq in SeqIO.parse(contigs_file, 'fasta'):
         trait_string = seq.description.replace(seq.id + ' ', '', 1)
@@ -277,10 +277,12 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
             required_class = ncbi.get_rank([required_id])[required_id]
             required_index = rank_list.index(required_class)
             # Get last index for the matching rank
-            matched_rank = max(idx
-                               for idx, ((tax_id, tax_name), (required_id, required_name))
-                               in enumerate(zip(taxa_rank, required_rank))
-                               if required_name == tax_name != 'NA')
+            matches = [idx
+                       for idx, ((tax_id, tax_name), (required_id, required_name))
+                       in enumerate(zip(taxa_rank, required_rank))
+                       if required_name == tax_name != 'NA']
+            matches.append(-1)
+            matched_rank = max(matches)
             if matched_rank + relaxing >= required_index:
                 is_in = True
                 break
@@ -288,5 +290,6 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
             to_save.append(key)
 
     filtered_frame = hmm_frame[hmm_frame['target'].isin(to_save)]
-    filtered_frame.to_csv(path.join(basedir, f'{prefix}.taxa.csv'))
+    filtered_frame.to_csv(
+        path.join(basedir, f'{prefix}.taxa.csv'), index=False)
     return filtered_frame

@@ -26,6 +26,7 @@ import sys
 from os import path
 import subprocess
 import multiprocessing
+import json
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -55,7 +56,7 @@ def concat_java(*args, **kwargs):
 
 @profiling
 def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
-               genetic_code=9, clade=None, taxa=None, thread_number=8):
+             genetic_code=9, clade=None, taxa=None, thread_number=8):
 
     # Once we can confirm the sequences are from the clade we want to,
     # then we don't need to use overall database.
@@ -66,26 +67,22 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
     blast_frame = tk.wash_blast_results(blast_frame)
 
-    wise_frame, queries, database = tk.genewise(
+    wise_frame, _, _ = tk.genewise(
         basedir=basedir, prefix=prefix, wises=blast_frame,
         infile=fastafile, dbfile=tbn_profile, cutoff=0.5)
 
-    # Output logging file
-    final_file = path.join(basedir, f'{prefix}.genewise.predicted.cds.fa')
-    if not tk.collect_result(final_file, wise_frame, queries, database):
-        return None, None
-
-    reloc = tk.reloc_genes(fasta_file=fastafile, wises=wise_frame)
+    # Output wise frame
     wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
-    reloc.to_csv(wise_csv)
+    wise_frame.to_csv(wise_csv)
 
     trna_out_dir = path.join(basedir, 'trna')
     os.makedirs(trna_out_dir, exist_ok=True)
     query_dict, missing_trna = tk.trna_search(
         fastafile, profile_dir_trna, trna_out_dir, prefix, genetic_code, 0.01)
 
+    logger.log(2, f'tRNAs found : {list(query_dict.keys())}')
     if missing_trna:
-        logger.log(3, f'Missing tRNAs for AAs : {missing_trna}')
+        logger.log(3, f'Missing tRNAs : {missing_trna}')
 
     rrna_out_dir = path.join(basedir, 'rrna')
     os.makedirs(rrna_out_dir, exist_ok=True)
@@ -98,4 +95,62 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     if not result_16:
         logger.log(3, '16s rRNA is not found!')
 
-    return wise_csv, query_dict, result_12, result_16
+    locs_file = path.join(basedir, 'locs.json')
+    annotation_json = {}
+
+    sequence_data = {x.id: x for x in SeqIO.parse(fastafile, 'fasta')}
+
+    annotated_fa = path.join(basedir, f'{prefix}.annotated.cds.fa')
+    annotated_frag = []
+    for _, row in wise_frame.iterrows():
+        cds = str(row).split('_')[3]
+        if cds in annotation_json:
+            count = sum(x.startswith(cds) for x in annotation_json.keys())
+            cds = f'{cds}{count}'
+        start, end = (min(int(row.wise_min_start), int(row.wise_max_end)),
+                      max(int(row.wise_min_start), int(row.wise_max_end)))
+        frag = sequence_data[str(row.sseq)][start-1:end]
+        frag.description = f'gene={cds} start={start} end={end}'
+        annotated_frag.append(frag)
+        annotation_json[cds] = (start, end, 0, str(row.sseq))
+
+    SeqIO.write(annotated_frag, annotated_fa, 'fasta')
+
+    annotated_rnas = path.join(basedir, f'{prefix}.annotated.rna.fa')
+    annotated_frag.clear()
+    for key, value in query_dict.items():
+        start, end = (min(value.seqfrom, value.seqto),
+                      max(value.seqfrom, value.seqto))
+        frag = sequence_data[value.sequence][start-1:end]
+        frag.description = f'gene=trn{key} start={start} end={end}'
+        annotated_frag.append(frag)
+        annotation_json[f'trn{key}'] = (
+            start, end, 1, value.sequence)
+
+    if result_12:
+        start, end = (min(result_12.seqfrom, result_12.seqto),
+                      max(result_12.seqfrom, result_12.seqto))
+        logger.log(
+            2, f'12s rRNA found from {start} to {end}')
+        frag = sequence_data[result_12.sequence][start-1:end]
+        frag.description = f'gene=rrnS start={start} end={end}'
+        annotated_frag.append(frag)
+        annotation_json['rrns'] = (
+            start, end, 2, result_12.sequence)
+
+    if result_16:
+        start, end = (min(result_16.seqfrom, result_16.seqto),
+                      max(result_16.seqfrom, result_16.seqto))
+        logger.log(
+            2, f'16s rRNA found from {start} to {end}')
+        frag = sequence_data[result_16.sequence][start-1:end]
+        frag.description = f'gene=rrnL start={start} end={end}'
+        annotated_frag.append(frag)
+        annotation_json['rrnl'] = (
+            start, end, 2, result_16.sequence)
+
+    SeqIO.write(annotated_frag, annotated_rnas, 'fasta')
+    with open(locs_file, 'w') as f:
+        json.dump(annotation_json, f)
+
+    return locs_file, annotated_fa, annotated_rnas

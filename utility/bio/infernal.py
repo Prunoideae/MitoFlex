@@ -43,8 +43,10 @@ class Infernal():
 
     class Result():
         def __init__(self, data: str):
-            lines = data.split('\n')[1:-1]
-            paras = lines[2].split()
+            lines = data.split('\n')[0:-1]
+            ids = lines[0].split()
+            self.sequence = ids[0]
+            paras = lines[3].split()
             self.rank = paras[0].translate({ord(i): None for i in '()'})
             self.e_value = float(paras[2])
             self.score = float(paras[3])
@@ -59,11 +61,11 @@ class Infernal():
             self.gc = float(paras[15])
             self.alignment = None
 
-            seq = lines[7].split(maxsplit=2)[2].rsplit(maxsplit=1)[0]
-            fold = lines[4].split()[0]
+            seq = lines[8].split(maxsplit=2)[2].rsplit(maxsplit=1)[0]
+            fold = lines[5].split()[0]
 
             sing = wuss.seq2single(seq)
-            self.qual = lines[8].split()[0]
+            self.qual = lines[9].split()[0]
             self.alignment = wuss.GenericLoop(fold, sing)
 
         def __repr__(self):
@@ -109,6 +111,7 @@ class Queries():
             self.e_value = float(splited[2])
             self.score = float(splited[3])
             self.bias = float(splited[4])
+            self.sequence = str(splited[5])
             self.seqfrom = int(splited[6])
             self.seqto = int(splited[7])
             self.plus = splited[8] == '+'
@@ -135,8 +138,7 @@ class Queries():
 
         except Exception:
             raise IOError("Cannot read infernal file!")
-        
+
         queries = queries[3:]
         queries = ''.join(queries).split('\n')[:-1]
         self.queries = [Queries.Query(x) for x in queries]
-        

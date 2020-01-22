@@ -33,7 +33,7 @@ import inspect
 import datetime
 import sys
 from os import path
-__level_list = ['CODE', 'DEBUG', 'INFO', 'WARN', 'ERROR']
+__level_list = ['CODE ', 'DEBUG', 'INFO ', 'WARN ', 'ERROR']
 __initialized = False
 __logger = None
 __level_valve = 0
@@ -61,6 +61,8 @@ def is_init():
 
 def __log(info: str):
     print(info, file=__logger)
+    if __logger:
+        __logger.flush()
 
 
 def set_level(level: int):
@@ -73,6 +75,10 @@ def get_level():
 
 
 def log(level: int = 2, info: str = None):
+    if not __initialized:
+        raise RuntimeWarning(
+            "A logging function was called when the logger is not initialized!")
+
     if level < __level_valve:
         return
     time_now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -98,6 +104,7 @@ def log(level: int = 2, info: str = None):
 
 def finalize():
     global __logger, __initialized
-    __logger.close()
+    if __logger:
+        __logger.close()
     __logger = None
     __initialized = False

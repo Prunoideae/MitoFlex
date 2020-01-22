@@ -47,7 +47,7 @@ class ParsingError(Exception):
 
 def register_group(group_name, argument_list, func=None):
     '''
-    Create an argument group with group_name and dict argument_list. 
+    Create an argument group with group_name and dict argument_list.
     Returns parser and group of this.
     '''
     parser = argparse.ArgumentParser(add_help=False,
@@ -102,15 +102,15 @@ def register_group(group_name, argument_list, func=None):
 
 def parse_func(func=None, *, func_help='', parents=[]):
     '''
-    Mark the decorated function as a valid 'argument acceptable' 
-    function. Decorated function will be analysed once it's created, 
+    Mark the decorated function as a valid 'argument acceptable'
+    function. Decorated function will be analysed once it's created,
     and it will further be examined and called.
 
     Values' metavars and types are determined automatically unless it
-    was modified before the parse_func decorator, but be careful, every 
-    bool argument will NOT be treated as a normal argument but a switch, 
-    thus you can't specify a metarvar or assign a type to it. Though modify 
-    the argument attributes after the decoration is acceptable, it's 
+    was modified before the parse_func decorator, but be careful, every
+    bool argument will NOT be treated as a normal argument but a switch,
+    thus you can't specify a metarvar or assign a type to it. Though modify
+    the argument attributes after the decoration is acceptable, it's
     not recommended for code structure.
 
     Arguments introduction:
@@ -173,21 +173,21 @@ def arg_prop(func=None, *, dest=None, arg_type=None, help=None, required=None, c
 
     func : a preserved variant for further call, DO NOT MODIFY IT!
 
-    dest : specify the destination argument, leaving this to blank or specify 
+    dest : specify the destination argument, leaving this to blank or specify
 
     a argument that's not existed will raise an error.
 
-    arg_type : specify the argument type of the argument, like you may change 
+    arg_type : specify the argument type of the argument, like you may change
     int to float, or something alike. A argument have a boolean default will not be changed.
 
     help : add a help string to argument. This will appear in --help or parser.print_help().
 
     required : mark this argument is required or not.
 
-    choices : give the argument a certain choices, this is predefined and not immutable, neither 
+    choices : give the argument a certain choices, this is predefined and not immutable, neither
     it has a metavar nor undecleard value can be entered in this argument.
 
-    meta : specify the metavar of the argument, like str can be changed to file, for a more detailed 
+    meta : specify the metavar of the argument, like str can be changed to file, for a more detailed
     information, this will not influence how the argument works.
     '''
     if func is None:
@@ -340,18 +340,23 @@ def freeze_arguments(prog, desc):
     return main_parser
 
 
-def parse_then_call(expr):
+def parse_then_call(expr, pre=None, post=None):
     '''
-    Analyze the parser information, then call a certain function with the name 
+    Analyze the parser information, then call a certain function with the name
     registered with parse_func before.
 
     Also it returns the arguments processed from every processor.
 
     Argument introduction:
 
-    expr : Accepts a parser created from freeze_argument. Other parsers could 
-    be used, but unregistered function will make the program extremely unstable 
+    expr : Accepts a parser created from freeze_argument. Other parsers could
+    be used, but unregistered function will make the program extremely unstable
     and may lead to an unhappy end.
+
+    pre : Callback function when the parser finished parsing, but the command is
+    not yet called.
+
+    post : Callback function when the command is executed.
     '''
     args = expr.parse_args()
     parsed = vars(args)
@@ -398,7 +403,11 @@ def parse_then_call(expr):
                 valid or print("Error occured, exiting.")
             if valid:
                 final.__calling = command
+                if callable(pre):
+                    pre(final)
                 func(final)
+                if callable(post):
+                    post(final)
             return final
         else:
             expr.print_help()
@@ -414,7 +423,11 @@ def parse_then_call(expr):
                     valid = valid and preprocessor(final)
             valid or print("Error occured, exiting")
         if valid:
+            if callable(pre):
+                pre(final)
             func(final)
+            if callable(post):
+                post(final)
         return final
     else:
         raise Exception(
