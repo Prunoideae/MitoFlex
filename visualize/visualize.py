@@ -31,6 +31,6 @@ try:
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
-@profiling
-def visualize():
+
+def visualize(fasta_file=None, fastq1=None, fastq2=None):
     pass

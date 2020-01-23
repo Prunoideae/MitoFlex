@@ -35,7 +35,6 @@ except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 
-@profiling
 def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              uselist=False, kmin=21, kmax=141, kstep=12, klist=None,
              no_mercy=False, disable_acc=False,

@@ -54,7 +54,6 @@ def concat_java(*args, **kwargs):
     return concat_command(*args, **kwargs).replace('--', '-')
 
 
-@profiling
 def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
              genetic_code=9, clade=None, taxa=None, thread_number=8,
              wildcard_profile=False):
@@ -140,7 +139,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         frag = sequence_data[result_12.sequence][start-1:end]
         frag.description = f'gene=rrnS start={start} end={end}'
         annotated_frag.append(frag)
-        annotation_json['rrns'] = (
+        annotation_json['rrnS'] = (
             start, end, 2, result_12.sequence)
 
     if result_16:
@@ -151,7 +150,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         frag = sequence_data[result_16.sequence][start-1:end]
         frag.description = f'gene=rrnL start={start} end={end}'
         annotated_frag.append(frag)
-        annotation_json['rrnl'] = (
+        annotation_json['rrnL'] = (
             start, end, 2, result_16.sequence)
 
     SeqIO.write(annotated_frag, annotated_rnas, 'fasta')

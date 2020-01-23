@@ -36,7 +36,6 @@ except Exception as identifier:
 filter_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-@profiling
 def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, seq_size=None):
     fsin = path.getsize(fqiabs)
     logger.log(level=1, info='Start filtering single-end rawdata.')
@@ -62,7 +61,6 @@ def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None
     return fqoabs
 
 
-@profiling
 def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
               a1=None, a2=None, dedup=False, mis=3, ali=15,
               start=None, end=None, n=10, q=55, l=0.2, seq_size=None):

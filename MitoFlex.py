@@ -74,7 +74,8 @@ Version
     {VERSION}
 
 Citation
-
+    MitoFlex
+    
 """
 
 @parse_func(func_help='filter out unqualified reads from fastq',
@@ -213,7 +214,7 @@ def all(args):
     args.fastafile = findmitoscaf(args)
 
     if not args.disable_annotation:
-        print(annotate(args))
+        pos_json = annotate(args)
         # Visualization is of no way if not annotated.
         # visualize(args)
 
@@ -227,6 +228,10 @@ def pre(args):
 
     if hasattr(args, 'workname'):
         logger.log(2, f'MitoFlex {VERSION}, run {args.workname}')
+
+    arg_dict = vars(args)
+    logger.log(1, f'Arguments after parsed : ')
+    logger.log(1, f'{[f"{key}={value}" for key, value in arg_dict.items()]}')
 
     if hasattr(args, 'disable_filter') and args.disable_filter:
         logger.log(3, 'Warning : Filtering is not enabled.')

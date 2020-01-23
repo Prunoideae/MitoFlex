@@ -81,13 +81,12 @@ def get_rank(taxa_name=None):
             if rank in rank_dict:
                 rank_dict[rank] = taxa
     else:
-        print(
-            f'Taxonomy name {taxa_name} not found in NCBI tax database. Skipping.')
+        logger.log(
+            2, f'Query name {taxa_name} was skipped because no result found in NCBI database.')
 
     return [(tax_class, tax_id) for tax_class, tax_id in rank_dict.items()]
 
 
-@profiling
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None,
                  contigs_file=None, relaxing=0, multi=10, cover_valve=1, min_multi=3.0):
@@ -199,7 +198,6 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     return picked_fasta
 
 
-@profiling
 def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
                   prefix=None, basedir=None):
 
