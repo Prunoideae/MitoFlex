@@ -153,7 +153,19 @@ MitoFlex has already integrated protein and nucleic acid data into the profile, 
 
 For official documentation refers to [here](http://www.csb.yale.edu/userguides/seq/hmmer/docs/node19.html).
 
-## 6.2 Adding CDS data
+## 6.2 Adding profile data
+
+MitoFlex has its internal profile for basic mitogenome assembly and annotation, but it comes to be inaccurate if a specific speciemen is required. You can implement your own set of profile of the specific speciemen you want if feeling like MitoFlex is not giving good results.
+
+### 6.2.1 Adding or modifying clade protein database
+
+MitoFlex uses a given set of protein sequences to do tblastn, for picking up most possible sequences and for annotating the genes, if you found the species you requested is not quite covered in the database (Like Rhabditophora in Playthelminthes), you can of course add your sequences into the profile. The set of sequences can be found in `profile/MT_database/{clade}.fa`, written in FASTA file format, the id of the sequence must be in `gi_NC_{record id}_{gene}_{genus}_{species}_{length}_aa`, only gene, genus and species were taken into recognition of sequences and clades, but please keep underscores in place for the program to detect and parse the information.
+
+### 6.2.2 Adding a new clade
+
+To add a new clade, these three files should be noticed: `{clade}.hmm` and `required_cds.json` in `profile/CDS_HMM` and `{clade}.fa` in `profile/MT_database`. The hmm file is used for nhmmer to search out possible sequences, and the fasta file is for tblastn to mark the potential sequence with genes, and the required_cds.json is for telling MitoFlex what gene should be taken into count, because some gene is rarely reported in several species, so it would be better for users to tell how MitoFlex will judge the gene is missing or not.
+
+
 
 # 7. Extending the function of MitoFlex
 

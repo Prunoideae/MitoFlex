@@ -60,8 +60,6 @@ logger.set_level(0)
 
 # Constants
 VERSION = '0.0.5'
-base_dir = path.abspath(path.dirname(__file__))
-profile_dir = path.join(base_dir, 'profile')
 
 # Command processing
 desc = f"""
@@ -80,7 +78,6 @@ Citation
 
 @parse_func(func_help='filter out unqualified reads from fastq',
             parents=[universal_parser, fastq_parser, filter_parser])
-@arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def filter(args):
 
     if not path.isabs(args.cleanq1):
@@ -96,14 +93,15 @@ def filter(args):
     if args.fastq2 is None:
         filtered1 = filter_se(fqiabs=f'"{args.fastq1}"', fqoabs=f'"{args.cleanq1}"', Ns=args.Ns_valve,
                               quality=args.quality_valve, limit=args.percentage_valve, start=args.start,
-                              end=args.end, seq_size=args.seq_size)
+                              end=args.end)
     else:
         filtered1, filtered2 = filter_pe(fq1=f'"{args.fastq1}"', fq2=f'"{args.fastq2}"',
                                          o1=f'"{args.cleanq1}"', o2=f'"{args.cleanq2}"',
                                          dedup=args.deduplication,
                                          start=args.start, end=args.end,
-                                         n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve,
-                                         seq_size=args.seq_size)
+                                         n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve)
+    
+    # Further processing for calling directly
     if args.__calling == 'filter':
         os.rename(filtered1, path.join(
             args.result_dir, path.basename(filtered1)))
@@ -123,6 +121,7 @@ def assemble(args):
                                   no_mercy=args.no_mercy, disable_acc=args.disable_acc, prune_level=args.prune_level,
                                   prune_depth=args.prune_depth, keep_temp=not args.clean_temp, threads=args.threads)
 
+    # Further processing for calling directly
     if args.__calling == 'assemble':
         os.rename(assembled_contigs, path.join(
             args.result_dir, path.basename(assembled_contigs)))
@@ -140,6 +139,7 @@ def findmitoscaf(args):
         multi=args.min_abundance, taxa=args.required_taxa, prefix=args.workname, basedir=args.findmitoscaf_dir,
         contigs_file=args.fastafile, cover_valve=1)
 
+    # Further processing for calling directly
     if args.__calling == 'findmitoscaf':
         os.rename(picked_fa, path.join(
             args.result_dir, path.basename(picked_fa)))
@@ -148,14 +148,13 @@ def findmitoscaf(args):
 
 @parse_func(func_help='annotate PCGs, tRNA and rRNA genes',
             parents=[universal_parser, fasta_parser, annotation_parser, saa_parser, search_parser])
-@arg_prop(dest='depth_file', help=argparse.SUPPRESS)
-@arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
 def annotate(args):
     from annotation.annotation import annotate as _annotate
-    annotate_json, _, _ = _annotate(basedir=args.annotation_dir, prefix=args.workname,
-                                    ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
-                                    clade=args.clade, taxa=args.required_taxa, thread_number=args.threads,
-                                    wildcard_profile=args.wider_taxa)
+    annotate_json, fa_file, rna_file = _annotate(basedir=args.annotation_dir, prefix=args.workname,
+                                                 ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
+                                                 clade=args.clade, taxa=args.required_taxa, thread_number=args.threads,
+                                                 wildcard_profile=args.wider_taxa)
+    # Further processing for calling directly
     if args.__calling == 'annotate':
         import json
         with open(annotate_json, 'r') as f:
@@ -177,13 +176,19 @@ def annotate(args):
             print('\nrRNAs found :')
             for key, value in rrna.items():
                 print(key, ':', value[0], '-', value[1], 'from', value[3])
+        os.rename(fa_file, path.join(args.result_dir, path.basename(fa_file)))
+        os.rename(rna_file, path.join(
+            args.result_dir, path.basename(rna_file)))
 
     return annotate_json
 
 
 @parse_func(func_help='visualization of GenBank file')
 def visualize(args):
-    # TODO:To fill the blanks of visualize method
+    if not hasattr(args, 'use_json'):
+        pass
+
+    # TODO To fill the blanks of visualize method
     pass
 
 
@@ -191,8 +196,6 @@ def visualize(args):
             parents=[universal_parser, assembly_parser, filter_parser, fastq_parser,
                      search_parser, saa_parser, annotation_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on')
-@arg_prop(dest='topology', choices=['linear', 'circular'], help=argparse.SUPPRESS, default='linear')
-@arg_prop(dest='seq_size', help='how many sequences will be filtered out.', arg_type=int)
 def all(args):
 
     # Go filtering
@@ -214,9 +217,13 @@ def all(args):
     args.fastafile = findmitoscaf(args)
 
     if not args.disable_annotation:
-        pos_json = annotate(args)
+        args.pos_json = annotate(args)
+        args.use_json = True
+
         # Visualization is of no way if not annotated.
-        # visualize(args)
+        # fastafile = findmitoscafed file
+        # fastq1, fastq2 = filtered fastq file
+        visualize(args)
 
 
 def pre(args):
@@ -234,10 +241,10 @@ def pre(args):
     logger.log(1, f'{[f"{key}={value}" for key, value in arg_dict.items()]}')
 
     if hasattr(args, 'disable_filter') and args.disable_filter:
-        logger.log(3, 'Warning : Filtering is not enabled.')
+        logger.log(3, 'Filtering is not enabled.')
 
     if hasattr(args, 'disable_annotation') and args.disable_annotation:
-        logger.log(3, 'Warning : Annotation is not enabled.')
+        logger.log(3, 'Annotation is not enabled.')
 
 
 def post(args):

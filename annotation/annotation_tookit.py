@@ -55,7 +55,7 @@ def truncated_call(*args, **kwargs):
 
 def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
                   prefix=None, threads=8):
-    # TODO: Replace single-threaded tblastn to use a pseudomultithreaded method
+    # TODO Replace single-threaded tblastn to use a pseudomultithreaded method
 
     # README:
     # This requires a rearrange of the MitoFlex's profile structure. So

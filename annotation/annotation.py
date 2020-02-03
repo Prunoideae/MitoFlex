@@ -33,7 +33,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call, concat_command
     from utility.profiler import profiling
-    # TODO: remove annotation when testing
+    # TODO remove annotation when testing
     from annotation import annotation_tookit as tk  # pylint: disable=import-error, no-name-in-module
     from Bio import SeqIO
     from utility import logger
@@ -57,6 +57,7 @@ def concat_java(*args, **kwargs):
 def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
              genetic_code=9, clade=None, taxa=None, thread_number=8,
              wildcard_profile=False):
+    logger.log(2, 'Entering annotation module.')
     if wildcard_profile:
         logger.log(
             3, 'Wildcard protein profile is used, results may not be accurate.')
@@ -64,7 +65,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     # Once we can confirm the sequences are from the clade we want to,
     # then we don't need to use overall database.
     tbn_profile = path.join(
-        profile_dir_tbn, f'{clade if not wildcard_profile else "Animal"}_CDS_protein.fa')
+        profile_dir_tbn, f'{clade if not wildcard_profile else "Animal"}.fa')
     blast_file = tk.tblastn(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
                             basedir=basedir, prefix=prefix)
 

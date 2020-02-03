@@ -93,6 +93,18 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     logger.log(2, 'Finding mitochondrial scaffold.')
 
+    # Update the total profile before the process
+    logger.log(2, 'Updating the general protein database.')
+    lc = 0
+    with open(path.join(profile_dir_tbn, 'Animal.fa'), 'w') as fout:
+        for protein_fas in os.listdir(profile_dir_tbn):
+            if protein_fas.endswith('.fa') and protein_fas != 'Animal.fa':
+                with open(path.join(profile_dir_tbn, protein_fas)) as fin:
+                    for line in fin:
+                        fout.write(line)
+                        lc += 1
+    logger.log(1, f'Generation finished with {lc} writes.')
+
     # Drop all the sequences where multi is too low to do further analysis
     filtered_fa = path.join(basedir, f'{prefix}.contigs.filtered.fa')
     filtered_contigs = []
@@ -107,7 +119,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     SeqIO.write(filtered_contigs, filtered_fa, 'fasta')
 
     # Do nhmmer search and collect, filter results
-    nhmmer_profile = path.join(profile_dir_hmm, f'{clade}_CDS.hmm')
+    nhmmer_profile = path.join(profile_dir_hmm, f'{clade}.hmm')
     logger.log(1, f'nhmmer profile : {nhmmer_profile}')
 
     # do hmmer search
@@ -118,7 +130,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     # filter by taxanomy
     if taxa is not None:
         # We use an overall protein dataset to determine what clades diffrent seqs belonged to.
-        tbn_profile = path.join(profile_dir_tbn, f'Animal_CDS_protein.fa')
+        tbn_profile = path.join(profile_dir_tbn, f'Animal.fa')
         hmm_frame = filter_taxanomy(
             taxa=taxa, fasta_file=filtered_fa, hmm_frame=hmm_frame,
             basedir=basedir, prefix=prefix, dbfile=tbn_profile, gene_code=gene_code,
