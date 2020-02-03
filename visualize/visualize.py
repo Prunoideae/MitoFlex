@@ -89,5 +89,5 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     # GC content
     # Reuse conv-list here, as it's not deleted in the scope
     for seq in list_conv:
-        #Stepping 50
+        #Stepping 50 to walk through
         pass
