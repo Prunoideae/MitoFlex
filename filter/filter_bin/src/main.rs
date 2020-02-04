@@ -103,7 +103,7 @@ fn main() {
                 .value_name("INT")
                 .help("Only this number of sequences will be filtered out")
                 .takes_value(true)
-                .default_value("-1"),
+                .default_value("0"),
         )
         .arg(
             Arg::with_name("deduplication")
@@ -165,7 +165,7 @@ fn main() {
         .unwrap_or("0")
         .parse()
         .ok()
-        .expect("Cannot parse argument trim");
+        .expect("Cannot parse a positive int to trimming!");
 
     let dedup: bool = matches.is_present("deduplication");
 
@@ -260,12 +260,6 @@ fn filter_pe(
         writeln!(cl2, "+");
         writeln!(cl2, "{}", qua2);
     }
-}
-
-#[test]
-fn foo() {
-    let a: usize = 150;
-    assert_eq!((a as f32 * 0.2) as usize, 30 as usize);
 }
 
 fn filter_se(
