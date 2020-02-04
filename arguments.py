@@ -35,12 +35,10 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
-'''
+profile_dir = os.path.join(os.path.dirname(__file__), 'profile', 'MT_database')
 
-'''
+
 # Universal group
-
-
 def universal_regulator(args):
 
     args.work_dir = os.path.abspath(os.path.join(args.basedir, args.workname))
@@ -103,9 +101,8 @@ universal_parser, universal_group = register_group('Universal arguments', [
     }], func=universal_regulator
 )
 
+
 # Fastq group
-
-
 def fastq_regulator(args):
     valid = True
 
@@ -163,9 +160,8 @@ fastq_parser, fastq_group = register_group('Fastq arguments', [
     }
 ], func=fastq_regulator)
 
+
 # Fasta group
-
-
 def fasta_regulator(args):
     args.fastafile = os.path.abspath(args.fastafile)
     if not os.path.isfile(args.fastafile):
@@ -182,9 +178,8 @@ fasta_parser, fasta_group = register_group('Fasta arugments', [
     }
 ], func=fasta_regulator)
 
+
 # Filter group
-
-
 def filter_regulator(args):
 
     if hasattr(args, 'disable_filter') and args.disable_filter:
@@ -264,9 +259,8 @@ filter_parser, filter_group = register_group('Filter arguments', [
     }
 ], func=filter_regulator)
 
+
 # Assembly group
-
-
 def assembly_regulator(args):
     valid = True
 
@@ -366,9 +360,8 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     }
 ], func=assembly_regulator)
 
+
 # Search mitochondrial gene group
-
-
 def search_regulator(args):
     valid = True
 
@@ -400,7 +393,7 @@ def search_regulator(args):
 
 search_parser, search_group = register_group('Search mitochondrial sequences arguments', [
     {
-        'name': 'filter-taxa',
+        'name': 'disable-taxa',
         'default': False,
         'help': 'turn on to filter out sequences not match the clade given.'
     },
@@ -423,9 +416,8 @@ search_parser, search_group = register_group('Search mitochondrial sequences arg
     }
 ], func=search_regulator)
 
+
 # Search and annotation mitochondrial gene group
-
-
 def saa_regulator(args):
     gene_code = {
         # Standard Code 1, raise a warning because it's not commonly used.
@@ -509,8 +501,11 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
     },
     {
         'name': 'clade',
-        'default': 'Platyhelminthes-flatworms',
-        'choices': ['Chordata', "Platyhelminthes-flatworms"],
+        # TODO Change to other things?
+        'default': 'Arthropoda',
+        'choices': [os.path.splitext(profile_name)[0]
+                    for profile_name in os.listdir(profile_dir)
+                    if profile_name != 'Animal.fa'],
         'help': 'which clade\'s nhmmer profile and cds will be used in the run.'
     },
     {

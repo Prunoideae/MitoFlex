@@ -100,7 +100,7 @@ def filter(args):
                                          dedup=args.deduplication,
                                          start=args.start, end=args.end,
                                          n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve)
-    
+
     # Further processing for calling directly
     if args.__calling == 'filter':
         os.rename(filtered1, path.join(
@@ -136,8 +136,8 @@ def findmitoscaf(args):
     from findmitoscaf.findmitoscaf import findmitoscaf as _findmitoscaf
     picked_fa = _findmitoscaf(
         thread_number=args.threads, clade=args.clade, relaxing=args.taxa_tolerance, gene_code=args.genetic_code,
-        multi=args.min_abundance, taxa=args.required_taxa, prefix=args.workname, basedir=args.findmitoscaf_dir,
-        contigs_file=args.fastafile, cover_valve=1)
+        multi=args.min_abundance, taxa=args.required_taxa if not args.disable_taxa else None,
+        prefix=args.workname, basedir=args.findmitoscaf_dir, contigs_file=args.fastafile, cover_valve=1)
 
     # Further processing for calling directly
     if args.__calling == 'findmitoscaf':
