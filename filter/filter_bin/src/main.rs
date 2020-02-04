@@ -97,13 +97,13 @@ fn main() {
                 .default_value("10"),
         )
         .arg(
-            Arg::with_name("times")
+            Arg::with_name("trimming")
                 .short("t")
-                .long("times")
+                .long("trim")
                 .value_name("INT")
                 .help("Only this number of sequences will be filtered out")
                 .takes_value(true)
-                .default_value("-1"),
+                .default_value("0"),
         )
         .arg(
             Arg::with_name("deduplication")
@@ -160,20 +160,21 @@ fn main() {
         .parse()
         .ok()
         .expect("Cannot parse N value!");
-    let times: i32 = matches
-        .value_of("times")
-        .unwrap_or("-1")
+
+    let trim: usize = matches
+        .value_of("trimming")
+        .unwrap_or("0")
         .parse()
         .ok()
-        .expect("Cannot parse argument times");
+        .expect("Cannot parse a positive int to trimming!");
 
     let dedup: bool = matches.is_present("deduplication");
 
     if fastq2.is_empty() {
-        filter_se(fastq1, cleanq1, start, end, ns, quality, limit);
+        filter_se(fastq1, cleanq1, start, end, ns, quality, limit, trim);
     } else {
         filter_pe(
-            fastq1, fastq2, cleanq1, cleanq2, start, end, ns, quality, limit, dedup,
+            fastq1, fastq2, cleanq1, cleanq2, start, end, ns, quality, limit, dedup, trim,
         );
     }
 }
@@ -189,6 +190,7 @@ fn filter_pe(
     quality: u8,
     limit: f32,
     dedup: bool,
+    trim: usize,
 ) {
     let fq1 = helper::read_file(fastq1);
     let fq2 = helper::read_file(fastq2);
@@ -199,6 +201,8 @@ fn filter_pe(
     let mut dup: HashSet<u64> = HashSet::new();
 
     let len = end - start;
+
+    let mut counts = 0;
 
     for ((a1, b1), (a2, b2), _, (a4, b4)) in fq1.lines().zip(fq2.lines()).tuples() {
         let head1: String = a1.ok().unwrap().trim().to_string();
@@ -242,6 +246,12 @@ fn filter_pe(
             dup.insert(hash);
         }
 
+        if trim != 0 {
+            counts += 1;
+            if counts > trim {
+                break;
+            }
+        }
         writeln!(cl1, "{}", head1);
         writeln!(cl1, "{}", seq1);
         writeln!(cl1, "+");
@@ -253,12 +263,6 @@ fn filter_pe(
     }
 }
 
-#[test]
-fn foo() {
-    let a: usize = 150;
-    assert_eq!((a as f32 * 0.2) as usize, 30 as usize);
-}
-
 fn filter_se(
     fastq1: &str,
     cleanq1: &str,
@@ -267,10 +271,12 @@ fn filter_se(
     ns: usize,
     quality: u8,
     limit: f32,
+    trim: usize,
 ) {
     let fastq_file = helper::read_file(fastq1);
     let mut clean_file = helper::write_file(cleanq1);
     let len = end - start;
+    let mut times = 0;
     for (l1, l2, _, l4) in fastq_file.lines().tuples() {
         let head: String = l1.ok().unwrap().trim().to_string();
         let mut bps: String = l2.ok().unwrap().trim().to_string();
@@ -291,6 +297,13 @@ fn filter_se(
         let cutoff = quas.len() as f32 * limit;
         if quas.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff as usize {
             continue;
+        }
+
+        if trim != 0 {
+            times += 1;
+            if times > trim {
+                break;
+            }
         }
 
         writeln!(clean_file, "{}", head);
