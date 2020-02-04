@@ -64,6 +64,19 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     # Once we can confirm the sequences are from the clade we want to,
     # then we don't need to use overall database.
+    if wildcard_profile:
+        # Copying the code because I'm lazy here
+        logger.log(2, 'Updating the general protein database.')
+        lc = 0
+        with open(path.join(profile_dir_tbn, 'Animal.fa'), 'w') as fout:
+            for protein_fas in os.listdir(profile_dir_tbn):
+                if protein_fas.endswith('.fa') and protein_fas != 'Animal.fa':
+                    with open(path.join(profile_dir_tbn, protein_fas)) as fin:
+                        for line in fin:
+                            fout.write(line)
+                            lc += 1
+        logger.log(1, f'Generation finished with {lc} writes.')
+
     tbn_profile = path.join(
         profile_dir_tbn, f'{clade if not wildcard_profile else "Animal"}.fa')
     blast_file = tk.tblastn(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,

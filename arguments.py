@@ -405,7 +405,7 @@ search_parser, search_group = register_group('Search mitochondrial sequences arg
     },
     {
         'name': 'required-taxa',
-        'default': 'Platyhelminthes',
+        'default': 'Arthropoda',
         'help': 'taxa sequences other than this taxanomy class will not be selected.'
     },
     {

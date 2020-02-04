@@ -246,6 +246,17 @@ def pre(args):
     if hasattr(args, 'disable_annotation') and args.disable_annotation:
         logger.log(3, 'Annotation is not enabled.')
 
+    def runtime_error_logger(exception_type, value, traceback):
+        if type == RuntimeError:
+            logger.log(4, value)
+            logger.finalize()
+            sys.exit()
+        else:
+            sys.__excepthook__(exception_type, value, traceback)
+        pass
+
+    sys.excepthook = runtime_error_logger
+
 
 def post(args):
     if args is None:

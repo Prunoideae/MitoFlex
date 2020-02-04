@@ -135,10 +135,17 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             taxa=taxa, fasta_file=filtered_fa, hmm_frame=hmm_frame,
             basedir=basedir, prefix=prefix, dbfile=tbn_profile, gene_code=gene_code,
             relaxing=relaxing)
+    else:
+        logger.log(
+            2, 'Skipping taxanomy filtering because the disable-taxa option is on.')
 
     contig_data = [x
                    for x in SeqIO.parse(filtered_fa, 'fasta')
                    if hmm_frame.target.str.contains(x.id).any()]
+
+    if not contig_data:
+        raise RuntimeError(
+            "The result from nhmmer/filter_taxanomy is empty! Please check if the data is unqualified, or a wrong taxanomy class is given!")
 
     # filter by multi
     contig_data_high = []
@@ -161,9 +168,11 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     contigs_file_high = path.join(basedir, f'{prefix}.abundance.high.fa')
     contigs_file_low = path.join(basedir, f'{prefix}.abundance.low.fa')
 
-    SeqIO.write(contig_data_high, contigs_file_high, 'fasta')
-    SeqIO.write(contig_data_low, contigs_file_low, 'fasta')
+    high = SeqIO.write(contig_data_high, contigs_file_high, 'fasta')
+    low = SeqIO.write(contig_data_low, contigs_file_low, 'fasta')
 
+    logger.log(
+        1, f'{high} records of high abundance, {low} records of low abundance was classified with multi value {multi}.')
     # Here we pick out the last sequences by using the brute
 
     cds_indexes = list(
@@ -254,6 +263,7 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
 def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = None, basedir=None,
                     prefix=None, dbfile=None, gene_code=9, relaxing=0):
 
+    logger.log(2, f'Filtering taxanomy with tblastn.')
     # Extract sequences from input fasta file according to hmm frame
 
     seqs = [record
@@ -302,4 +312,6 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     filtered_frame = hmm_frame[hmm_frame['target'].isin(to_save)]
     filtered_frame.to_csv(
         path.join(basedir, f'{prefix}.taxa.csv'), index=False)
+    logger.log(
+        2, f'{len(filtered_frame.index)} records were selected after the taxanomy filtering.')
     return filtered_frame
