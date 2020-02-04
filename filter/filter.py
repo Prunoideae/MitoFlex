@@ -43,7 +43,7 @@ def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None
     logger.log(level=1,
                info=f'Using argument : Ns={Ns}, quality={quality}, limit={limit}, start={start}, end={end}, seq_size={seq_size}')
     try:
-        shell_call(path.join(filter_dir, 'filter_v2'), cleanq1=fqoabs, fastq1=fqiabs,
+        shell_call(path.join(filter_dir, 'filter_v2'), cleanq1=f'"{fqoabs}"', fastq1=f'"{fqiabs}"',
                    n=Ns, q=quality, l=limit, s=start, e=end, t=seq_size)
     except Exception as identifier:
         logger.log(
@@ -75,11 +75,11 @@ def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
         level=1, info=f'Using argument : Ns={n}, quality={q}, start={start}, end={end},limit={l}, seqsize={seq_size}')
     try:
         shell_call(path.join(filter_dir, 'filter_v2'),
-                   _1=fq1, _2=fq2, _3=o1, _4=o2, d=dedup, s=start,
+                   _1=f'"{fq1}"', _2=f'"{fq2}"', _3=f'"{o1}"', _4=f'"{o2}"', d=dedup, s=start,
                    e=end, n=n, q=q, l=l, t=seq_size)
     except Exception as identifier:
         logger.log(
-            level=1, info=f'Error occured when running filter, cause : {identifier}')
+            level=4, info=f'Error occured when running filter, cause : {identifier}')
         logger.log(level=1, info=f'Input file : {fq1} , {fq2}')
         logger.log(level=1, info=f'Output file : {o1} , {o2}')
         sys.exit("Error occured when running filter!")

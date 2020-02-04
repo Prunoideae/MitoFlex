@@ -95,8 +95,8 @@ def filter(args):
                               quality=args.quality_valve, limit=args.percentage_valve, start=args.start,
                               end=args.end)
     else:
-        filtered1, filtered2 = filter_pe(fq1=f'"{args.fastq1}"', fq2=f'"{args.fastq2}"',
-                                         o1=f'"{args.cleanq1}"', o2=f'"{args.cleanq2}"',
+        filtered1, filtered2 = filter_pe(fq1=args.fastq1, fq2=args.fastq2,
+                                         o1=args.cleanq1, o2=args.cleanq2,
                                          dedup=args.deduplication,
                                          start=args.start, end=args.end,
                                          n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve)

@@ -160,7 +160,6 @@ fn main() {
         .parse()
         .ok()
         .expect("Cannot parse N value!");
-
     let trim: usize = matches
         .value_of("trimming")
         .unwrap_or("0")

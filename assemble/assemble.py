@@ -51,7 +51,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         logger.log(1, f'Using step parameters : min={kmin}, max={kmax}')
 
     logger.log(
-        1, f'Using arguments : mercy={not no_mercy}, acc={disable_acc}, p_lv = {prune_level}, p_dep = {prune_depth}')
+        1, f'Using arguments : mercy={not no_mercy}, no_acc={disable_acc}, p_lv = {prune_level}, p_dep = {prune_depth}')
 
     tmp_dir = path.join(base_dir, 'temp')
     try:
