@@ -31,6 +31,7 @@ from os import path
 import os
 import sys
 import argparse
+import traceback
 
 if sys.version_info[0] < 3:
     sys.exit('Python 3 must be installed in current environment! Please check if any of your environment setup(like conda environment) is deactivated or wrong!')
@@ -66,7 +67,7 @@ desc = f"""
 Description
 
     MitoFlex - A rewritten toolkit of its ancestor MitoZ for faster and better 
-    mitochondrial assembly, annotation and visualization, for expandability and more.
+    mitochondrial assembly, annotation and visualization with high expandability.
 
 Version
     {VERSION}
@@ -202,7 +203,7 @@ def all(args):
     if not args.disable_filter:
         #
         # Why I'm NOT using .gz ext here even I have implemented this:
-        # 1. flate2 is slow, it takes much compressing data.
+        # 1. flate2 is slow, it takes much compressing data if single-threaded.
         # 2. plug in a SSD is much more easier than adding a CPU.
         #
         # You can still set this to xx.gz then it will surely make a
@@ -246,13 +247,21 @@ def pre(args):
     if hasattr(args, 'disable_annotation') and args.disable_annotation:
         logger.log(3, 'Annotation is not enabled.')
 
-    def runtime_error_logger(exception_type, value, traceback):
-        if type == RuntimeError:
+    def runtime_error_logger(exception_type, value, tb):
+        if exception_type == RuntimeError:
             logger.log(4, value)
             logger.finalize()
             sys.exit()
         else:
-            sys.__excepthook__(exception_type, value, traceback)
+            logger.log(
+                4, "An unexpected error was happened in the MitoFlex, this could be an bug in coding, so please report it if you see this message in log.")
+            logger.log(
+                4, f"Error type : {exception_type.__name__}, value : {value}")
+            logger.log(
+                4, f"The traceback should be saved along with the log file, please also send it to give more detailed message. ")
+            with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
+                traceback.print_tb(tb, file=f)
+            sys.__excepthook__(exception_type, value, tb)
         pass
 
     sys.excepthook = runtime_error_logger

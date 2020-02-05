@@ -27,6 +27,7 @@ import sys
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
+    #import wuss
     from utility.bio import wuss
 except Exception as iden:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
@@ -63,6 +64,8 @@ class Infernal():
 
             seq = lines[8].split(maxsplit=2)[2].rsplit(maxsplit=1)[0]
             fold = lines[5].split()[0]
+
+            fold, seq = wuss.align_fold(fold, seq)
 
             sing = wuss.seq2single(seq)
             self.qual = lines[9].split()[0]

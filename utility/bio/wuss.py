@@ -62,7 +62,6 @@ class Sequence():
 
     def __repr__(self):
         return ''.join([single.base for single in self.sequence])
-        
 
 
 class Sets():
@@ -340,3 +339,39 @@ class GenericLoop():
         son_level = sequence[0].parent.index(self)+1
         translated = [base.parent[son_level] for base in sequence]
         self.components = [x[0] for x in groupby(translated)]
+
+
+def align_fold(fold, sing):
+    left_collections = '{[(<'
+    right_collections = '}])>'
+
+    stack = []
+    unaligned = []
+    for idx, cha in enumerate(fold):
+        if cha in right_collections:
+            last_cha = stack[-1]
+            right_level = right_collections.index(cha)
+            left_level = left_collections.index(last_cha[0])
+
+            aligned = False
+            while not aligned:
+                if right_level == left_level:
+                    aligned = True
+                    stack.pop()
+                elif right_level > left_level:
+                    # Missing a left hand bracket due to something, so reject
+                    # the right hand bracket as well.
+                    unaligned.append((cha, idx))
+                    aligned = True
+                elif left_level > right_level:
+                    # Missing a right hand bracket for some reasons, reject
+                    # all unmatched left hand bracket.
+                    unaligned.appends(stack.pop())
+
+        elif cha in left_collections:
+            stack.append((cha, idx))
+
+    unaligned += stack  # Adding remained unaligned brackets
+    indexes = [x[1] for x in unaligned]
+    return (''.join(x for idx, x in enumerate(fold) if idx not in indexes),
+            ''.join(x for idx, x in enumerate(sing) if idx not in indexes))

@@ -37,16 +37,18 @@ __level_list = ['CODE ', 'DEBUG', 'INFO ', 'WARN ', 'ERROR']
 __initialized = False
 __logger = None
 __level_valve = 0
+__filepath = ""
 
 
 def init(file_path: str):
-    global __logger, __initialized
+    global __logger, __initialized, __filepath
     if __logger is not None:
         print('Logger is already initialized.')
     else:
         if file_path:
             try:
                 __logger = open(file_path, 'w')
+                __filepath = file_path
             except IOError:
                 print(
                     f'Logger is failed to open file {file_path}, the initialization is not valid.')
@@ -72,6 +74,10 @@ def set_level(level: int):
 
 def get_level():
     return __level_valve
+
+
+def get_file():
+    return __filepath
 
 
 def log(level: int = 2, info: str = None):
