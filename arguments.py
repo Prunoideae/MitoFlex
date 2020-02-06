@@ -326,6 +326,11 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'help': 'a k-mer list will be used if this switched on.'
     },
     {
+        'name': 'disable-local',
+        'default': False,
+        'help': 'disable the local assembly of MEGAHIT, will have a performance imporve but may lowers the result quality.'
+    },
+    {
         'name': 'kmer-list',
         'default': '21,29,39,59,79,99,119,141',
         'help': 'list of kmer to use in sDBG building, all length must be odd.'
