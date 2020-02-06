@@ -349,6 +349,7 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
                 continue
 
             if '-' in center.hairpin.to_str()[2:5]:
+                logger.log(1, f'Unqualified fold discarded, fold : {center.hairpin.to_str()}, sequence : {center.sequence}')
                 continue
 
             code = Seq(center.hairpin.to_str()[2:5]).reverse_complement()
@@ -365,8 +366,14 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
                 if f'{amino}2' in query_dict and align.score <= query_dict[f'{amino}2'].score:
                     continue
                 query_dict[f'{amino}2'] = align
+                logger.log(1, f'tRNA{amino}2 found:')
+                logger.log(1, f'fold: {loop.fold}')
+                logger.log(1, f'seq : {loop.sequence}')
             else:
                 query_dict[amino] = align
+                logger.log(1, f'tRNA{amino} found:')
+                logger.log(1, f'fold: {loop.fold}')
+                logger.log(1, f'seq : {loop.sequence}')
 
     # Debug code
     # print('\n'.join(['\n'.join([key + ':', str(value), ''])

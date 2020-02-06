@@ -127,6 +127,8 @@ class HairpinLoop():
         self.hairpin = Hairpin([])
         self.stem = Stem([], [])
         self.unknown = Sets(set())
+        self.fold = foldseq
+        
         stack = []
         for idx, cha in enumerate(foldseq):
             sequence[idx].parent.append(self)
@@ -166,6 +168,7 @@ class MultiLoop():
         self.multi = MultiBranchLoop(set())
         self.interior = InteriorLoop(set())
         self.unknown = Sets(set())
+        self.fold = fold
 
         stack = []
 
@@ -217,6 +220,7 @@ class ComplexLoop():
         self.interior = InteriorLoop(set())
         self.mismatch = Sets(set())
         self.unknown = Sets(set())
+        self.fold = fold
 
         stack = []
 
@@ -285,6 +289,7 @@ class GenericLoop():
         self.interior = InteriorLoop(set())
         self.mismatch = Sets(set())
         self.unknown = Sets(set())
+        self.fold = fold
 
         stack = []
 

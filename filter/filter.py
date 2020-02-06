@@ -36,15 +36,15 @@ except Exception as identifier:
 filter_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, seq_size=None):
+def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, trim=0):
     fsin = path.getsize(fqiabs)
     logger.log(level=1, info='Start filtering single-end rawdata.')
     logger.log(level=0, info=f'Input file has {fsin} bytes.')
     logger.log(level=1,
-               info=f'Using argument : Ns={Ns}, quality={quality}, limit={limit}, start={start}, end={end}, seq_size={seq_size}')
+               info=f'Using argument : Ns={Ns}, quality={quality}, limit={limit}, start={start}, end={end}, trimming={trim}')
     try:
         shell_call(path.join(filter_dir, 'filter_v2'), cleanq1=f'"{fqoabs}"', fastq1=f'"{fqiabs}"',
-                   n=Ns, q=quality, l=limit, s=start, e=end, t=seq_size)
+                   n=Ns, q=quality, l=limit, s=start, e=end, t=trim)
     except Exception as identifier:
         logger.log(
             level=4, info=f'Error occured when running filter, cause : {identifier}')
@@ -63,7 +63,7 @@ def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None
 
 def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
               a1=None, a2=None, dedup=False, mis=3, ali=15,
-              start=None, end=None, n=10, q=55, l=0.2, seq_size=None):
+              start=None, end=None, n=10, q=55, l=0.2, trim=0):
     fsin1, fsin2 = path.getsize(fq1), path.getsize(fq2)
     logger.log(level=1, info='Start filtering pair-end rawdata.')
     logger.log(
@@ -72,11 +72,11 @@ def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
         logger.log(
             level=3, info=f'Input file 1 and 2 have different sizes! This could cause loss on rawdata, or even crash the program.')
     logger.log(
-        level=1, info=f'Using argument : Ns={n}, quality={q}, start={start}, end={end},limit={l}, seqsize={seq_size}')
+        level=1, info=f'Using argument : Ns={n}, quality={q}, start={start}, end={end},limit={l}, trimming={trim}')
     try:
         shell_call(path.join(filter_dir, 'filter_v2'),
                    _1=f'"{fq1}"', _2=f'"{fq2}"', _3=f'"{o1}"', _4=f'"{o2}"', d=dedup, s=start,
-                   e=end, n=n, q=q, l=l, t=seq_size)
+                   e=end, n=n, q=q, l=l, t=trim)
     except Exception as identifier:
         logger.log(
             level=4, info=f'Error occured when running filter, cause : {identifier}')

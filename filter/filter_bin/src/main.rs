@@ -101,7 +101,7 @@ fn main() {
                 .short("t")
                 .long("trim")
                 .value_name("INT")
-                .help("Only this number of sequences will be filtered out")
+                .help("Only this bases of sequences will be filtered out")
                 .takes_value(true)
                 .default_value("0"),
         )
@@ -246,7 +246,7 @@ fn filter_pe(
         }
 
         if trim != 0 {
-            counts += 1;
+            counts += seq1.len();
             if counts > trim {
                 break;
             }
@@ -299,7 +299,7 @@ fn filter_se(
         }
 
         if trim != 0 {
-            times += 1;
+            times += bps.len();
             if times > trim {
                 break;
             }

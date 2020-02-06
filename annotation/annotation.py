@@ -92,7 +92,8 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     # Output wise frame
     wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
     wise_frame.to_csv(wise_csv)
-
+    logger.log(1, f'Genewise results generated at {wise_csv}')
+    
     trna_out_dir = path.join(basedir, 'trna')
     os.makedirs(trna_out_dir, exist_ok=True)
     query_dict, missing_trna = tk.trna_search(

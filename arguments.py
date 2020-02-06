@@ -216,7 +216,10 @@ def filter_regulator(args):
     if args.percentage_valve <= 0 or args.percentage_valve >= 1:
         print('Input percentage limit is not valid.')
         valid = False
-
+    if args.trimming < 0:
+        print('Trimming value is not valid.')
+        valid = False
+    args.trimming = int(float(args.trimming) * (10**9))
     return valid
 
 
@@ -256,6 +259,11 @@ filter_parser, filter_group = register_group('Filter arguments', [
         'default': '0,0',
         'meta': 'beg,end',
         'help': 'only the BEG and the END will be read, leave blank for full length.'
+    },
+    {
+        'name': 'trimming',
+        'default': 5,
+        'help': 'only filter out x Gbps of the given dataset.'
     }
 ], func=filter_regulator)
 

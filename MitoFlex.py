@@ -207,7 +207,7 @@ def all(args):
         # 2. plug in a SSD is much more easier than adding a CPU.
         #
         # You can still set this to xx.gz then it will surely make a
-        # gzip for you, but this will have a great impact on the App's
+        # gzip for you, but this will have a great impact on the program's
         # running time, and it's strongly not recommended to do this.
         #
         args.cleanq1 = 'clean.1.fq'
@@ -253,14 +253,18 @@ def pre(args):
             logger.finalize()
             sys.exit()
         else:
-            logger.log(
-                4, "An unexpected error was happened in the MitoFlex, this could be an bug in coding, so please report it if you see this message in log.")
-            logger.log(
-                4, f"Error type : {exception_type.__name__}, value : {value}")
-            logger.log(
-                4, f"The traceback should be saved along with the log file, please also send it to give more detailed message. ")
-            with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
-                traceback.print_tb(tb, file=f)
+            if exception_type != KeyboardInterrupt:
+                logger.log(
+                    4, "An unexpected error was happened in the MitoFlex, this could be an bug in coding, so please report it if you see this message in log.")
+                logger.log(
+                    4, f"Error type : {exception_type.__name__}, value : {value}")
+                logger.log(
+                    4, f"The traceback should be saved along with the log file, please also send it to give more detailed message. ")
+                with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
+                    traceback.print_tb(tb, file=f)
+            else:
+                logger.log(2, "This run was terminated manually.")
+            logger.finalize()
             sys.__excepthook__(exception_type, value, tb)
         pass
 
