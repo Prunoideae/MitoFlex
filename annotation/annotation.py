@@ -56,7 +56,7 @@ def concat_java(*args, **kwargs):
 
 def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
              genetic_code=9, clade=None, taxa=None, thread_number=8,
-             wildcard_profile=False):
+             wildcard_profile=False, trna_overlapping=40):
     logger.log(2, 'Entering annotation module.')
     if wildcard_profile:
         logger.log(
@@ -93,11 +93,11 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
     wise_frame.to_csv(wise_csv)
     logger.log(1, f'Genewise results generated at {wise_csv}')
-    
+
     trna_out_dir = path.join(basedir, 'trna')
     os.makedirs(trna_out_dir, exist_ok=True)
     query_dict, missing_trna = tk.trna_search(
-        fastafile, profile_dir_trna, trna_out_dir, prefix, genetic_code, 0.01)
+        fastafile, profile_dir_trna, trna_out_dir, prefix, genetic_code, 0.01, overlap_cutoff=trna_overlapping)
 
     logger.log(2, f'tRNAs found : {list(query_dict.keys())}')
     if missing_trna:
@@ -125,7 +125,10 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         cds = str(row).split('_')[3]
         if cds in annotation_json:
             count = sum(x.startswith(cds) for x in annotation_json.keys())
-            cds = f'{cds}{count}'
+            cds = f'{cds}{"_" if count > 0 else ""}{count}'
+            if count > 0:
+                logger.log(
+                    3, f'Duplicated gene {cds} detected at {start} - {end}!')
         start, end = (min(int(row.wise_min_start), int(row.wise_max_end)),
                       max(int(row.wise_min_start), int(row.wise_max_end)))
         frag = sequence_data[str(row.sseq)][start-1:end]

@@ -86,7 +86,7 @@ universal_parser, universal_group = register_group('Universal arguments', [
     },
     {
         'name': 'clean-temp',
-        'default': False,
+        'default': True,
         'help': 'remove temporal files and folders after work done.'
     },
     {
@@ -272,10 +272,6 @@ filter_parser, filter_group = register_group('Filter arguments', [
 def assembly_regulator(args):
     valid = True
 
-    if args.insert_size <= 0:
-        valid = False
-        print('Input insert size is not valid.')
-
     if hasattr(args, 'temp_dir'):
         args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
     else:
@@ -293,6 +289,7 @@ def assembly_regulator(args):
         if 0 in [x % 2 for x in args.kmer_list]:
             print('All kmer length must be odd.')
             valid = False
+        args.kmer_list = ','.join(args.kmer_list)
     else:
         if True in [
             args.kmer_min <= 0,
@@ -315,11 +312,6 @@ def assembly_regulator(args):
 
 
 assembly_parser, assembly_group = register_group('Assembly arguments', [
-    {
-        'name': 'insert-size',
-        'default': 150,
-        'help': 'insert size of input fastq files.'
-    },
     {
         'name': 'use-list',
         'default': False,

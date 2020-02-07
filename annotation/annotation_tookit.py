@@ -46,9 +46,8 @@ except Exception as iden:
 
 bin_dir = path.dirname(__file__)
 
+
 # Truncates all the -- to - to suit blast's parsing style
-
-
 def truncated_call(*args, **kwargs):
     return direct_call(concat_command(*args, **kwargs).replace('--', '-'))
 
@@ -234,11 +233,15 @@ def genewise(basedir=None, prefix=None, codon_table=None,
 
     wises.assign(wise_cover=np.nan)
     for (qseq, sseq), (cover, shift, start, end) in wise_dict.items():
-        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_cover'] = cover
-        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_shift'] = int(shift)
-        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_min_start'] = int(start)
-        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq), 'wise_max_end'] = int(end)
-        
+        wises.loc[(wises.qseq == qseq) & (
+            wises.sseq == sseq), 'wise_cover'] = cover
+        wises.loc[(wises.qseq == qseq) & (
+            wises.sseq == sseq), 'wise_shift'] = int(shift)
+        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq),
+                  'wise_min_start'] = int(start)
+        wises.loc[(wises.qseq == qseq) & (
+            wises.sseq == sseq), 'wise_max_end'] = int(end)
+
     wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'), index=False)
     return wises, queries, dbparsed
 
@@ -305,7 +308,7 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
     return wises
 
 
-def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_code=9, e_value=0.001):
+def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_code=9, e_value=0.001, overlap_cutoff=40):
     # Make sure it's the absolute path
     fasta_file = path.abspath(fasta_file)
     profile_dir = path.abspath(profile_dir)
@@ -348,39 +351,58 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
             if len(center.hairpin.sequence) != 7:
                 continue
 
+            # Can't read the center tri-base codon
             if '-' in center.hairpin.to_str()[2:5]:
-                logger.log(1, f'Unqualified fold discarded, fold : {center.hairpin.to_str()}, sequence : {center.sequence}')
+                logger.log(
+                    1, f'Unqualified fold discarded, fold : {center.hairpin.to_str()}, sequence : {center.sequence}')
                 continue
 
             code = Seq(center.hairpin.to_str()[2:5]).reverse_complement()
             amino = forward_table[code]
 
-            if amino in query_dict \
-                    and align.score <= query_dict[amino].score \
-                    and amino not in 'LS':
-                continue
+            if amino not in query_dict:
+                query_dict[amino] = list()
+            query_dict[amino].append(align)
 
-            if amino in 'LS' and amino in query_dict:
-                if query_dict[amino].seqfrom == align.seqfrom and query_dict[amino].seqto == align.seqto:
-                    continue
-                if f'{amino}2' in query_dict and align.score <= query_dict[f'{amino}2'].score:
-                    continue
-                query_dict[f'{amino}2'] = align
-                logger.log(1, f'tRNA{amino}2 found:')
-                logger.log(1, f'fold: {loop.fold}')
-                logger.log(1, f'seq : {loop.sequence}')
-            else:
-                query_dict[amino] = align
-                logger.log(1, f'tRNA{amino} found:')
-                logger.log(1, f'fold: {loop.fold}')
-                logger.log(1, f'seq : {loop.sequence}')
+    # Sort descending by scores
+    for items in query_dict.values():
+        items.sort(key=lambda x: x.score, reverse=True)
 
-    # Debug code
-    # print('\n'.join(['\n'.join([key + ':', str(value), ''])
-    #                 for key, value in query_dict.items()]))
-    # print(query_dict.keys())
+    # Then find the most possible of all
+    def overlapped(items: list):
+        # First, map the items into a list
+        ranges = []
+        for item in items:
+            if item:
+                ranges.append((item[0].seqfrom, item))
+                ranges.append((item[0].seqto, item))
+        ranges.sort(key=lambda x: x[0])
+        ranges = [x[1] for x in ranges]
 
-    missing_trnas = [x for x in codon_table.back_table if x not in query_dict and x]
+        # Then, search for the overlapped items.
+        it = iter(ranges)
+        for i in it:
+            try:
+                pair = next(it)
+                if i != pair and (max(i[0].seqfrom, i[0].seqto) - min(pair[0].seqfrom, pair[0].seqto)) > overlap_cutoff:
+                    # Remove the first overlapped item and return
+                    if i[0].score > pair[0].score:
+                        pair.pop(0)
+                    else:
+                        i.pop(0)
+                    return True
+            except StopIteration:
+                logger.log(4, f'Range list is not even, how could it be???')
+        return False
+
+    while overlapped(list(query_dict.values())):
+        pass
+
+    # Normalize the results
+    query_dict = {key: value[0] for key, value in query_dict.items() if value}
+
+    missing_trnas = [
+        x for x in codon_table.back_table if x not in query_dict and x]
     return query_dict, missing_trnas
 
 

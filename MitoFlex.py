@@ -94,13 +94,13 @@ def filter(args):
     if args.fastq2 is None:
         filtered1 = filter_se(fqiabs=f'"{args.fastq1}"', fqoabs=f'"{args.cleanq1}"', Ns=args.Ns_valve,
                               quality=args.quality_valve, limit=args.percentage_valve, start=args.start,
-                              end=args.end)
+                              end=args.end, trim=args.trimming)
     else:
         filtered1, filtered2 = filter_pe(fq1=args.fastq1, fq2=args.fastq2,
                                          o1=args.cleanq1, o2=args.cleanq2,
                                          dedup=args.deduplication,
                                          start=args.start, end=args.end,
-                                         n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve)
+                                         n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve, trim=args.trimming)
 
     # Further processing for calling directly
     if args.__calling == 'filter':
@@ -154,7 +154,7 @@ def annotate(args):
     annotate_json, fa_file, rna_file = _annotate(basedir=args.annotation_dir, prefix=args.workname,
                                                  ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
                                                  clade=args.clade, taxa=args.required_taxa, thread_number=args.threads,
-                                                 wildcard_profile=args.wider_taxa)
+                                                 wildcard_profile=args.wider_taxa, trna_overlapping=30)
     # Further processing for calling directly
     if args.__calling == 'annotate':
         import json
@@ -274,6 +274,13 @@ def pre(args):
 def post(args):
     if args is None:
         return
+    if args.clean_temp:
+        logger.log(1, 'Removing filtered data files.')
+        os.remove(args.cleanq1)
+        os.remove(args.cleanq2)
+
+        logger.log(1, 'Removing generated contigs files.')
+
     logger.finalize()
 
 
