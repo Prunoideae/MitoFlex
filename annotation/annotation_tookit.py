@@ -26,7 +26,7 @@ from os import path
 import sys
 import subprocess
 import multiprocessing
-
+from itertools import tee
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -326,7 +326,7 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
                        path.join(profile_dir, cm), fasta_file])
         query_results.append(infernal.Infernal(indexed))
 
-    query_dict = {}
+    gene_map = []
 
     for result in query_results:
         for align in result.alignments:
@@ -360,46 +360,53 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
             code = Seq(center.hairpin.to_str()[2:5]).reverse_complement()
             amino = forward_table[code]
 
-            if amino not in query_dict:
-                query_dict[amino] = list()
-            query_dict[amino].append(align)
+            align.amino = amino
+            align.length = max(align.seqfrom, align.seqto) - \
+                min(align.seqfrom, align.seqto)
+            gene_map.append((align.seqfrom, align))
+            gene_map.append((align.seqto, align))
 
-    # Sort descending by scores
-    for items in query_dict.values():
-        items.sort(key=lambda x: x.score, reverse=True)
+    gene_map.sort(key=lambda x: x[0])
+
+    gene_map = [x[1] for x in gene_map]
 
     # Then find the most possible of all
-    def overlapped(items: list):
-        # First, map the items into a list
-        ranges = []
-        for item in items:
-            if item:
-                ranges.append((item[0].seqfrom, item))
-                ranges.append((item[0].seqto, item))
-        ranges.sort(key=lambda x: x[0])
-        ranges = [x[1] for x in ranges]
+    def overlapped(mapping: list):
+        def pairwise(iterable):
+            a, b = tee(iterable)
+            next(b, None)
+            return zip(a, b)
 
-        # Then, search for the overlapped items.
-        it = iter(ranges)
-        for i in it:
-            try:
-                pair = next(it)
-                if i != pair and (max(i[0].seqfrom, i[0].seqto) - min(pair[0].seqfrom, pair[0].seqto)) > overlap_cutoff:
-                    # Remove the first overlapped item and return
-                    if i[0].score > pair[0].score:
-                        pair.pop(0)
-                    else:
-                        i.pop(0)
-                    return True
-            except StopIteration:
-                logger.log(4, f'Range list is not even, how could it be???')
+        for gene_loc, pair_loc in pairwise(mapping):
+            dist = max(gene_loc.seqfrom, gene_loc.seqto) - \
+                min(pair_loc.seqfrom, pair_loc.seqto)
+            if gene_loc != pair_loc and dist >= overlap_cutoff and (dist <= gene_loc.length or dist <= pair_loc.length):
+                if gene_loc.score >= pair_loc.score:
+                    print(
+                        f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {pair_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
+                    while pair_loc in mapping:
+                        mapping.remove(pair_loc)
+                else:
+                    print(
+                        f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {gene_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
+                    while gene_loc in mapping:
+                        mapping.remove(gene_loc)
+                return True
         return False
 
-    while overlapped(list(query_dict.values())):
+    while overlapped(gene_map):
         pass
 
+    gene_map = list(set(gene_map))
+
     # Normalize the results
-    query_dict = {key: value[0] for key, value in query_dict.items() if value}
+    query_dict = {}
+    for gene in gene_map:
+        if gene.amino not in query_dict:
+            query_dict[gene.amino] = gene
+        else:
+            query_dict[gene.amino + str(sum(x.startswith(gene.amino)
+                                            for x in query_dict.keys())+1)] = gene
 
     missing_trnas = [
         x for x in codon_table.back_table if x not in query_dict and x]
