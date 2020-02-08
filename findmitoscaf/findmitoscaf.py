@@ -134,7 +134,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         hmm_frame = filter_taxanomy(
             taxa=taxa, fasta_file=filtered_fa, hmm_frame=hmm_frame,
             basedir=basedir, prefix=prefix, dbfile=tbn_profile, gene_code=gene_code,
-            relaxing=relaxing)
+            relaxing=relaxing, threads=thread_number)
     else:
         logger.log(
             2, 'Skipping taxanomy filtering because the disable-taxa option is on.')
@@ -261,7 +261,7 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
 
 
 def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = None, basedir=None,
-                    prefix=None, dbfile=None, gene_code=9, relaxing=0):
+                    prefix=None, dbfile=None, gene_code=9, relaxing=0, threads=8):
 
     logger.log(2, f'Filtering taxanomy with tblastn.')
     # Extract sequences from input fasta file according to hmm frame
@@ -278,8 +278,8 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
         SeqIO.write(seqs, f, 'fasta')
 
     # Do tblastn to search out the possible taxanomy of the gene
-    blast_file = tk.tblastn(dbfile=dbfile, infile=hmm_fa,
-                            genetic_code=gene_code, basedir=basedir, prefix=prefix)
+    blast_file = tk.tblastn_multi(dbfile=dbfile, infile=hmm_fa,
+                            genetic_code=gene_code, basedir=basedir, prefix=prefix, threads=threads)
     blast_frame, _ = tk.blast_to_csv(blast_file)
     blast_frame = tk.wash_blast_results(blast_frame)
 

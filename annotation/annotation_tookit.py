@@ -26,7 +26,7 @@ from os import path
 import sys
 import subprocess
 import multiprocessing
-from itertools import tee
+from itertools import tee, chain
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -54,11 +54,7 @@ def truncated_call(*args, **kwargs):
 
 def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
                   prefix=None, threads=8):
-    # TODO Replace single-threaded tblastn to use a pseudomultithreaded method
 
-    # README:
-    # This requires a rearrange of the MitoFlex's profile structure. So
-    # it will be a updated feature if most of the MitoFlex's code is done.
     infile = path.abspath(infile)
     dbfile = path.abspath(dbfile)
 
@@ -67,17 +63,34 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
     tasks = []
     results = []
 
-    def work(command):
-        return direct_call(command)
+    protein_data_dir = path.join(basedir, 'tblastn_data')
+    os.mkdir(protein_data_dir)
 
-    pool = multiprocessing.Pool(threads)
-    res = pool.map_async(work, tasks, callback=results.append)
+    logger.log(1, f'Making {threads} small datasets for calling tblastn.')
+    tblastn_db = np.array_split(list(SeqIO.parse(dbfile, 'fasta')), threads)
+    for idx, data in enumerate(tblastn_db):
+        if data.any():
+            logger.log(0, f'Dataset {idx} has {len(data)} queries.')
+            dataset_path = path.join(protein_data_dir, f'dataset_{idx}.fasta')
+            SeqIO.write(data, dataset_path, 'fasta')
+            tasks.append(
+                f'tblastn -evalue 1e-5 -outfmt 6 -seg no -db_gencode {genetic_code} -db {infile} -query {dataset_path}')
+    logger.log(1, f'Generating map for calling tblastn.')
+    pool = multiprocessing.Pool(processes=threads)
+    res = pool.map_async(direct_call, tasks, callback=results.append)
+
+    logger.log(1, f'Waiting for all processes to finish.')
     res.wait()
 
+    logger.log(1, f'Merging results and cleaning generated temp files.')
+    results = list(chain.from_iterable(results))
     out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
-    with open(out_blast) as f:
-        f.write('\n'.join(results))
+    with open(out_blast, 'w') as f:
+        f.write(''.join(results))
 
+    os.remove(f'{infile}.nhr')
+    os.remove(f'{infile}.nin')
+    os.remove(f'{infile}.nsq')
     return out_blast
 
 
@@ -382,13 +395,13 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
                 min(pair_loc.seqfrom, pair_loc.seqto)
             if gene_loc != pair_loc and dist >= overlap_cutoff and (dist <= gene_loc.length or dist <= pair_loc.length):
                 if gene_loc.score >= pair_loc.score:
-                    print(
-                        f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {pair_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
+                    logger.log(
+                        1, f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {pair_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
                     while pair_loc in mapping:
                         mapping.remove(pair_loc)
                 else:
-                    print(
-                        f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {gene_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
+                    logger.log(
+                        1, f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {gene_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
                     while gene_loc in mapping:
                         mapping.remove(gene_loc)
                 return True
