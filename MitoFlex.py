@@ -234,8 +234,8 @@ def pre(args):
     else:
         logger.init(path.join(os.getcwd(), 'summary.log'))
 
-    if hasattr(args, 'workname'):
-        logger.log(2, f'MitoFlex {VERSION}, run {args.workname}')
+    logger.log(
+        2, f'MitoFlex {VERSION}, run {args.workname if hasattr(args, "workname") else "1"}')
 
     arg_dict = vars(args)
     logger.log(1, f'Arguments after parsed : ')
@@ -255,7 +255,7 @@ def pre(args):
         else:
             if exception_type != KeyboardInterrupt:
                 logger.log(
-                    4, "An unexpected error was happened in the MitoFlex, this could be an bug in coding, so please report it if you see this message in log.")
+                    4, "An unexpected error was happened in the MitoFlex, this could be an bug in the program, so please report it if you see this message in log.")
                 logger.log(
                     4, f"Error type : {exception_type.__name__}, value : {value}")
                 logger.log(
