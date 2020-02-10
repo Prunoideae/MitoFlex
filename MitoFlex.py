@@ -41,7 +41,6 @@ try:
     from Bio import SeqIO
     from Bio import SeqRecord
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
-    from utility.profiler import profiling
     from utility import logger
     # We are using this for making the main file clean, so wildcard is
     # not a problem here.

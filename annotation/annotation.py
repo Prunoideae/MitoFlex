@@ -32,7 +32,6 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call, concat_command
-    from utility.profiler import profiling
     # TODO remove annotation when testing
     from annotation import annotation_tookit as tk  # pylint: disable=import-error, no-name-in-module
     from Bio import SeqIO

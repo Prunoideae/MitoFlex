@@ -30,7 +30,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 # # you don't want to.
 # # Also, this configuration used a trick to make python import and
 # # execute it as an module, thus you may add your config with some
-# # code to make it even more flexible...
+# # code to make it even more flexible.
 
 # # Global configuration
 # command = 'all'

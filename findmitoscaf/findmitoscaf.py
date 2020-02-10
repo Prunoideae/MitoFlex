@@ -37,7 +37,6 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call, maxs
-    from utility.profiler import profiling
     from utility.bio.seq import compile_seq, decompile
     from annotation import annotation_tookit as tk
     from utility import logger

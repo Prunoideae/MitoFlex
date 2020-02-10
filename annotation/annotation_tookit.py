@@ -32,7 +32,6 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import concat_command, direct_call, shell_call
-    from utility.profiler import profiling
     from utility import logger
     from utility.bio.seq import compile_seq, decompile
     from utility.bio import wuss, infernal
