@@ -23,4 +23,3 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 from .helper import *
 from .parser import *
-from .profiler import *

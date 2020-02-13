@@ -137,7 +137,8 @@ def findmitoscaf(args):
     picked_fa = _findmitoscaf(
         thread_number=args.threads, clade=args.clade, relaxing=args.taxa_tolerance, gene_code=args.genetic_code,
         multi=args.min_abundance, taxa=args.required_taxa if not args.disable_taxa else None,
-        prefix=args.workname, basedir=args.findmitoscaf_dir, contigs_file=args.fastafile, cover_valve=1)
+        prefix=args.workname, basedir=args.findmitoscaf_dir, contigs_file=args.fastafile, cover_valve=1,
+        max_contig_len=args.max_contig_length)
 
     # Further processing for calling directly
     if args.__calling == 'findmitoscaf':

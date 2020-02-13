@@ -40,7 +40,6 @@ try:
     from utility.bio.seq import compile_seq, decompile
     from annotation import annotation_tookit as tk
     from utility import logger
-    from findmitoscaf import brute
 except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -87,7 +86,7 @@ def get_rank(taxa_name=None):
 
 
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
-                 basedir=None, gene_code=9, taxa=None,
+                 basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
                  contigs_file=None, relaxing=0, multi=10, cover_valve=1, min_multi=3.0):
 
     logger.log(2, 'Finding mitochondrial scaffold.')
@@ -115,6 +114,12 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     logger.log(
         1, f'{len(filtered_contigs)} sequences above depth {min_multi} was selected.')
+
+    filtered_contigs = [x for x in filtered_contigs if len(x) < max_contig_len]
+
+    logger.log(
+        1, f'{len(filtered_contigs)} sequences below {max_contig_len} was selected.')
+
     SeqIO.write(filtered_contigs, filtered_fa, 'fasta')
 
     # Do nhmmer search and collect, filter results
@@ -172,42 +177,74 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     logger.log(
         1, f'{high} records of high abundance, {low} records of low abundance was classified with multi value {multi}.')
-    # Here we pick out the last sequences by using the brute
 
-    cds_indexes = list(
-        json.load(open(path.join(profile_dir_hmm, 'required_cds.json')))[clade])
+    # Here we pick out the last sequences by using a greedy algorithm
+    # the brute is deprecated because I found myself didn't realize what
+    # I'm really going to do at the time I created it.
+    cds_indexes = json.load(
+        open(path.join(profile_dir_hmm, 'required_cds.json')))[clade]
 
-    # First, collect the matching range of single sseq
-    seq_dict = {}
-    by_seqid = dict(tuple(hmm_frame.groupby(['target'])))
-    for key, frame in by_seqid.items():
-        found_cds = [(0, 0)] * len(cds_indexes)
-        for _, row in frame.iterrows():
-            # Since genes should be consistent, add the offset of aligment.
-            query = str(row.query)
-            query_start = int(row.hmmfrom)
-            align_start = int(row.alifrom)
-            align_end = int(row.alito)
-            query_end = int(row['hmm to'])
-            seq_len = int(row.sqlen)
-            query_start = max(query_start - align_start, 1)
-            query_end += seq_len - align_end
-            found_cds[cds_indexes.index(query)] = (query_start, query_end)
-        seq_dict[tuple(found_cds)] = key
+    # Collects all the related cds
+    candidates = {x: [] for x in cds_indexes}
+    for row in hmm_frame.iterrows():
+        query = str(row.query)
+        index = str(row.target)
+        score = int(row.score)
+        align_start = int(row.alifrom)
+        align_end = int(row.alito)
+        align_length = abs(align_start-align_end)+1
+        query_start = int(row.hmmfrom)
+        query_to = int(row['hmm to'])
+        complete = align_length >= cds_indexes[query]
+        candidates[query].append(
+            (index, score, complete, query_start, query_to))
 
-    # Then, solve the problem by brute
-    best = brute.solution(list(seq_dict.keys()))
+    selected_candidates = {x: None for x in cds_indexes}
+    # Process the data
+    for query, candidate in candidates.items():
+        candidate.sort(key=lambda candi: candi[1])
+        # Try to find all the first occurences of complete cds.
+        selected_candidates[query] = next(
+            (x for x in candidate if x[2]), default=None)
 
-    # Finally, convert returned solution to cds
-    picked_ids = [seq_dict[tuple(seq_id)] for seq_id in best]
-    picked_seq = [seq for seq in contig_data_high if seq.id in picked_ids]
+    # Try to concat the debris of cds if no complete gene is found
+    for query, candidate in candidates.items():
+        if not selected_candidates[query] and candidate:
+            # Map the genes to locations
+            gene_map = []
+            for debri in gene_map:
+                gene_map.append((debri[3], debri))
+                gene_map.append((debri[4], debri))
+            gene_map.sort(key=lambda x: x[0])
+            gene_map = [x[1] for x in gene_map]
 
-    found_pcgs = []
-    for seq in best:
-        for idx, pcg in enumerate(seq):
-            if pcg != (0, 0):
-                found_pcgs.append(cds_indexes[idx])
+            def overlapping(locs):
+                for i in range(0, len(locs)-1, 2):
+                    left_loc = locs[i]
+                    right_loc = locs[i+1]
+                    if locs[i] != locs[i+1]:
+                        if left_loc[2] >= right_loc[2]:
+                            while right_loc in locs:
+                                locs.remove(right_loc)
+                        else:
+                            while left_loc in locs:
+                                locs.remove(left_loc)
+                        return True
+                return False
 
+            # Remove overlapped results
+            while overlapping(gene_map):
+                pass
+            gene_map = gene_map[::2]
+            selected_candidates[query] = gene_map
+
+    selected_ids = []
+    for x in selected_candidates.values():
+        selected_ids += x
+    selected_ids = list(set(selected_ids))
+    picked_seq = [seq for seq in contig_data_high if seq.id in selected_ids]
+
+    found_pcgs = [x for x in cds_indexes if selected_candidates[x]]
     missing_pcgs = [x for x in cds_indexes if x not in found_pcgs]
 
     picked_fasta = path.join(basedir, f'{prefix}.picked.fa')
@@ -278,7 +315,7 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
 
     # Do tblastn to search out the possible taxanomy of the gene
     blast_file = tk.tblastn_multi(dbfile=dbfile, infile=hmm_fa,
-                            genetic_code=gene_code, basedir=basedir, prefix=prefix, threads=threads)
+                                  genetic_code=gene_code, basedir=basedir, prefix=prefix, threads=threads)
     blast_frame, _ = tk.blast_to_csv(blast_file)
     blast_frame = tk.wash_blast_results(blast_frame)
 

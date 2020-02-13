@@ -92,6 +92,8 @@ class Infernal():
                         elif line.startswith('Hit alignments'):
                             stage = 1
                             continue
+                        elif '[No hits detected that satisfy reporting thresholds]' in line:
+                            continue
                         elif line.startswith('Internal CM pipeline statistics summary'):
                             stage = 2
                             continue
@@ -144,4 +146,6 @@ class Queries():
 
         queries = queries[3:]
         queries = ''.join(queries).split('\n')[:-1]
-        self.queries = [Queries.Query(x) for x in queries]
+
+        self.queries = [Queries.Query(
+            x) for x in queries if '[No hits detected that satisfy reporting thresholds]' not in x]

@@ -490,7 +490,7 @@ def saa_regulator(args):
 saa_parser, saa_group = register_group('Search and annotate arguments', [
     {
         'name': 'genetic-code',
-        'default': 9,
+        'default': 5,
         'help': 'genetic code table to be used in the run.'
     },
     {
@@ -501,6 +501,11 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
                     for profile_name in os.listdir(profile_dir)
                     if profile_name != 'Animal.fa'],
         'help': 'which clade\'s nhmmer profile and cds will be used in the run.'
+    },
+    {
+        'name': 'max-contig-length',
+        'default': 20000,
+        'help': 'the maximum length of a reasonable sequence. Use to filter out strangly connected scaffolds caused by containmination or other reasons before picking.'
     },
     {
         'name': 'wider-taxa',
