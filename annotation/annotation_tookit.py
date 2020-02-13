@@ -116,7 +116,7 @@ def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
 
 
 def blast_to_csv(blast_file, ident=30, score=25):
-    blast_frame = pandas.read_table(
+    blast_frame = pandas.read_csv(
         blast_file, delimiter='\t',
         names=['qseq', 'sseq', 'ident',
                'length', 'mismatch', 'gap',

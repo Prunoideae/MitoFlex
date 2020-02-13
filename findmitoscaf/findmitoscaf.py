@@ -277,7 +277,7 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
             print(' '.join(splitted[:15]), file=fout)
 
     # Read table with pandas
-    hmm_frame = pandas.read_table(hmm_tbl_pd, comment='#', delimiter=' ',
+    hmm_frame = pandas.read_csv(hmm_tbl_pd, comment='#', delimiter=' ',
                                   names=[
                                       'target', 'accession1', 'query',
                                       'accession2', 'hmmfrom', 'hmm to',

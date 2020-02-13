@@ -153,7 +153,7 @@ def annotate(args):
     from annotation.annotation import annotate as _annotate
     annotate_json, fa_file, rna_file = _annotate(basedir=args.annotation_dir, prefix=args.workname,
                                                  ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
-                                                 clade=args.clade, taxa=args.required_taxa, thread_number=args.threads,
+                                                 clade=args.clade, thread_number=args.threads,
                                                  wildcard_profile=args.wider_taxa, trna_overlapping=30)
     # Further processing for calling directly
     if args.__calling == 'annotate':

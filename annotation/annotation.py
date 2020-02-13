@@ -32,7 +32,6 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call, concat_command
-    # TODO remove annotation when testing
     from annotation import annotation_tookit as tk  # pylint: disable=import-error, no-name-in-module
     from Bio import SeqIO
     from utility import logger
@@ -54,7 +53,7 @@ def concat_java(*args, **kwargs):
 
 
 def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
-             genetic_code=9, clade=None, taxa=None, thread_number=8,
+             genetic_code=9, clade=None, thread_number=8,
              wildcard_profile=False, trna_overlapping=40):
     logger.log(2, 'Entering annotation module.')
     if wildcard_profile:

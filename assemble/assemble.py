@@ -67,7 +67,9 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
     contigs_file = os.path.join(
         base_dir, 'result', work_prefix + '.contigs.fa')
-
+    if not path.isfile(contigs_file):
+        raise RuntimeError(
+            'Megahit finished with no results! This could be an error caused memory overflow or something will halt the process of Megahit!')
     if logger.get_level() <= 1:
         from Bio import SeqIO
         contigs = [x for x in SeqIO.parse(contigs_file, 'fasta')]
