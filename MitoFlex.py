@@ -150,6 +150,7 @@ def findmitoscaf(args):
 @parse_func(func_help='annotate PCGs, tRNA and rRNA genes',
             parents=[universal_parser, fasta_parser, annotation_parser, saa_parser, search_parser])
 def annotate(args):
+
     from annotation.annotation import annotate as _annotate
     annotate_json, fa_file, rna_file = _annotate(basedir=args.annotation_dir, prefix=args.workname,
                                                  ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
@@ -186,6 +187,7 @@ def annotate(args):
 
 @parse_func(func_help='visualization of GenBank file')
 def visualize(args):
+
     if not hasattr(args, 'use_json'):
         pass
 
@@ -228,6 +230,7 @@ def all(args):
 
 
 def pre(args):
+
     # Initialize the logger.
     if hasattr(args, 'work_dir') and hasattr(args, 'workname'):
         logger.init(path.join(args.work_dir, f'{args.workname}.log'))
@@ -249,13 +252,23 @@ def pre(args):
 
     def runtime_error_logger(exception_type, value, tb):
         if exception_type == RuntimeError:
+            logger.log(
+                4,
+                'A RuntimeError was occured! This is already considered in the program'
+                ', but since it\'s though to be errors in parts outside the MitoFlex, it\'s'
+                ' NOT a bug caused by MitoFlex itself. Please check the error message below'
+                ' and try to fix the possible cause of the crash, only as a last resort, send '
+                'github a issue with a rerun with logger level set to 0!'
+            )
             logger.log(4, value)
             logger.finalize()
             sys.exit()
         else:
             if exception_type != KeyboardInterrupt:
                 logger.log(
-                    4, "An unexpected error was happened in the MitoFlex, this could be an bug in the program, so please report it if you see this message in log.")
+                    4,
+                    "An unexpected error was happened in the MitoFlex, this could be an bug in the program,"
+                    " so please report it if you see this message in log.")
                 logger.log(
                     4, f"Error type : {exception_type.__name__}, value : {value}")
                 logger.log(
@@ -272,6 +285,7 @@ def pre(args):
 
 
 def post(args):
+
     if args is None:
         return
     if args.clean_temp:

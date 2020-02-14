@@ -104,7 +104,8 @@ class Infernal():
             raise IOError("Cannot read infernal file!")
 
         alignments = ''.join(alignments).split('>> ')[1:]
-        self.alignments = [Infernal.Result(data) for data in alignments]
+        self.alignments = [Infernal.Result(
+            data) for data in alignments if '[No hits detected that satisfy reporting thresholds]' not in data]
 
 
 class Queries():

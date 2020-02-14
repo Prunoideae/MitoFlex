@@ -240,7 +240,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     selected_ids = []
     for x in selected_candidates.values():
-        selected_ids += x
+        if x is not None:
+            selected_ids += x
     selected_ids = list(set(selected_ids))
     picked_seq = [seq for seq in contig_data_high if seq.id in selected_ids]
 

@@ -510,6 +510,11 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
         'name': 'wider-taxa',
         'default': False,
         'help': 'to use the general protein profile for annotation, only used if no reports and cannot add addtional profile.'
+    },
+    {
+        'name': 'logger-level',
+        'default': 2,
+        'help': 'how verbose the logger will output log, 1 for debug, 2 for info, 3 for warning, 4 for error. Logs below the logger level will not be displayed.'
     }
 
 
