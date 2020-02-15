@@ -205,7 +205,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         candidate.sort(key=lambda candi: candi[1])
         # Try to find all the first occurences of complete cds.
         selected_candidates[query] = next(
-            (x for x in candidate if x[2]), default=None)
+            (x for x in candidate if x[2]), None)
 
     # Try to concat the debris of cds if no complete gene is found
     for query, candidate in candidates.items():
