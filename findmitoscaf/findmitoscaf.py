@@ -186,7 +186,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     # Collects all the related cds
     candidates = {x: [] for x in cds_indexes}
-    for row in hmm_frame.iterrows():
+    for _, row in hmm_frame.iterrows():
         query = str(row.query)
         index = str(row.target)
         score = int(row.score)
@@ -279,13 +279,13 @@ def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
 
     # Read table with pandas
     hmm_frame = pandas.read_csv(hmm_tbl_pd, comment='#', delimiter=' ',
-                                  names=[
-                                      'target', 'accession1', 'query',
-                                      'accession2', 'hmmfrom', 'hmm to',
-                                      'alifrom', 'alito', 'envfrom', 'envto',
-                                      'sqlen', 'strand', 'e', 'score',
-                                      'bias'
-                                  ])
+                                names=[
+                                    'target', 'accession1', 'query',
+                                    'accession2', 'hmmfrom', 'hmm to',
+                                    'alifrom', 'alito', 'envfrom', 'envto',
+                                    'sqlen', 'strand', 'e', 'score',
+                                    'bias'
+                                ])
     hmm_frame = hmm_frame.drop(columns=['accession1', 'accession2'])
 
     # Deduplicate multiple hits on the same gene of same sequence
