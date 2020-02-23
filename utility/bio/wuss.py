@@ -128,7 +128,7 @@ class HairpinLoop():
         self.stem = Stem([], [])
         self.unknown = Sets(set())
         self.fold = foldseq
-        
+
         stack = []
         for idx, cha in enumerate(foldseq):
             sequence[idx].parent.append(self)
@@ -353,7 +353,7 @@ def align_fold(fold, sing):
     stack = []
     unaligned = []
     for idx, cha in enumerate(fold):
-        if cha in right_collections:
+        if cha in right_collections and stack:
             last_cha = stack[-1]
             right_level = right_collections.index(cha)
             left_level = left_collections.index(last_cha[0])
@@ -371,10 +371,12 @@ def align_fold(fold, sing):
                 elif left_level > right_level:
                     # Missing a right hand bracket for some reasons, reject
                     # all unmatched left hand bracket.
-                    unaligned.appends(stack.pop())
+                    unaligned.append(stack.pop())
 
         elif cha in left_collections:
             stack.append((cha, idx))
+        elif not stack:
+            unaligned.append((cha, idx))
 
     unaligned += stack  # Adding remained unaligned brackets
     indexes = [x[1] for x in unaligned]
