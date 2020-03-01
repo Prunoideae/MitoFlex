@@ -87,6 +87,11 @@ universal_parser, universal_group = register_group('Universal arguments', [
         'name': 'basedir',
         'default': os.getcwd(),
         'help': 'working folder will be generated in which directory.'
+    },
+    {
+        'name': 'level',
+        'default': 2,
+        'choices': [0, 1, 2, 3, 4]
     }], func=universal_regulator
 )
 
@@ -121,6 +126,9 @@ def fastq_regulator(args):
         if min_kmer >= args.fastq_read_length:
             valid = False
             print("Specified fastq read length lower than the mininum kmer.")
+
+    if args.level == 0:
+        print("Using logger level 0, this could lead to a very verbose logging.")
 
     return valid
 

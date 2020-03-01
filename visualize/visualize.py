@@ -32,6 +32,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
     from Bio import SeqIO
+    from visualize import circos_config
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -88,5 +89,19 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     # GC content
     # Reuse conv-list here, as it's not deleted in the scope
     for seq in list_conv:
-        #Stepping 50 to walk through
+        # Stepping 50 to walk through
         pass
+
+    # Giving the values
+    generated_config = circos_config.circos_conf
+    generated_config.image.dir = 'Output directory here'
+    generated_config.karyotype = 'Karyotype file here'
+    generated_config.plots['plot', 0].file = 'Gene name and position file here'
+    generated_config.plots['plot', 1].file = 'Plus file here'
+    generated_config.plots['plot', 2].file = 'GC content file here'
+    with generated_config.plots['plot', 3] as depth_plot:
+        depth_plot.file = 'Depth file here'
+        depth_plot.rules['rule', 0].condition = 'var(value) > {}'
+        depth_plot.rules['rule', 1].condition = 'var(value) < {}'
+
+    generated_config.highlights['highlight', 0].file = "Feature file here"

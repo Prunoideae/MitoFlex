@@ -43,8 +43,6 @@ try:
 except Exception as iden:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
-bin_dir = path.dirname(__file__)
-
 
 # Truncates all the -- to - to suit blast's parsing style
 def truncated_call(*args, **kwargs):
@@ -177,9 +175,11 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
 def genewise(basedir=None, prefix=None, codon_table=None,
              wises: pandas.DataFrame = None, infile=None,
              dbfile=None, cutoff=0.5):
+    wise_dir = path.abspath(
+        path.join(path.dirname(__file__), '..', 'genewise'))
 
     if codon_table is None:
-        codon_table = path.join(bin_dir, 'codon_InverMito.table')
+        codon_table = path.join(wise_dir, 'codon_InverMito.table')
 
     wisedir = path.join(basedir, 'genewise')
     dbdir = path.join(wisedir, 'sequences')
@@ -203,7 +203,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
     for idx, record in dbparsed.items():
         SeqIO.write(record, path.join(dbdir, f'{idx}.fa'), 'fasta')
 
-    wise_cfg_dir = path.join(bin_dir, 'wisecfg')
+    wise_cfg_dir = path.join(wise_dir, 'wisecfg')
     env_var = dict(os.environ)
     env_var["WISECONFIGDIR"] = wise_cfg_dir
 

@@ -83,6 +83,8 @@ Info should be printed if there's no error in your installation, otherwise you n
 
 # 3. Data requirement
 
+MitoFlex depends on the quality more than the size of data, it will not throw any error because of your input fastq file is too small or something, but the result may be of low quality if the raw dataset is small or unqualified.
+
 # 4. Specifying parameters in configuration file
 
 MitoFlex created a very flexible argument catching and processing mechanism, which is aimed to make it easier for further developing. [An example configuration file](example.config.py) is created under the main directory.
@@ -145,7 +147,7 @@ Most modules of MitoFlex are just the same as MitoZ. But some of the methods are
 
 ## 5.6 visualize
 
-# 6. Adding new sequence data to MitoFlex
+# 6. Adding new profile data to MitoFlex
 
 MitoFlex has already integrated protein and nucleic acid data into the profile, but it can't cover all the species for sure. So it's necessary to add data of other taxonomy classes if current MitoFlex doesn't have it for better assemble and annotation performance.
 
@@ -165,7 +167,9 @@ MitoFlex uses a given set of protein sequences to do tblastn, for picking up mos
 
 To add a new clade, these three files should be noticed: `{clade}.hmm` and `required_cds.json` in `profile/CDS_HMM` and `{clade}.fa` in `profile/MT_database`. The hmm file is used for nhmmer to search out possible sequences, and the fasta file is for tblastn to mark the potential sequence with genes, and the required_cds.json is for telling MitoFlex what gene should be taken into count, because some gene is rarely reported in several species, so it would be better for users to tell how MitoFlex will judge the gene is missing or not.
 
+### 6.2.3 Adding Covariance Models for tRNA search
 
+Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex will automatically use files under this directory for tRNA searching.
 
 # 7. Extending the function of MitoFlex
 

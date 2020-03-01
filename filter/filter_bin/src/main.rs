@@ -251,14 +251,14 @@ fn filter_pe(
                 break;
             }
         }
-        writeln!(cl1, "{}", head1);
-        writeln!(cl1, "{}", seq1);
-        writeln!(cl1, "+");
-        writeln!(cl1, "{}", qua1);
-        writeln!(cl2, "{}", head2);
-        writeln!(cl2, "{}", seq2);
-        writeln!(cl2, "+");
-        writeln!(cl2, "{}", qua2);
+        writeln!(cl1, "{}", head1).unwrap();
+        writeln!(cl1, "{}", seq1).unwrap();
+        writeln!(cl1, "+").unwrap();
+        writeln!(cl1, "{}", qua1).unwrap();
+        writeln!(cl2, "{}", head2).unwrap();
+        writeln!(cl2, "{}", seq2).unwrap();
+        writeln!(cl2, "+").unwrap();
+        writeln!(cl2, "{}", qua2).unwrap();
     }
 }
 
@@ -305,10 +305,10 @@ fn filter_se(
             }
         }
 
-        writeln!(clean_file, "{}", head);
-        writeln!(clean_file, "{}", bps);
-        writeln!(clean_file, "+");
-        writeln!(clean_file, "{}", quas);
+        writeln!(clean_file, "{}", head).unwrap();
+        writeln!(clean_file, "{}", bps).unwrap();
+        writeln!(clean_file, "+").unwrap();
+        writeln!(clean_file, "{}", quas).unwrap();
     }
 }
 

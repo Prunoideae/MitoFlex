@@ -55,9 +55,6 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
-# Debug only
-logger.set_level(0)
-
 # Constants
 VERSION = '0.0.5'
 
@@ -236,13 +233,13 @@ def pre(args):
         logger.init(path.join(args.work_dir, f'{args.workname}.log'))
     else:
         logger.init(path.join(os.getcwd(), 'summary.log'))
-
+    logger.set_level(args.level)
     logger.log(
         2, f'MitoFlex {VERSION}, run {args.workname if hasattr(args, "workname") else "1"}')
 
     arg_dict = vars(args)
-    logger.log(1, f'Arguments after parsed : ')
-    logger.log(1, f'{[f"{key}={value}" for key, value in arg_dict.items()]}')
+    logger.log(0, f'Arguments after parsed : ')
+    logger.log(0, f'{[f"{key}={value}" for key, value in arg_dict.items()]}')
 
     if hasattr(args, 'disable_filter') and args.disable_filter:
         logger.log(3, 'Filtering is not enabled.')
@@ -254,8 +251,8 @@ def pre(args):
         if exception_type == RuntimeError:
             logger.log(
                 4,
-                'A RuntimeError was occured! This is already considered in the program'
-                ', but since it\'s though to be errors in parts outside the MitoFlex, it\'s'
+                'A RuntimeError was occured! This is already considered in the code'
+                ', but since it\'s thought to be errors in parts outside the MitoFlex, it\'s'
                 ' NOT a bug caused by MitoFlex itself. Please check the error message below'
                 ' and try to fix the possible cause of the crash, only as a last resort, send '
                 'github a issue with a rerun with logger level set to 0!'
@@ -272,7 +269,7 @@ def pre(args):
                 logger.log(
                     4, f"Error type : {exception_type.__name__}, value : {value}")
                 logger.log(
-                    4, f"The traceback should be saved along with the log file, please also send it to give more detailed message. ")
+                    4, f"The traceback should be saved along with the log file, please also send it to give a more detailed message. ")
                 with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
                     traceback.print_tb(tb, file=f)
             else:
@@ -280,7 +277,7 @@ def pre(args):
             logger.finalize()
             sys.__excepthook__(exception_type, value, tb)
         pass
-
+    
     sys.excepthook = runtime_error_logger
 
 
@@ -289,11 +286,10 @@ def post(args):
     if args is None:
         return
     if args.clean_temp:
+        # Not removing until here since cleanq1 and cleanq2 have many other usage other than assembling
         logger.log(1, 'Removing filtered data files.')
         os.remove(args.cleanq1)
         os.remove(args.cleanq2)
-
-        logger.log(1, 'Removing generated contigs files.')
 
     logger.finalize()
 

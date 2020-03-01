@@ -209,15 +209,3 @@ with circos_conf.highlights as highlights:
         highlight.file = None
 
 
-# Giving the values, but will be in another module
-circos_conf.image.dir = 'Output directory here'
-circos_conf.karyotype = 'Karyotype file here'
-circos_conf.plots['plot', 0].file = 'Gene name and position file here'
-circos_conf.plots['plot', 1].file = 'Plus file here'
-circos_conf.plots['plot', 2].file = 'GC content file here'
-with circos_conf.plots['plot', 3] as depth_plot:
-    depth_plot.file = 'Depth file here'
-    depth_plot.rules['rule', 0].condition = 'var(value) > {}'
-    depth_plot.rules['rule', 1].condition = 'var(value) < {}'
-
-circos_conf.highlights['highlight', 0].file = "Feature file here"
