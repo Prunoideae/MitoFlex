@@ -24,6 +24,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
+from os import path
 from os.path import getmtime
 from datetime import datetime
 
@@ -42,15 +43,25 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
-if os.path.isfile('taxdump.tar.gz'):
-    os.rename('taxdump.tar.gz', 'old.taxdump.tar.gz')
+dump_file = path.join(path.dirname(__file__), 'taxdump.tar.gz')
+dump_file = path.abspath(dump_file)
+dump_dir = path.dirname(dump_file)
+dump_file_old = path.join(dump_dir, 'old.taxdump.tar.gz')
+
+if os.path.isfile(dump_file):
+    os.rename(dump_file, dump_file_old)
+
 try:
     ncbi = NCBITaxa()
     ncbi.update_taxonomy_database()
-    if os.path.isfile('old.taxdump.tar.gz'):
-        os.remove('old.taxdump.tar.gz')
+    if os.path.isfile(dump_file_old):
+        os.remove(dump_file_old)
 except Exception as idd:
     print("Errors occured when fetching data from NCBI database, falling back to the last fetched database.")
-    ncbi = NCBITaxa(taxdump_file=os.path.abspath('old.taxdump.tar.gz'))
-    if os.path.isfile('old.taxdump.tar.gz'):
-        os.rename('old.taxdump.tar.gz', 'taxdump.tar.gz')
+    if path.isfile(dump_file):
+        ncbi = NCBITaxa(taxdump_file=os.path.abspath(dump_file_old))
+        if os.path.isfile(dump_file_old):
+            os.rename(dump_file_old, dump_file)
+    else:
+        print("A taxdump file is not found under installation directory, cannot build NCBI taxanomy database.")
+        print("Please manually download it from http://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz.")

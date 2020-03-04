@@ -267,27 +267,6 @@ def genewise(basedir=None, prefix=None, codon_table=None,
     return wises, queries, dbparsed
 
 
-def collect_result(output_file=None, wises: pandas.DataFrame = None, queries=None, data=None):
-    result_seq = []
-    for _, wise in wises.iterrows():
-        trait_string = compile_seq({
-            'qseq': wise.qseq,
-            'sseq': wise.sseq,
-            'qstart': wise.qstart,
-            'qend': wise.qend,
-            'sstart': wise.sstart,
-            'send': wise.send,
-            'plus': wise.plus
-        })
-
-        seq = queries[wise.sseq][wise.sstart-1: wise.send]
-        seq.description = trait_string
-        if wise.plus is 0:
-            seq.seq = seq.seq.reverse_complement()
-        result_seq.append(seq)
-    return SeqIO.write(result_seq, output_file, 'fasta')
-
-
 def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
     wise_seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta')}
     wises.assign(start_real=np.nan, end_real=np.nan)

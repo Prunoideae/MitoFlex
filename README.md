@@ -155,7 +155,7 @@ Run the whole workflow, including methods listed below. Some part of module can 
 
 ## 5.2 filter
 
-Filter out fastq sequences of low quality, binary is written in Rust to ensure speed and data safety. The method will not output compressed clean data by default, and most workflow is designed to directly process with plain data format, clean data will be deleted after the workflow is done if `--keep-temp` option is not set. If you really need to output compressed format, you can modify `args.cleanq1 = ''` and `args.cleanq2 = ''` in the [MitoFlex](MitoFlex.py) in code of `all`, in a complete run, or specify output data ends with `.gz`, in a direct call to filter method.
+Filter out fastq sequences of low quality, binary is written in Rust to ensure speed and data safety. The method will not output compressed clean data by default, and most workflow is designed to directly process with plain data format, clean data will be deleted after the workflow is done if `--keep-temp` option is not set. If you really need to output compressed format, you can modify `args.cleanq1 = ''` and `args.cleanq2 = ''` in the [MitoFlex.py](https://github.com/Prunoideae/MitoFlex/blob/5a56ab4f567dfc1109acc561d748e44d621af18e/MitoFlex.py#L210-L211) in code of `all`, in a complete run, or specify output data ends with `.gz`, in a direct call to filter method.
 
 ## 5.3 assemble
 
