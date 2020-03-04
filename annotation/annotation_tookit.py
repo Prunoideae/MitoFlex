@@ -63,7 +63,12 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
     results = []
 
     protein_data_dir = path.join(basedir, 'tblastn_data')
-    os.mkdir(protein_data_dir)
+
+    try:
+        os.mkdir(protein_data_dir)
+    except FileExistsError:
+        raise RuntimeError(
+            "Folder is already created, please make sure the working folder is clean.")
 
     logger.log(1, f'Making {threads} small datasets for calling tblastn.')
     tblastn_db = np.array_split(list(SeqIO.parse(dbfile, 'fasta')), threads)

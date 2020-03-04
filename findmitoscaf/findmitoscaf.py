@@ -185,7 +185,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         open(path.join(profile_dir_hmm, 'required_cds.json')))[clade]
 
     # Collects all the related cds
-    candidates = {x: [] for x in cds_indexes}
+    candidates = {}
     for _, row in hmm_frame.iterrows():
         query = str(row.query)
         index = str(row.target)
@@ -196,52 +196,84 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         query_start = int(row.hmmfrom)
         query_to = int(row['hmm to'])
         complete = align_length >= cds_indexes[query]
-        candidates[query].append(
-            (index, score, complete, query_start, query_to))
+
+        if index not in candidates:
+            candidates[index] = {}
+        candidates[index][query] = (
+            score, align_start, align_end, complete
+        )
+
+    flatten_candidates = [(key, value) for key, value in candidates.items()]
+    flatten_candidates.sort(key=lambda x: len(x[1]), reverse=True)
 
     selected_candidates = {x: None for x in cds_indexes}
-    # Process the data
-    for query, candidate in candidates.items():
-        candidate.sort(key=lambda candi: candi[1])
-        # Try to find all the first occurences of complete cds.
-        selected_candidates[query] = next(
-            (x for x in candidate if x[2]), None)
 
-    # Try to concat the debris of cds if no complete gene is found
-    for query, candidate in candidates.items():
-        if not selected_candidates[query] and candidate:
-            # Map the genes to locations
+    # Select as many as possible full pcgs
+    for candidate in flatten_candidates:
+        index = candidate[0]
+        mapping = candidate[1]
+        completed = [x for x in mapping if mapping[x][3]]
+
+        if any([selected_candidates[c] != None for c in completed]):
+            continue
+        for c in completed:
+            selected_candidates[c] = [index]
+
+    # For fragments, select non-conflict sequence as much as possible
+    for empty_pcg in [x for x in selected_candidates if selected_candidates[x] == None]:
+        for index, mapping in candidates.items():
+            # No pcg in this sequence, next sequence
+            if empty_pcg not in mapping:
+                continue
+            # Selected sequence has complete pcg, but not selected due to previous conflict
+            # select now.
+            if mapping[empty_pcg][3]:
+                selected_candidates[empty_pcg] = [index]
+                break
+            # First found pcg, set and quit
+            if selected_candidates[index] == None:
+                selected_candidates[index] = []
+
+            # Collect all the sequences
+            selected_candidates[index].append(
+                (index, *mapping[empty_pcg][:-1])
+            )
+
+        # Convert all fragments to final results
+        if selected_candidates[empty_pcg] is not None:
             gene_map = []
-            for debri in gene_map:
-                gene_map.append((debri[3], debri))
-                gene_map.append((debri[4], debri))
+            for pos in selected_candidates[empty_pcg]:
+                gene_map.append((pos[2], (pos[0], pos[1])))
+                gene_map.append((pos[3], (pos[0], pos[1])))
             gene_map.sort(key=lambda x: x[0])
             gene_map = [x[1] for x in gene_map]
 
-            def overlapping(locs):
-                for i in range(0, len(locs)-1, 2):
-                    left_loc = locs[i]
-                    right_loc = locs[i+1]
-                    if locs[i] != locs[i+1]:
-                        if left_loc[2] >= right_loc[2]:
-                            while right_loc in locs:
-                                locs.remove(right_loc)
+            def overlapping():
+                for i in range(0, len(gene_map)-1, 2):
+                    left = gene_map[i]
+                    right = gene_map[i+1]
+                    if left[0] != right[0]:
+                        if left[1] < right[1]:
+                            gene_map.remove(left)
+                            gene_map.remove(left)
                         else:
-                            while left_loc in locs:
-                                locs.remove(left_loc)
+                            gene_map.remove(right)
+                            gene_map.remove(right)
                         return True
                 return False
 
-            # Remove overlapped results
-            while overlapping(gene_map):
+            while overlapping():
                 pass
-            gene_map = gene_map[::2]
-            selected_candidates[query] = gene_map
+
+            selected_candidates[empty_pcg] = list(
+                set([x[0] for x in gene_map])
+            )
 
     selected_ids = []
     for x in selected_candidates.values():
         if x is not None:
             selected_ids += x
+
     selected_ids = list(set(selected_ids))
     picked_seq = [seq for seq in contig_data_high if seq.id in selected_ids]
 

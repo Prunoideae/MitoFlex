@@ -283,11 +283,12 @@ def post(args):
 
     if args is None:
         return
-    if not args.keep_temp:
+    if not args.keep_temp and args.__calling != 'filter' and hasattr(args, 'cleanq1'):
         # Not removing until here since cleanq1 and cleanq2 have many other usage other than assembling
         logger.log(1, 'Removing filtered data files.')
         os.remove(args.cleanq1)
-        os.remove(args.cleanq2)
+        if hasattr(args, 'cleanq2'):
+            os.remove(args.cleanq2)
 
     logger.finalize()
 
