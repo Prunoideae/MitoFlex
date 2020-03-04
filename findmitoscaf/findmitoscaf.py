@@ -269,6 +269,10 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                 set([x[0] for x in gene_map])
             )
 
+    candidates_json = path.join(basedir, f'{prefix}.candidates.json')
+    with open(candidates_json, 'w') as f:
+        json.dump(selected_candidates, f, sort_keys=True,
+                  indent=4, separators=(', ', ": "))
     selected_ids = []
     for x in selected_candidates.values():
         if x is not None:

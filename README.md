@@ -6,11 +6,11 @@ MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembli
 
 ## 1.1 Platform
 
-MitoFlex is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL2)`, compiled and tested under `CentOS release 7.3.1611`.
+MitoFlex is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL2)`, compiled and tested under `CentOS release 7.3.1611`. Unix like system should work fine, but since some part of the program is compiled in Ubuntu, MitoFlex may have risk to fail if running on other OS, like MacOS, Windows system is obviously not suitable to run MitoFlex.
 
 ## 1.2 Storage
 
-Installing MitoFlex requires abount 1~2GB of disk space. Assembling needs about 50% to 200% of raw data's size to create and store temp files each run. Temp files could be deleted after the run, though you may find something useful in it.
+Installing MitoFlex requires abount 1~2GB of disk space (Including dependency packages). Assembling needs about 50% to 200% of raw data's size to create and store temp files each run. Temp files could be deleted after the run, which will reduce the result to about 100MB size.
 
 ## 1.3 Memory
 
@@ -22,15 +22,23 @@ MitoFlex makes use of a multi k-mer assemble strategy from [MEGAHIT](https://git
 
 ## 1.5 GPU
 
-MitoFlex does not explicitly requires GPU in the work, but a GPU will highly accelerate the process of sDBG building, about 3 times faster than normal.
+MitoFlex does not explicitly requires GPU in the work, but a GPU will highly accelerate the process of sDBG building.
 
 # 2. Installation
 
-## 2.1 From Docker Image
+## 2.1 From Docker Image (Currently not implemented)
 
 ## 2.2 From git repository (Conda required)
 
 For certain conditions, like if you don't have a sudo permission or root command, you can deploy MitoFlex from git without any.
+
+To download MitoFlex from Github, simply type:
+
+``` bash
+git clone https://github.com/Prunoideae/MitoFlex
+```
+
+And git will pull the MitoFlex into your current directory, downloading zip file and extract it to any folder is also ok.
 
 ### 2.2.1 Installing Conda
 
@@ -187,7 +195,7 @@ Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex wil
 
 # 7. Extending the function of MitoFlex
 
-MitoFlex is designed for extendability and readability, to make users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be optimized. Extending the function should not be an hard task as MitoZ.
+MitoFlex is designed for extendability and readability, to make users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be even optimized. Extending the function should not be an hard task as MitoZ.
 
 MitoFlex is written in Python 3.6, so modifying the original workflow of MitoFlex requires a basic knowledge of the Python programming language.
 
