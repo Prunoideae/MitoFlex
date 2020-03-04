@@ -79,8 +79,8 @@ universal_parser, universal_group = register_group('Universal arguments', [
         'help': 'thread numbers.'
     },
     {
-        'name': 'clean-temp',
-        'default': True,
+        'name': 'keep-temp',
+        'default': False,
         'help': 'remove temporal files and folders after work done.'
     },
     {

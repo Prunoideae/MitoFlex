@@ -42,8 +42,6 @@ try:
     from Bio import SeqRecord
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility import logger
-    # We are using this for making the main file clean, so wildcard is
-    # not a problem here.
     from arguments import *  # pylint: disable=unused-wildcard-import
 
 except ModuleNotFoundError as identifier:
@@ -116,7 +114,7 @@ def assemble(args):
                                   work_prefix=args.workname, uselist=args.use_list, disable_local=args.disable_local,
                                   kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
                                   no_mercy=args.no_mercy, disable_acc=args.disable_acc, prune_level=args.prune_level,
-                                  prune_depth=args.prune_depth, keep_temp=not args.clean_temp, threads=args.threads)
+                                  prune_depth=args.prune_depth, keep_temp=args.keep_temp, threads=args.threads)
 
     # Further processing for calling directly
     if args.__calling == 'assemble':
@@ -277,7 +275,7 @@ def pre(args):
             logger.finalize()
             sys.__excepthook__(exception_type, value, tb)
         pass
-    
+
     sys.excepthook = runtime_error_logger
 
 
@@ -285,7 +283,7 @@ def post(args):
 
     if args is None:
         return
-    if args.clean_temp:
+    if not args.keep_temp:
         # Not removing until here since cleanq1 and cleanq2 have many other usage other than assembling
         logger.log(1, 'Removing filtered data files.')
         os.remove(args.cleanq1)

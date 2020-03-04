@@ -40,6 +40,7 @@ try:
     from Bio import SeqIO
     from Bio.Seq import Seq
     from Bio.Data import CodonTable
+    from deprecation import deprecated
 except Exception as iden:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -49,6 +50,7 @@ def truncated_call(*args, **kwargs):
     return direct_call(concat_command(*args, **kwargs).replace('--', '-'))
 
 
+# Use multiprocessing to actually boost the search
 def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
                   prefix=None, threads=8):
 
@@ -91,6 +93,7 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
     return out_blast
 
 
+@deprecated
 def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
             prefix=None):
 
@@ -172,6 +175,7 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
     return pandas.concat(results)
 
 
+# Call genewise
 def genewise(basedir=None, prefix=None, codon_table=None,
              wises: pandas.DataFrame = None, infile=None,
              dbfile=None, cutoff=0.5):

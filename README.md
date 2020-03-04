@@ -52,6 +52,12 @@ As the network situation varies, mirror channels, or other alternative channels 
 
 Though you actually can setup the environment from the ground, using conda for creating virtual environment, as there may be other tools requiring different environment, and even requirements that are conflict to MitoFlex's, is actually a better choice.
 
+MitoFlex requires a bunch of packages to run, you can install them in one line like:
+
+```bash
+conda create -n {environment name here} python=3.6.4 numpy pandas ete3 biopython megahit blast infernal circos hmmer samtools bwa infernal
+```
+
 ### 2.2.4 Installing MitoFlex from Git
 
 ```bash
@@ -137,11 +143,19 @@ Most modules of MitoFlex are just the same as MitoZ. But some of the methods are
 
 ## 5.1 all
 
+Run the whole workflow, including methods listed below. Some part of module can be disabled to meet a certain usage, `all2` command is removed, and replaced with `--disable-filter` option, check the help for a more detailed usage.
+
 ## 5.2 filter
+
+Filter out fastq sequences of low quality, binary is written in Rust to ensure speed and data safety. The method will not output compressed clean data by default, and most workflow is designed to directly process with plain data format, clean data will be deleted after the workflow is done if `--keep-temp` option is not set. If you really need to output compressed format, you can modify `args.cleanq1 = ''` and `args.cleanq2 = ''` in the [MitoFlex](MitoFlex.py) in code of `all`, in a complete run, or specify output data ends with `.gz`, in a direct call to filter method.
 
 ## 5.3 assemble
 
+Assemble the fastq file to output contigs. This method use Megahit for faster and better results, but since Megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 2h for a 5Gbps dataset) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if data itself is fragmentized.
+
 ## 5.4 findmitoscaf
+
+To pick out candidate sequences which likely to be mitochondrial sequences. This process firstly drop sequences which is obviously too low for searching, then will search the data with nhmmer and tblastn.
 
 ## 5.5 annotate
 

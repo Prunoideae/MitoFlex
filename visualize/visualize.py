@@ -32,6 +32,7 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
     from Bio import SeqIO
+    from utility.bio import circos
     from visualize import circos_config
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
@@ -50,7 +51,7 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     list_conv = []
     counter = 1
 
-    # TODO test after the dataset is done
+    # TODO have a test
     # Rename to a easier form
     index_list = {}
     for seq in SeqIO.parse(fasta_file, 'fasta'):
@@ -87,21 +88,35 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
                 max_gene_depth = int(content[2])
 
     # GC content
-    # Reuse conv-list here, as it's not deleted in the scope
-    for seq in list_conv:
-        # Stepping 50 to walk through
-        pass
+    # Reusing conv-list here, as it's not deleted in the scope
+    gc_content_file = path.join(basedir, f'{prefix}.gc.txt')
+    with open(gc_content_file, 'w') as gc_f:
+        for seq in list_conv:
+            # Stepping 50 to walk through
+            for s in range(0, len(seq), 50):
+                seq_slice = seq[s:s+50]
+                gc_num = sum(x == 'G' or x == 'C' for x in seq_slice)
+                gc_per = gc_num / len(seq_slice)
+                print(seq.id, s, s+len(seq_slice), gc_per, file=gc_f)
 
     # Giving the values
     generated_config = circos_config.circos_conf
-    generated_config.image.dir = 'Output directory here'
+    generated_config.image.dir = basedir
     generated_config.karyotype = 'Karyotype file here'
     generated_config.plots['plot', 0].file = 'Gene name and position file here'
     generated_config.plots['plot', 1].file = 'Plus file here'
-    generated_config.plots['plot', 2].file = 'GC content file here'
+    generated_config.plots['plot', 2].file = gc_content_file
     with generated_config.plots['plot', 3] as depth_plot:
-        depth_plot.file = 'Depth file here'
-        depth_plot.rules['rule', 0].condition = 'var(value) > {}'
-        depth_plot.rules['rule', 1].condition = 'var(value) < {}'
+        depth_plot.file = gene_depth_file
+        depth_plot.rules['rule',
+                         0].condition = f'var(value) > {int(max_gene_depth*0.9)}'
+        depth_plot.rules['rule',
+                         1].condition = f'var(value) < {int(max_gene_depth*0.1)}'
 
     generated_config.highlights['highlight', 0].file = "Feature file here"
+
+    # Writing to final
+    cfg_dict = circos.collapse(generated_config)
+    cfg_file = path.join(basedir, f'{prefix}.circos.cfg')
+    with open(cfg_file, 'w') as cfg_f:
+        cfg_f.write(circos.dict2circos(cfg_dict))
