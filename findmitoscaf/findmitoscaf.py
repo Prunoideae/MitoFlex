@@ -84,7 +84,7 @@ def get_rank(taxa_name=None):
 
     return [(tax_class, tax_id) for tax_class, tax_id in rank_dict.items()]
 
-
+# TODO test new algorithm
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
                  contigs_file=None, relaxing=0, multi=10, cover_valve=1, min_multi=3.0):

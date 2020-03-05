@@ -145,7 +145,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
     return blast_frame, out_blast_csv
 
 
-# Filter out the most important sequences for genewise
+# Filter out the most important sequences
 def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
     blast_frame['plus'] = blast_frame.send - blast_frame.sstart > 0
     blast_frame['sstart'], blast_frame['send'] = np.where(

@@ -38,6 +38,12 @@ except ImportError as identifier:
 profile_dir = os.path.join(os.path.dirname(__file__), 'profile', 'MT_database')
 
 
+def safe_makedirs(path, exist_ok=False):
+    if os.path.isdir(path) and not exist_ok:
+        raise FileExistsError()
+    os.makedirs(path, exist_ok=exist_ok)
+
+
 # Universal group
 def universal_regulator(args):
 
@@ -49,9 +55,12 @@ def universal_regulator(args):
         args.work_dir, args.workname + '.temp'))
     # Validates the folders
     try:
-        os.makedirs(args.work_dir, exist_ok=True)
-        os.makedirs(args.result_dir, exist_ok=True)
-        os.makedirs(args.temp_dir, exist_ok=True)
+        safe_makedirs(args.work_dir)
+        safe_makedirs(args.result_dir)
+        safe_makedirs(args.temp_dir)
+    except FileExistsError:
+        print('Diretory exist before validating, please check and remove it to prevent data loss.')
+        return False
     except Exception:
         print(
             'Error occured when validating the directories, please check your permissions or things could be related.')
@@ -197,7 +206,10 @@ def filter_regulator(args):
         args.clean_dir = os.path.join(os.getcwd(), 'cleandata')
 
     try:
-        os.makedirs(args.clean_dir, exist_ok=True)
+        safe_makedirs(args.clean_dir)
+    except FileExistsError:
+        valid = False
+        print('Diretory exist before validating, please check and remove it to prevent data loss.')
     except Exception:
         valid = False
         print('Error occured when validating the directories, please check your permissions or things could be related.')
@@ -275,7 +287,10 @@ def assembly_regulator(args):
         args.assemble_dir = os.path.join(os.getcwd(), 'assemble')
 
     try:
-        os.makedirs(args.assemble_dir, exist_ok=True)
+        safe_makedirs(args.assemble_dir)
+    except FileExistsError:
+        print('Diretory exist before validating, please check and remove it to prevent data loss.')
+        valid = False
     except Exception:
         valid = False
         print('Error occured when validating the directories, please check your permissions or things could be related.')
@@ -379,7 +394,10 @@ def search_regulator(args):
     else:
         args.findmitoscaf_dir = os.path.join(os.getcwd(), 'findmitoscaf')
     try:
-        os.makedirs(args.findmitoscaf_dir, exist_ok=True)
+        safe_makedirs(args.findmitoscaf_dir)
+    except FileExistsError:
+        valid = False
+        print('Diretory exist before validating, please check and remove it to prevent data loss.')
     except Exception:
         valid = False
         print('Error occured when validating the directories, please check your permissions or things could be related.')
@@ -536,7 +554,10 @@ def annotation_regulator(args):
         args.annotation_dir = os.path.join(os.getcwd(), 'annotation')
 
     try:
-        os.makedirs(args.annotation_dir, exist_ok=True)
+        safe_makedirs(args.annotation_dir)
+    except FileExistsError:
+        print('Diretory exist before validating, please check and remove it to prevent data loss.')
+        return False
     except Exception:
         print('Cannot make annotation temp folder!')
         return False

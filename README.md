@@ -195,13 +195,15 @@ To add a new clade, these three files should be noticed: `{clade}.hmm` and `requ
 
 Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex will automatically use files under this directory for tRNA searching.
 
-# 7. Extending the function of MitoFlex
+# 7. Logging and debugging when failed
+
+# 8. Extending the function of MitoFlex
 
 MitoFlex is designed for extendability and readability, to make users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be even optimized. Extending the function should not be an hard task as MitoZ.
 
 MitoFlex is written in Python 3.6, so modifying the original workflow of MitoFlex requires a basic knowledge of the Python programming language.
 
-## 6.0 Calling the MitoFlex from other ways
+## 8.0 Calling the MitoFlex from other ways
 
 Bash is not always the solution, in a certain circumstances an call from python inside could be better because it allows deeper profiling and monitoring, and controlling. For example deploying and integrating the MitoFlex with environments like Jupyter or some web server.
 
@@ -236,7 +238,7 @@ process_arguments(command='test', args=args)
 MitoFlex.test(args)
 ```
 
-## 6.1 Creating more subcommands
+## 8.1 Creating more subcommands
 
 MitoFlex mainly use two decorators, `@parse_func` and `@arg_prop` from [parser.py](utility/parser.py), to profile and collect functions needed to be a subcommand of MitoFlex runtime, which means that  attaching the `@parse_func` decorator will expose the function to commandline, and using a `@arg_prop` decorator will add a argument to it.
 
@@ -289,7 +291,7 @@ True    # print(args.switch)
 1       # print(args.c)
 ```
 
-## 6.2 Creating parameter groups
+## 8.2 Creating parameter groups
 
 Most methods shares a set of parameters, like thread numbers or input fastq file. Specifying the parameters repeatedly could be a problem, and validation will be difficult. So MitoFlex implements a parameter group processing mechanism to make this progress easier to be defined.
 To create a argument group, you need to import and execute the method `register_group` from the module [parser.py](utility/parser.py):
