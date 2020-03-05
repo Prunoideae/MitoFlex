@@ -176,7 +176,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     low = SeqIO.write(contig_data_low, contigs_file_low, 'fasta')
 
     logger.log(
-        1, f'{high} records of high abundance, {low} records of low abundance was classified with multi value {multi}.')
+        2, f'{high} records of high abundance, {low} records of low abundance was classified with multi value {multi}.')
 
     # Here we pick out the last sequences by using a greedy algorithm
     # the brute is deprecated because I found myself didn't realize what
@@ -209,6 +209,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     selected_candidates = {x: None for x in cds_indexes}
 
     # Select as many as possible full pcgs
+    # As my point of view, using greedy here just ok.
     for candidate in flatten_candidates:
         index = candidate[0]
         mapping = candidate[1]
@@ -217,7 +218,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         if any([selected_candidates[c] != None for c in completed]):
             continue
         for c in completed:
-            selected_candidates[c] = [index]
+            selected_candidates[c] = index
 
     # For fragments, select non-conflict sequence as much as possible
     for empty_pcg in [x for x in selected_candidates if selected_candidates[x] == None]:
@@ -228,19 +229,18 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             # Selected sequence has complete pcg, but not selected due to previous conflict
             # select now.
             if mapping[empty_pcg][3]:
-                selected_candidates[empty_pcg] = [index]
+                selected_candidates[empty_pcg] = index
                 break
-            # First found pcg, set and quit
+
             if selected_candidates[index] == None:
                 selected_candidates[index] = []
-
             # Collect all the sequences
             selected_candidates[index].append(
                 (index, *mapping[empty_pcg][:-1])
             )
 
         # Convert all fragments to final results
-        if selected_candidates[empty_pcg] is not None:
+        if isinstance(selected_candidates[empty_pcg], list):
             gene_map = []
             for pos in selected_candidates[empty_pcg]:
                 gene_map.append((pos[2], (pos[0], pos[1])))
@@ -276,7 +276,10 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     selected_ids = []
     for x in selected_candidates.values():
         if x is not None:
-            selected_ids += x
+            if isinstance(x, list):
+                selected_ids += x
+            else:
+                selected_ids.append(x)
 
     selected_ids = list(set(selected_ids))
     picked_seq = [seq for seq in contig_data_high if seq.id in selected_ids]
