@@ -1,6 +1,6 @@
 # MitoFlex
 
-MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembling, it's inspired from [MitoZ](https://github.com/linzhi2013/MitoZ), but with improved performance and result quality. And also it implemented a both easy and flexible mechanism for extending the program feature. It accepts both single-end and pair-end data, and follows a filter-assemble-annotate-visualize workflow to output results. Working mechanism is highly flexible and can be easily configured here.
+MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembling, it's inspired from [MitoZ](https://github.com/linzhi2013/MitoZ), but with improved performance and result quality. And also it implemented a both easy and flexible mechanism to extend the program feature. It accepts both single-end and pair-end data, and follows an already set workflow to output results. Working mechanism is highly flexible and can be easily reconfigured here.
 
 # 1. System requirements
 
@@ -8,9 +8,9 @@ MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembli
 
 MitoFlex is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL2)`, compiled and tested under `CentOS release 7.3.1611`. Unix like system should work fine, but since some part of the program is compiled in Ubuntu, MitoFlex may have risk to fail if running on other OS, like MacOS, Windows system is obviously not suitable to run MitoFlex.
 
-## 1.2 Storage
+## 1.2 File system
 
-Installing MitoFlex requires abount 1~2GB of disk space (Including dependency packages). Assembling needs about 50% to 200% of raw data's size to create and store temp files each run. Temp files could be deleted after the run, which will reduce the result to about 100MB size.
+Installing MitoFlex requires about 1GB of space (Including dependency packages). Assembling needs about 50% to 200% of raw data's size to create and store temp files each run. Temp files could be deleted after the run, which will reduce the result to about 100MB size.
 
 ## 1.3 Memory
 
@@ -26,7 +26,7 @@ MitoFlex does not explicitly requires GPU in the work, but a GPU will highly acc
 
 # 2. Installation
 
-## 2.1 From Docker Image (Currently not implemented)
+## 2.1 From Docker Image (Not yet implemented)
 
 ## 2.2 From git repository (Conda required)
 
@@ -38,7 +38,7 @@ To download MitoFlex from Github, simply type:
 git clone https://github.com/Prunoideae/MitoFlex
 ```
 
-And git will pull the MitoFlex into your current directory, downloading zip file and extract it to any folder is also ok.
+And git will pull the MitoFlex into your current directory, downloading zip file and extract it to installation folder is also ok.
 
 ### 2.2.1 Installing Conda
 
@@ -97,7 +97,7 @@ Info should be printed if there's no error in your installation, otherwise you n
 
 # 3. Data requirement
 
-MitoFlex depends on the quality more than the size of data, it will not throw any error because of your input fastq file is too small or something, but the result may be of low quality if the raw dataset is small or unqualified.
+MitoFlex depends on the quality more than the size of data, it will not throw any error if your input fastq file is too small or something, but the result may be of low quality if the raw dataset is small or unqualified.
 
 # 4. Specifying parameters in configuration file
 
@@ -159,15 +159,17 @@ Filter out fastq sequences of low quality, binary is written in Rust to ensure s
 
 ## 5.3 assemble
 
-Assemble the fastq file to output contigs. This method use Megahit for faster and better results, but since Megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 2h for a 5Gbps dataset) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if data itself is fragmentized.
+Assemble the fastq file to output contigs. This method use Megahit for faster and better results, but since Megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 2h for a 5Gbps dataset) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
 
 ## 5.4 findmitoscaf
 
-To pick out candidate sequences which likely to be mitochondrial sequences. This process firstly drop sequences which is obviously too low for searching, then will search the data with nhmmer and tblastn.
+To pick out candidate sequences which likely to be mitochondrial sequences. This process firstly drop sequences which is obviously too low for searching, then will search the data with nhmmer and tblastn. The two step of process, nhmmer and tblastn, depends highly on the parallel processing power of the environment, in our testing environment (80 threads), this takes 5-10min for any dataset to finish.
 
 ## 5.5 annotate
 
-## 5.6 visualize
+To annotate sequences using tblastn and infernal.
+
+## 5.6 visualize (Not yet implemented)
 
 # 6. Adding new profile data to MitoFlex
 
