@@ -383,12 +383,12 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
             if gene_loc != pair_loc and dist >= overlap_cutoff and (dist <= gene_loc.length or dist <= pair_loc.length):
                 if gene_loc.score >= pair_loc.score:
                     logger.log(
-                        1, f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {pair_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
+                        0, f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {pair_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
                     while pair_loc in mapping:
                         mapping.remove(pair_loc)
                 else:
                     logger.log(
-                        1, f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {gene_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
+                        0, f'conflict of {gene_loc.amino} and {pair_loc.amino}, removing {gene_loc.amino}, score:{gene_loc.score}, {pair_loc.score}, overlapping : {dist}')
                     while gene_loc in mapping:
                         mapping.remove(gene_loc)
                 return True

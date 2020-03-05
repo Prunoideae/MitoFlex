@@ -54,7 +54,7 @@ except ImportError as identifier:
     sys.exit()
 
 # Constants
-VERSION = '0.0.5'
+VERSION = '0.0.7'
 
 # Command processing
 desc = f"""
@@ -103,6 +103,7 @@ def filter(args):
         os.rename(filtered2, path.join(
             args.result_dir, path.basename(filtered2)))
     return filtered1, filtered2
+
 
 @parse_func(func_help='assemble from input fastq reads, output contigs',
             parents=[universal_parser, fastq_parser, assembly_parser])
@@ -180,11 +181,11 @@ def annotate(args):
     return annotate_json
 
 
-@parse_func(func_help='visualization of GenBank file',
+@parse_func(func_help='visualization of sequences',
             parents=[])
 def visualize(args):
 
-    # TODO To fill the blanks of visualize method
+    # TODO fill the blanks of visualize method
     pass
 
 
