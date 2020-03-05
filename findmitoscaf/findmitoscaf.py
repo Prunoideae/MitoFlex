@@ -84,7 +84,8 @@ def get_rank(taxa_name=None):
 
     return [(tax_class, tax_id) for tax_class, tax_id in rank_dict.items()]
 
-# TODO test new algorithm
+
+# TODO test new algorithm under multiple datasets
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
                  contigs_file=None, relaxing=0, multi=10, cover_valve=1, min_multi=3.0):
@@ -200,7 +201,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         if index not in candidates:
             candidates[index] = {}
         candidates[index][query] = (
-            score, align_start, align_end, complete
+            score, query_start, query_to, complete
         )
 
     flatten_candidates = [(key, value) for key, value in candidates.items()]
@@ -232,15 +233,17 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                 selected_candidates[empty_pcg] = index
                 break
 
-            if selected_candidates[index] == None:
-                selected_candidates[index] = []
+            if selected_candidates[empty_pcg] == None:
+                selected_candidates[empty_pcg] = []
             # Collect all the sequences
-            selected_candidates[index].append(
+            selected_candidates[empty_pcg].append(
                 (index, *mapping[empty_pcg][:-1])
             )
 
         # Convert all fragments to final results
         if isinstance(selected_candidates[empty_pcg], list):
+            logger.log(
+                3, f'Gene {empty_pcg} is fragmentized, deducing most possible sequences')
             gene_map = []
             for pos in selected_candidates[empty_pcg]:
                 gene_map.append((pos[2], (pos[0], pos[1])))
@@ -269,6 +272,10 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                 set([x[0] for x in gene_map])
             )
 
+            total_length = sum([abs(candidates[index][empty_pcg][2] - candidates[index][empty_pcg][1])
+                                for index in selected_candidates[empty_pcg]])
+            logger.log(
+                3, f'Recovered {total_length} bps, ratio {total_length/cds_indexes[empty_pcg]}')
     candidates_json = path.join(basedir, f'{prefix}.candidates.json')
     with open(candidates_json, 'w') as f:
         json.dump(selected_candidates, f, sort_keys=True,

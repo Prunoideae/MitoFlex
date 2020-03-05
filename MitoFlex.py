@@ -180,11 +180,9 @@ def annotate(args):
     return annotate_json
 
 
-@parse_func(func_help='visualization of GenBank file')
+@parse_func(func_help='visualization of GenBank file',
+            parents=[])
 def visualize(args):
-
-    if not hasattr(args, 'use_json'):
-        pass
 
     # TODO To fill the blanks of visualize method
     pass
@@ -216,7 +214,6 @@ def all(args):
 
     if not args.disable_annotation:
         args.pos_json = annotate(args)
-        args.use_json = True
 
         # Visualization is of no way if not annotated.
         # fastafile = findmitoscafed file
