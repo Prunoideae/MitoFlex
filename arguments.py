@@ -100,7 +100,8 @@ universal_parser, universal_group = register_group('Universal arguments', [
     {
         'name': 'level',
         'default': 2,
-        'choices': [0, 1, 2, 3, 4]
+        'choices': [0, 1, 2, 3, 4],
+        'help': 'how verbose will MitoFlex output logs, the lower the log outputs more, level 0 is mainly for code debugging and reporting.'
     }], func=universal_regulator
 )
 
@@ -525,7 +526,7 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
         'choices': [os.path.splitext(profile_name)[0]
                     for profile_name in os.listdir(profile_dir)
                     if profile_name != 'Animal.fa'],
-        'help': 'which clade\'s nhmmer profile and cds will be used in the run.'
+        'help': 'which clade\'s nhmmer profile and cds database will be used in the run.'
     },
     {
         'name': 'max-contig-length',
@@ -537,11 +538,7 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
         'default': False,
         'help': 'to use the general protein profile for annotation, only used if no reports and cannot add addtional profile.'
     },
-    {
-        'name': 'logger-level',
-        'default': 2,
-        'help': 'how verbose the logger will output log, 1 for debug, 2 for info, 3 for warning, 4 for error. Logs below the logger level will not be displayed.'
-    }
+
 
 
 ], func=saa_regulator)
@@ -561,7 +558,19 @@ def annotation_regulator(args):
     except Exception:
         print('Cannot make annotation temp folder!')
         return False
-    return True
+
+    valid = True
+
+    if args.max_contig_length < 0:
+        print('Please input valid contig length.')
+        valid = False
+    if args.hmmer_score < 0:
+        print('Please input valid hmmer score valve.')
+        valid = False
+    if args.hmmer_e < 0:
+        print('Please input valid hmmer e-value limit.')
+        valid = False
+    return valid
 
 
 # Annotation group
@@ -575,5 +584,20 @@ annotation_parser, annotation_group = register_group('Annotation arguments', [
         'name': 'species-name',
         'default': 'Test sp.',
         'help': 'species name to use in genbank file.'
+    },
+    {
+        'name': 'use-hmmer',
+        'default': False,
+        'help': 'if use nhmmer for additional searching for missing PCGs during tblastn, may output low accuracy results, use iif the database is not enough, the results are not ideal and no good way to add profiles.'
+    },
+    {
+        'name': 'hmmer-score',
+        'default': 5.0,
+        'help': 'if nhmmer is used, results with score higher than this will be selected.'
+    },
+    {
+        'name': 'hmmer-e',
+        'default': 0.005,
+        'help': 'if nhmmer is used, results with e-value lower than this will be selected.'
     }
 ], func=annotation_regulator)

@@ -27,6 +27,7 @@ from os import path
 import subprocess
 import multiprocessing
 import json
+import warnings
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -34,6 +35,7 @@ try:
     from utility.helper import shell_call, direct_call, concat_command
     from annotation import annotation_tookit as tk  # pylint: disable=import-error, no-name-in-module
     from Bio import SeqIO
+    from Bio import BiopythonWarning
     from utility import logger
     from utility.bio import infernal
     from utility.bio import wuss
@@ -54,7 +56,7 @@ def concat_java(*args, **kwargs):
 
 def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
              genetic_code=9, clade=None, thread_number=8,
-             wildcard_profile=False, trna_overlapping=40):
+             wildcard_profile=False, trna_overlapping=40, hmmer_search=True, score=5, e_value=0.005):
     logger.log(2, 'Entering annotation module.')
     if wildcard_profile:
         logger.log(
@@ -91,13 +93,42 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
     wise_frame.to_csv(wise_csv)
     wise_frame = tk.reloc_genes(fasta_file=fastafile,
-                              wises=wise_frame, code=genetic_code)
+                                wises=wise_frame, code=genetic_code)
     logger.log(1, f'Genewise results generated at {wise_csv}')
+
+    cds_indexes = {}
+    cds_found = []
+    with open(path.join(profile_dir_hmm, 'required_cds.json')) as f:
+        cds_indexes = json.load(f)[clade]
+
+    for _, row in wise_frame.iterrows():
+        cds = str(row).split('_')[3]
+        cds_found.append(cds)
+
+    hmmer_frame = None
+
+    cds_notfound = [x for x in cds_indexes if x not in cds_found]
+    if cds_notfound and not hmmer_search:
+        logger.log(3, f'Expected PCG {cds_notfound} not found!')
+    elif cds_notfound and hmmer_search:
+        logger.log(
+            3, f'Expected PCG {cds_notfound} not found, turning to nhmmer search.'
+        )
+        hmmer_frame = tk.nhmmer_search(fasta_file=fastafile, thread_number=thread_number,
+                                       nhmmer_profile=profile_dir_hmm + f'/{clade}.hmm', prefix=prefix, basedir=basedir)
+        hmmer_frame = hmmer_frame[~hmmer_frame['query'].isin(cds_found)]
+        hmmer_frame = hmmer_frame[hmmer_frame['e'] < e_value]
+        hmmer_frame = hmmer_frame[hmmer_frame['score'] > score]
+        logger.log(2, 'Recovered pcgs : \n'+str(hmmer_frame))
 
     trna_out_dir = path.join(basedir, 'trna')
     os.makedirs(trna_out_dir, exist_ok=True)
-    query_dict, missing_trna = tk.trna_search(
-        fastafile, profile_dir_trna, trna_out_dir, prefix, genetic_code, 0.01, overlap_cutoff=trna_overlapping)
+
+    # Disable some annoying warning
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', BiopythonWarning)
+        query_dict, missing_trna = tk.trna_search(
+            fastafile, profile_dir_trna, trna_out_dir, prefix, genetic_code, 0.01, overlap_cutoff=trna_overlapping)
 
     logger.log(2, f'tRNAs found : {list(query_dict.keys())}')
     if missing_trna:
@@ -135,6 +166,14 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         frag.description = f'gene={cds} start={start} end={end}'
         annotated_frag.append(frag)
         annotation_json[cds] = (start, end, 0, str(row.sseq))
+
+    for _, row in hmmer_frame.iterrows():
+        start, end = (min(int(row.envfrom), int(row.envto)),
+                      max(int(row.envfrom), int(row.envto)))
+        frag = sequence_data[str(row.target)][start-1:end]
+        frag.description = f'gene={str(row.query)} start={start} end={end}'
+        annotated_frag.append(frag)
+        annotation_json[str(row.query)] = (start, end, 0, str(row.target))
 
     SeqIO.write(annotated_frag, annotated_fa, 'fasta')
 

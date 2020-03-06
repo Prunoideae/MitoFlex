@@ -27,6 +27,8 @@ import sys
 import subprocess
 import multiprocessing
 from itertools import tee, chain
+import warnings
+from Bio import BiopythonWarning
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -436,3 +438,44 @@ def rrna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, e_
 
     return (result_12.queries[0] if result_12.queries else None,
             result_16.queries[0] if result_16.queries else None)
+
+
+def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
+                  prefix=None, basedir=None):
+
+    logger.log(2, 'Calling nhmmer.')
+
+    # Call nhmmer
+    hmm_out = os.path.join(basedir, f'{prefix}.nhmmer.out')
+    hmm_tbl = os.path.join(basedir, f'{prefix}.nhmmer.tblout')
+    logger.log(1, f'Out file : o={hmm_out}, tbl={hmm_tbl}')
+    shell_call('nhmmer', o=hmm_out, tblout=hmm_tbl,
+               cpu=thread_number, appending=[nhmmer_profile, fasta_file])
+
+    # Process data to pandas readable table
+    hmm_tbl_pd = f'{hmm_tbl}.readable'
+    with open(hmm_tbl, 'r') as fin, open(hmm_tbl_pd, 'w') as fout:
+        for line in fin:
+            striped = line.strip()
+            splitted = striped.split()
+            # Dispose the description of genes, god damned nhmmer...
+            print(' '.join(splitted[:15]), file=fout)
+
+    # Read table with pandas
+    hmm_frame = pandas.read_csv(hmm_tbl_pd, comment='#', delimiter=' ',
+                                names=[
+                                    'target', 'accession1', 'query',
+                                    'accession2', 'hmmfrom', 'hmm to',
+                                    'alifrom', 'alito', 'envfrom', 'envto',
+                                    'sqlen', 'strand', 'e', 'score',
+                                    'bias'
+                                ])
+    hmm_frame = hmm_frame.drop(columns=['accession1', 'accession2'])
+
+    # Deduplicate multiple hits on the same gene of same sequence
+    hmm_frame = hmm_frame.drop_duplicates(
+        subset=['target', 'query'], keep='first')
+    hmm_frame.to_csv(f'{hmm_tbl}.dedup.csv', index=False)
+
+    logger.log(1, f'HMM query have {len(hmm_frame.index)} results.')
+    return hmm_frame
