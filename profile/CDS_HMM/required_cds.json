@@ -1,5 +1,5 @@
 {
-    "Annelida-segmented-worms": {
+    "Annelida": {
         "ATP6": 498,
         "ATP8": 148,
         "COX1": 1532,
@@ -104,7 +104,7 @@
         "ND5": 1407,
         "ND6": 369
     },
-    "Nemertea-ribbon-worms": {
+    "Nemertea": {
         "ATP6": 639,
         "ATP8": 157,
         "COX1": 1533,
@@ -119,7 +119,7 @@
         "ND5": 1689,
         "ND6": 446
     },
-    "Platyhelminthes-flatworms": {
+    "Platyhelminthes": {
         "ATP6": 510,
         "ATP8": 126,
         "COX1": 1471,
@@ -134,7 +134,7 @@
         "ND5": 1407,
         "ND6": 369
     },
-    "Porifera-sponges": {
+    "Porifera": {
         "ATP6": 600,
         "ATP8": 147,
         "COX1": 1326,

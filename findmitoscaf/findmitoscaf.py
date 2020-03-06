@@ -227,12 +227,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             # No pcg in this sequence, next sequence
             if empty_pcg not in mapping:
                 continue
-            # Selected sequence has complete pcg, but not selected due to previous conflict
-            # select now.
-            if mapping[empty_pcg][3]:
-                selected_candidates[empty_pcg] = index
-                break
-
+        
             if selected_candidates[empty_pcg] == None:
                 selected_candidates[empty_pcg] = []
             # Collect all the sequences

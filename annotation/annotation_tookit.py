@@ -185,7 +185,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
              wises: pandas.DataFrame = None, infile=None,
              dbfile=None, cutoff=0.5):
     wise_dir = path.abspath(
-        path.join(path.dirname(__file__), '..', 'genewise'))
+        path.join(path.dirname(__file__), '..', 'profile', 'genewise'))
 
     if codon_table is None:
         codon_table = path.join(wise_dir, 'codon_InverMito.table')
@@ -280,8 +280,8 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
         except:
             trans = seq.translate(9)
         # Finding stop
-        if trans.find('*') != -1:
-            offset = trans.find('*') * 3
+        if trans.seq.find('*') != -1:
+            offset = trans.seq.find('*') * 3
             end_real = (wise.sstart+1 + offset
                         if wise.plus else
                         wise.send - offset)
@@ -297,12 +297,12 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
 
         # Finding start
         # Find the last M of mercied part of translated seq, where it should be the start codon
-        mercy = trans[:10:-1].find('M')
+        mercy = trans[:10:-1].seq.find('M')
         if mercy != -1:
             offset = (10-mercy) * 3
             start_real = wise.sstart + offset - 29 if wise.plus else wise.send + 30 + offset
 
-        wise.start_real, wise.end_real = (
+        wise.wise_min_start, wise.wise_max_end = (
             start_real, end_real) if wise.plus else (end_real, start_real)
 
     return wises

@@ -78,7 +78,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     tbn_profile = path.join(
         profile_dir_tbn, f'{clade if not wildcard_profile else "Animal"}.fa')
     blast_file = tk.tblastn_multi(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
-                            basedir=basedir, prefix=prefix, threads=thread_number)
+                                  basedir=basedir, prefix=prefix, threads=thread_number)
 
     blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
     blast_frame = tk.wash_blast_results(blast_frame)
@@ -90,6 +90,8 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     # Output wise frame
     wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
     wise_frame.to_csv(wise_csv)
+    wise_frame = tk.reloc_genes(fasta_file=fastafile,
+                              wises=wise_frame, code=genetic_code)
     logger.log(1, f'Genewise results generated at {wise_csv}')
 
     trna_out_dir = path.join(basedir, 'trna')
