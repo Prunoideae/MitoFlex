@@ -35,7 +35,9 @@ except ImportError as identifier:
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
 
-profile_dir = os.path.join(os.path.dirname(__file__), 'profile', 'MT_database')
+profile_dir_tbn = os.path.join(
+    os.path.dirname(__file__), 'profile', 'MT_database')
+profile_dir_hmm = os.path.join(os.path.dirname(__file__), 'profile', 'CDS_HMM')
 
 
 def safe_makedirs(path, exist_ok=False):
@@ -514,6 +516,8 @@ def saa_regulator(args):
     return True
 
 
+profiles_hmm = [os.path.splitext(profile_name)[0]
+                for profile_name in os.listdir(profile_dir_hmm)]
 saa_parser, saa_group = register_group('Search and annotate arguments', [
     {
         'name': 'genetic-code',
@@ -524,8 +528,8 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
         'name': 'clade',
         'default': 'Arthropoda',
         'choices': [os.path.splitext(profile_name)[0]
-                    for profile_name in os.listdir(profile_dir)
-                    if profile_name != 'Animal.fa'],
+                    for profile_name in os.listdir(profile_dir_tbn)
+                    if os.path.splitext(profile_name)[0] in profiles_hmm],
         'help': 'which clade\'s nhmmer profile and cds database will be used in the run.'
     },
     {
