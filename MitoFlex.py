@@ -88,13 +88,14 @@ def filter(args):
     if args.fastq2 is None:
         filtered1 = filter_se(fqiabs=f'"{args.fastq1}"', fqoabs=f'"{args.cleanq1}"', Ns=args.Ns_valve,
                               quality=args.quality_valve, limit=args.percentage_valve, start=args.start,
-                              end=args.end, trim=args.trimming)
+                              end=args.end, trim=args.trimming, trunc=args.disable_filter)
     else:
         filtered1, filtered2 = filter_pe(fq1=args.fastq1, fq2=args.fastq2,
                                          o1=args.cleanq1, o2=args.cleanq2,
                                          dedup=args.deduplication,
                                          start=args.start, end=args.end,
-                                         n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve, trim=args.trimming)
+                                         n=args.Ns_valve, q=args.quality_valve, l=args.percentage_valve, trim=args.trimming,
+                                         trunc=args.disable_filter)
 
     # Further processing for calling directly
     if args.__calling == 'filter':
@@ -197,19 +198,18 @@ def visualize(args):
 def all(args):
 
     # Go filtering
-    if not args.disable_filter:
-        #
-        # Why I'm NOT using .gz ext here even I have implemented this:
-        # 1. flate2 is slow, it takes much compressing data if single-threaded.
-        # 2. plug in a SSD is much more easier than adding a CPU.
-        #
-        # You can still set this to xx.gz then it will surely make a
-        # gzip for you, but this will have a great impact on the program's
-        # running time, and it's strongly not recommended to do this.
-        #
-        args.cleanq1 = 'clean.1.fq'
-        args.cleanq2 = 'clean.2.fq'
-        args.fastq1, args.fastq2 = filter(args=args)
+    #
+    # Why I'm NOT using .gz ext here even I have implemented this:
+    # 1. flate2 is slow, it takes much compressing data if single-threaded.
+    # 2. plug in a SSD is much more easier than adding a CPU.
+    #
+    # You can still set this to xx.gz then it will surely make a
+    # gzip for you, but this will have a great impact on the program's
+    # running time, and it's strongly not recommended to do this.
+    #
+    args.cleanq1 = 'clean.1.fq'
+    args.cleanq2 = 'clean.2.fq'
+    args.fastq1, args.fastq2 = filter(args=args)
 
     args.fastafile = assemble(args)
     args.fastafile = findmitoscaf(args)

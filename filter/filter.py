@@ -35,15 +35,15 @@ except Exception as identifier:
 filter_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, trim=0):
+def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None, end=None, trim=0, trunc=False):
     fsin = path.getsize(fqiabs)
     logger.log(level=1, info='Start filtering single-end rawdata.')
     logger.log(level=0, info=f'Input file has {fsin} bytes.')
     logger.log(level=1,
-               info=f'Using argument : Ns={Ns}, quality={quality}, limit={limit}, start={start}, end={end}, trimming={trim}')
+               info=f'Using argument : Ns={Ns}, quality={quality}, limit={limit}, start={start}, end={end}, trimming={trim}, trunc={trunc}')
     try:
         shell_call(path.join(filter_dir, 'filter_v2'), cleanq1=f'"{fqoabs}"', fastq1=f'"{fqiabs}"',
-                   n=Ns, q=quality, l=limit, s=start, e=end, t=trim)
+                   n=Ns, q=quality, l=limit, s=start, e=end, t=trim, truncate_only=trunc)
     except Exception as identifier:
         logger.log(
             level=4, info=f'Error occured when running filter, cause : {identifier}')
@@ -62,7 +62,7 @@ def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None
 
 def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
               a1=None, a2=None, dedup=False, mis=3, ali=15,
-              start=None, end=None, n=10, q=55, l=0.2, trim=0):
+              start=None, end=None, n=10, q=55, l=0.2, trim=0, trunc=False):
     fsin1, fsin2 = path.getsize(fq1), path.getsize(fq2)
     logger.log(level=1, info='Start filtering pair-end rawdata.')
     logger.log(
@@ -75,7 +75,7 @@ def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
     try:
         shell_call(path.join(filter_dir, 'filter_v2'),
                    _1=f'"{fq1}"', _2=f'"{fq2}"', _3=f'"{o1}"', _4=f'"{o2}"', d=dedup, s=start,
-                   e=end, n=n, q=q, l=l, t=trim)
+                   e=end, n=n, q=q, l=l, t=trim, truncate_only=trunc)
     except Exception as identifier:
         logger.log(
             level=4, info=f'Error occured when running filter, cause : {identifier}')

@@ -112,6 +112,11 @@ fn main() {
                 .help("Filter out duplicated sequences")
                 .requires("fastq2"),
         )
+        .arg(
+            Arg::with_name("truncate")
+                .long("truncate_only")
+                .help("Only truncates the file, no filtering."),
+        )
         .get_matches();
 
     let fastq1 = matches.value_of("fastq1").unwrap();
@@ -168,12 +173,13 @@ fn main() {
         .expect("Cannot parse a positive int to trimming!");
 
     let dedup: bool = matches.is_present("deduplication");
+    let trunc: bool = matches.is_present("truncate");
 
     if fastq2.is_empty() {
-        filter_se(fastq1, cleanq1, start, end, ns, quality, limit, trim);
+        filter_se(fastq1, cleanq1, start, end, ns, quality, limit, trim, trunc);
     } else {
         filter_pe(
-            fastq1, fastq2, cleanq1, cleanq2, start, end, ns, quality, limit, dedup, trim,
+            fastq1, fastq2, cleanq1, cleanq2, start, end, ns, quality, limit, dedup, trim, trunc,
         );
     }
 }
@@ -190,6 +196,7 @@ fn filter_pe(
     limit: f32,
     dedup: bool,
     trim: usize,
+    trunc: bool,
 ) {
     let fq1 = helper::read_file(fastq1);
     let fq2 = helper::read_file(fastq2);
@@ -217,7 +224,6 @@ fn filter_pe(
             qua1 = qua1.get(start..).unwrap().to_string();
             qua2 = qua2.get(start..).unwrap().to_string();
         }
-
         if end != 0 {
             seq1 = seq1.get(..len).unwrap().to_string();
             seq2 = seq2.get(..len).unwrap().to_string();
@@ -225,24 +231,23 @@ fn filter_pe(
             qua2 = qua2.get(..len).unwrap().to_string();
         }
 
-        if seq1.matches("N").count() > ns || seq2.matches("N").count() > ns {
-            continue;
-        }
-
-        let cutoff = (seq1.len() as f32 * limit) as usize;
-        if qua1.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff
-            || qua2.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff
-        {
-            continue;
-        }
-
-        if dedup {
-            let hash = calculate_hash(&seq1);
-
-            if dup.contains(&hash) {
+        if !trunc {
+            if seq1.matches("N").count() > ns || seq2.matches("N").count() > ns {
                 continue;
             }
-            dup.insert(hash);
+            let cutoff = (seq1.len() as f32 * limit) as usize;
+            if qua1.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff
+                || qua2.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff
+            {
+                continue;
+            }
+            if dedup {
+                let hash = calculate_hash(&seq1);
+                if dup.contains(&hash) {
+                    continue;
+                }
+                dup.insert(hash);
+            }
         }
 
         if trim != 0 {
@@ -251,6 +256,7 @@ fn filter_pe(
                 break;
             }
         }
+
         writeln!(cl1, "{}", head1).unwrap();
         writeln!(cl1, "{}", seq1).unwrap();
         writeln!(cl1, "+").unwrap();
@@ -271,6 +277,7 @@ fn filter_se(
     quality: u8,
     limit: f32,
     trim: usize,
+    trunc: bool,
 ) {
     let fastq_file = helper::read_file(fastq1);
     let mut clean_file = helper::write_file(cleanq1);
@@ -289,13 +296,15 @@ fn filter_se(
             bps = bps.get(..len).unwrap().to_string();
             quas = quas.get(..len).unwrap().to_string();
         }
-        if bps.matches("N").count() > ns {
-            continue;
-        }
 
-        let cutoff = quas.len() as f32 * limit;
-        if quas.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff as usize {
-            continue;
+        if !trunc {
+            if bps.matches("N").count() > ns {
+                continue;
+            }
+            let cutoff = quas.len() as f32 * limit;
+            if quas.as_bytes().iter().filter(|&n| n <= &quality).count() >= cutoff as usize {
+                continue;
+            }
         }
 
         if trim != 0 {
