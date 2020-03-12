@@ -209,7 +209,7 @@ def all(args):
     #
     args.cleanq1 = 'clean.1.fq'
     args.cleanq2 = 'clean.2.fq'
-    args.fastq1, args.fastq2 = filter(args=args)
+    args.fastq1, args.fastq2 = filter(args)
 
     args.fastafile = assemble(args)
     args.fastafile = findmitoscaf(args)
@@ -225,7 +225,7 @@ def all(args):
 
 # This is for initializing the framework right before the command executed,
 # but after the arguments are processed. Pre will initialize something no
-# matter what command is called.
+# matter what command is called. Not pretty.
 def pre(args):
 
     # Initialize the logger.
@@ -242,7 +242,7 @@ def pre(args):
     logger.log(0, f'{[f"{key}={value}" for key, value in arg_dict.items()]}')
 
     if hasattr(args, 'disable_filter') and args.disable_filter:
-        logger.log(3, 'Filtering is not enabled.')
+        logger.log(3, 'Filtering is not enabled, files will only be truncated.')
 
     if hasattr(args, 'disable_annotation') and args.disable_annotation:
         logger.log(3, 'Annotation is not enabled.')

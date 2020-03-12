@@ -179,6 +179,8 @@ MitoFlex has already integrated protein and nucleic acid data into the profile, 
 
 For official documentation refers to [here](http://www.csb.yale.edu/userguides/seq/hmmer/docs/node19.html).
 
+Building HMM profile needs the access of `hmmbuild`, which is included in the HMMER package, the command requires a Multiple Sequence Alignment (MSA) file, which is obtained from aligning sequences you want to build profile with by serveral alignment program like MAFFT or ClustalW. The `hmmbuild` in installed version supports most file format, like FASTA, Stockholm or ClustalW.
+
 ## 6.2 Adding profile data
 
 MitoFlex has its internal profile for basic mitogenome assembly and annotation, but it comes to be inaccurate if a specific speciemen is required. You can implement your own set of profile of the specific speciemen you want if feeling like MitoFlex is not giving good results.
@@ -199,17 +201,19 @@ Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex wil
 
 # 8. Extending the function of MitoFlex
 
+Although MitoFlex has already implemented a full workflow to filter, assemble and annotate the mitogenome, and all of this can be done in one-click, it also support to modify some behaviour if you want to do.
+
 MitoFlex is designed for extendability and readability, to make users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be even optimized. Extending the function should not be an hard task as MitoZ.
 
 MitoFlex is written in Python 3.6, so modifying the original workflow of MitoFlex requires a basic knowledge of the Python programming language.
 
 ## 8.0 Calling the MitoFlex from other ways
 
-Bash is not always the solution, in a certain circumstances an call from python inside could be better because it allows deeper profiling and monitoring, and controlling. For example deploying and integrating the MitoFlex with environments like Jupyter or some web server.
+Bash is not always the solution, in a certain circumstances an call from python inside could be better because it allows deeper profiling and monitoring, and controlling. For example deploying and integrating the MitoFlex with environments like `Jupyter` or web servers like `Django` or `Flask`.
 
 Since the only goal of decorators is to expose the original methods of Python to the command line, calling the methods could be easy, but should be catious because a raw calling could bypass some of the fuse methods of MitoFlex, which could make the arguments parsed and processed not correctly, or even leads to an unknown end.
 
-All MitoFlex function takes an Argument object as the only arguments, it's from the [parser.py](utility/parser.py), and it's very simple because actually it's just a wrapper of `**kwargs` to reduce coding and improve code redability.
+All MitoFlex function takes an Argument object as the only arguments, it's from the [parser.py](utility/parser.py), working like a context argumentin certain CLI builder like `invoke` or others, it's very simple because actually it's just a wrapper of `**kwargs` to reduce coding and improve code redability.
 Casting and passing the Argument instance is easy:
 
 ```python
@@ -218,7 +222,7 @@ args = Arguments({'foo':'bar', 'lorem':'ipsum'})
 print(args.foo) # prints 'bar'
 ```
 
-Once you obtain a Argument instance, you can directly call the function like this:
+Once you obtain an Argument instance, you can directly call the function like this:
 
 ```python
 import MitoFlex
