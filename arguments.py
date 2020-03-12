@@ -330,7 +330,7 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     {
         'name': 'use-list',
         'default': False,
-        'help': 'a k-mer list will be used if this switched on.'
+        'help': 'k-mer list arguments will be used if this switched on.'
     },
     {
         'name': 'disable-local',
