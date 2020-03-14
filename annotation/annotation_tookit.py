@@ -42,7 +42,6 @@ try:
     from Bio import SeqIO
     from Bio.Seq import Seq
     from Bio.Data import CodonTable
-    from deprecation import deprecated
 except Exception as iden:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -93,29 +92,6 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
     out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
     with open(out_blast, 'w') as f:
         f.write(''.join(results))
-
-    os.remove(f'{infile}.nhr')
-    os.remove(f'{infile}.nin')
-    os.remove(f'{infile}.nsq')
-    return out_blast
-
-
-@deprecated
-def tblastn(dbfile=None, infile=None, genetic_code=9, basedir=None,
-            prefix=None):
-
-    # Make sure input path IS absolute path
-    infile = path.abspath(infile)
-    dbfile = path.abspath(dbfile)
-
-    # Since 'in' is the preserve keyword
-    truncated_call('makeblastdb', '-in', infile, dbtype='nucl')
-
-    # Go tblastn
-    out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
-    truncated_call('tblastn', useconv=False, evalue='1e-5', outfmt=6,
-                   seg='no', db_gencode=genetic_code, db=infile,
-                   query=dbfile, appending=['>', out_blast])
 
     os.remove(f'{infile}.nhr')
     os.remove(f'{infile}.nin')
