@@ -288,7 +288,7 @@ def assembly_regulator(args):
         args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
     else:
         args.assemble_dir = os.path.join(os.getcwd(), 'assemble')
-
+    
     try:
         safe_makedirs(args.assemble_dir)
     except FileExistsError:
@@ -304,7 +304,7 @@ def assembly_regulator(args):
         if 0 in [x % 2 for x in args.kmer_list]:
             print('All kmer length must be odd.')
             valid = False
-        args.kmer_list = ','.join(args.kmer_list)
+        args.kmer_list = ','.join([str(x) for x in args.kmer_list])
     else:
         if True in [
             args.kmer_min <= 0,
