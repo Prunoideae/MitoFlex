@@ -338,3 +338,11 @@ def bar(args):
 ```
 
 Actually you can `register_group` anywhere as long as your `@parser_func` decorator can reach there, but I strongly recommends to write all the argument settings into the [arguments.py](arguments.py) to keep the code structure clean.
+
+# 9 Reusing my code
+
+I'm very glad to see that my code is used in other fields, even in non-bioinformatic way, the [utility](utility/) folder contains most helper classes and methods used in the program development. If you want to directly reuse the code I wrote in related research field(mitogenome analyzing, for example), please cite my paper if you will publish one, if you want to implement a similar workflow yourself, please cite the MitoZ's paper since this program is inspired from the former toolkit.
+
+The argument [parser](utility/parser.py) of this software is quite useful, but sadly I strongly not recommend you to use it directly in the program, since it was a temporarily made argparse wrapper just in three days, much code here is neither clean, nor easy to use, though already suitable for MitoFlex's current need and hard to rewrite one in short time. If you want to implement a workflow into a similar framework without having too much coding(like directly facing the argparse module), better integration of other caller besides bash or command prompt, for example a `Jupyter` web notebook or a `Django` or `Flask` server, and more flexible, modularized, clean code and code structure, please refer to the `Workflow Descriptor for Python (WDP)`, a repo pinned on my GitHub page.
+
+For the analyzer of Washington University Secondary Structure (WUSS), any rewriting is welcomed, since the output format of Infernal is quite messy, the parser of this can only accept annotations in one line (though it can parse any structure if sequence and fold string are given directly). Any help on this is gratefully welcomed.
