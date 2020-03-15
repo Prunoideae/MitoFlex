@@ -14,15 +14,15 @@ Installing MitoFlex requires about 1GB of space (Including dependency packages).
 
 ## 1.3 Memory
 
-It takes about 5G to assemble the genome from a 10Gbp pair-end rawdata with thread number set to 80 (`--thread_number 80`). It takes much lower memory space in comparison to MitoZ, as MitoFlex uses the succinct de Brujin Graph (sDBG), a succinct representation of de Brujin Graph. Improving the data quality could reduce the memory usage.
+It takes about 5-20G to assemble the genome from a 5Gbps pair-end rawdata sample with thread number set to 80 (`--thread_number 80`). The memory consumption is highly varied, mainly depends on the fragmentation of the quality of rawdata, a dataset with more focus reads on mitogenome will absolutely takes much lesser memory since the contigs are limited. It takes much lower memory space in comparison to MitoZ, as MitoFlex uses the succinct de Brujin Graph (sDBG), a succinct representation of de Brujin Graph. Improving the data quality could reduce the memory usage.
 
 ## 1.4 CPU
 
-MitoFlex makes use of a multi k-mer assemble strategy from [MEGAHIT](https://github.com/voutcn/megahit), thus requires more calculate power because multiple iteration of the graph is needed. Using MitoFlex with high iteration count (21-141, 8 generation) will takes more time than MitoZ in low thread number (8), but the time will be almost equivalent in a higher thread number (80).
+MitoFlex makes use of a multi k-mer assemble strategy from [MEGAHIT](https://github.com/voutcn/megahit), thus requires more calculate power because multiple iteration of the graph is needed. Using MitoFlex with high iteration count (21-141, 8 generation) will takes more time than MitoZ in low thread number (8), but the time will be almost equivalent in a higher thread number (80). The speed of the process depends highly on the data quality too, an iteration could use from 4min to 20min, which makes the total processing time ranges from 30min to over 2hrs.
 
 ## 1.5 GPU
 
-MitoFlex does not explicitly requires GPU in the work, but a GPU will highly accelerate the process of sDBG building.
+MitoFlex does not explicitly requires GPU in the work, but a GPU will highly accelerate the process of sDBG building. The server I'm developing MitoFlex on has no GPU, so I can't tell this part.
 
 # 2. Installation
 
@@ -197,7 +197,25 @@ To add a new clade, these three files should be noticed: `{clade}.hmm` and `requ
 
 Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex will automatically use files under this directory for tRNA searching.
 
-# 7. Logging and debugging when failed
+# 7. Things that will effect MitoFlex's overall performance
+
+MitoFlex itself isn't doing magic, though it's fast and (more) reliable, bad result could be outputted if you don't even give it a good result input, but at least it will be the most reliable result of all contigs that MEGAHIT can assemble.
+
+There are mainly two factors influencing result quality : 1. The quality of rawdata itself. 2. The size of genome profile that MitoFlex currently have in the profile folder.
+
+## 7.1 Data quality
+
+MitoFlex doesn't depends on the size of data too much, since only a portion of total reads is filtered and extracted, resulted to be the clean data, the data actually used in the workflow is small, no more than 5Gbps(can be adjusted if needed). The speed of assembly is then depends on the data quality, which is mainly representing how filtered reads are concentrated on your final sequence, this is quite obvious, if the reads are aparted and have no linkage, the assembler will have to retain them at each iteration because you can't actually concat them into a single sequence, which leads to a slower iteration, and a bigger contig file. So, the findmitoscaf will have to pick out mitogenome sequences from a much larger contig file, where it could also be quite slow.
+
+The other part of data quality, is how much mitogenome is covered in the raw data, this could be varied a lot, if the input data is small, or just because the filter module extracted too much nuclear genomic sequences. Since the mitogenome is really small and possess a high depth number over the nuclear genome, the latter is rarely happened. But if you ensures that your dataset is of enough size and quality, you can increase the truncation threshold by specifing `--trimming <INT>` to X Gbps you want.
+
+## 7.2 Genome profile
+
+MitoFlex uses `nhmmer` and `tblastn` to search for mitogenome candidates, where `nhmmer` is used to identify how a region on a sequence is related to some PCG, which is quite remote but accurate enough. This process is of high tolerance and profile can be used across phylums. BUT, the accuracy, and the average length of alignment, will be then severely reduced, where it may be difficult for MitoFlex to identify the fragments of contigs, or to determine where the sequence is belong to.
+
+The `tblastn` is used for a more closely related homology search, and used to determine and filter out the sequences not belonging to the taxanomy clade expected, which is categorized as contamination. But if none of the gene related to the clade annotated by searching through `tblastn`, the program will remove it incorrectly. Also it will affect the `annotation` module, so there may be a mismatch for the `findmitoscaf` and the `annotation` results, where mainly indicates the protein database currently have is of not enough records, and an additional search using other methods of annotation, for example a `MITOS` web server is recommended.
+
+Further adjustment on the process may be scheduled, but not now.
 
 # 8. Extending the function of MitoFlex
 
