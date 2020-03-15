@@ -265,9 +265,9 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
                         wise.send - offset)
         else:
             mercy = seq[-30:] if wise.plus else seq[:30].reverse_complement()
-            offset = mercy.find('TA')
+            offset = mercy.seq.find('TA')
             if offset == -1:
-                offset = mercy.find('T')
+                offset = mercy.seq.find('T')
 
             if offset != -1:
                 end_real = (
