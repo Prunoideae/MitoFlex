@@ -72,7 +72,8 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         'out_prefix': work_prefix,
         'no_hw_accel': disable_acc,
         'num_cpu_threads': threads,
-        'no_local': disable_local
+        'no_local': disable_local,
+        'min_count': 3
     }
 
     # Mutable options

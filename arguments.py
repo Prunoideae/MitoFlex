@@ -339,12 +339,12 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     },
     {
         'name': 'kmer-list',
-        'default': '21,29,39,59,79,99,119,141',
+        'default': '31,39,59,79,99,119,141',
         'help': 'list of kmer to use in sDBG building, all length must be odd.'
     },
     {
         'name': 'kmer-min',
-        'default': 21,
+        'default': 31,
         'help': 'the minimum length kmer used in MEGAHIT\'s multiple kmer assemble strategy.'
     },
     {
@@ -354,13 +354,13 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     },
     {
         'name': 'kmer-step',
-        'default': 12,
+        'default': 22,
         'help': 'increment of kmer size of each iteration (<= 28), must be even number.'
     },
     {
-        'name': 'no-mercy',
+        'name': 'mercy-edges',
         'default': False,
-        'help': 'mercy edges are NOT allowed in sDBG if switched on.',
+        'help': 'mercy edges are allowed in sDBG if switched on, use when sequence is of low coverage.',
     },
     {
         'name': 'prune-level',

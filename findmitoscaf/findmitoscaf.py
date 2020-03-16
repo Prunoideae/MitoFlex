@@ -293,6 +293,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     logger.log(2, f'PCGs found : {found_pcgs}')
     if missing_pcgs:
         logger.log(3, f'Missing PCGs : {missing_pcgs}')
+        logger.log(3, f'The missing PCGs may not actually missing, but not detected by the nhmmer search, they may be annotated by tblastn in the annotation module.')
     return picked_fasta
 
 
