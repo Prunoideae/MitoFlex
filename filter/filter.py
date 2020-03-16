@@ -61,8 +61,8 @@ def filter_se(fqiabs=None, fqoabs=None, Ns=10, quality=55, limit=0.2, start=None
 
 
 def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
-              a1=None, a2=None, dedup=False, mis=3, ali=15,
-              start=None, end=None, n=10, q=55, l=0.2, trim=0, trunc=False):
+              dedup=False, start=None, end=None,
+              n=10, q=55, l=0.2, trim=0, trunc=False):
     fsin1, fsin2 = path.getsize(fq1), path.getsize(fq2)
     logger.log(level=1, info='Start filtering pair-end rawdata.')
     logger.log(

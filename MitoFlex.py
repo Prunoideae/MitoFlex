@@ -75,10 +75,16 @@ Citation
             parents=[universal_parser, fastq_parser, filter_parser])
 def filter(args):
 
-    if not path.isabs(args.cleanq1):
-        args.cleanq1 = path.abspath(path.join(args.clean_dir, args.cleanq1))
+    if not hasattr(args, 'disable_filter'):
+        args.disable_filter = False
 
-    if args.cleanq2 is not None and not path.isabs(args.cleanq2):
+    if not hasattr(args, 'cleanq1') or not args.cleanq1:
+        args.cleanq1 = 'clean.1.fq'
+    if hasattr(args, 'fastq2') and (not hasattr(args, 'cleanq2') or not args.cleanq1):
+        args.cleanq2 = 'clean.2.fq'
+
+    args.cleanq1 = path.abspath(path.join(args.clean_dir, args.cleanq1))
+    if hasattr(args, 'fastq2') and args.fastq2:
         args.cleanq2 = path.abspath(path.join(args.clean_dir, args.cleanq2))
 
     filtered1 = filtered2 = None
@@ -86,7 +92,7 @@ def filter(args):
     from filter.filter import filter_pe, filter_se
 
     if args.fastq2 is None:
-        filtered1 = filter_se(fqiabs=f'"{args.fastq1}"', fqoabs=f'"{args.cleanq1}"', Ns=args.Ns_valve,
+        filtered1 = filter_se(fqiabs=args.fastq1, fqoabs=args.cleanq1, Ns=args.Ns_valve,
                               quality=args.quality_valve, limit=args.percentage_valve, start=args.start,
                               end=args.end, trim=args.trimming, trunc=args.disable_filter)
     else:
@@ -101,8 +107,9 @@ def filter(args):
     if args.__calling == 'filter':
         os.rename(filtered1, path.join(
             args.result_dir, path.basename(filtered1)))
-        os.rename(filtered2, path.join(
-            args.result_dir, path.basename(filtered2)))
+        if filtered2:
+            os.rename(filtered2, path.join(
+                args.result_dir, path.basename(filtered2)))
     return filtered1, filtered2
 
 

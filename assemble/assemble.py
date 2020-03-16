@@ -58,12 +58,33 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
     except:
         tmp_dir = None
 
-    shell_call('megahit', _1=fastq1, _2=fastq2,
-               k_min=kmin, k_max=kmax, k_step=kstep, k_list=klist,
-               no_mercy=no_mercy, prune_level=prune_level, prune_depth=prune_depth,
-               keep_tmp_files=keep_temp, tmp_dir=tmp_dir,
-               out_dir=path.join(base_dir, 'result'), out_prefix=work_prefix,
-               no_hw_accel=disable_acc, num_cpu_threads=threads, no_local=disable_local)
+    options = {
+        'k_min': kmin,
+        'k_max': kmax,
+        'k_step': kstep,
+        'k_list': klist,
+        'no_mercy': no_mercy,
+        'prune_level': prune_level,
+        'prune_depth': prune_depth,
+        'keep_tmp_files': keep_temp,
+        'tmp_dir': tmp_dir,
+        'out_dir': path.join(base_dir, 'result'),
+        'out_prefix': work_prefix,
+        'no_hw_accel': disable_acc,
+        'num_cpu_threads': threads,
+        'no_local': disable_local
+    }
+
+    # Mutable options
+    if fastq1 and fastq2:
+        options['_1'] = fastq1
+        options['_2'] = fastq2
+    elif fastq1:
+        options['r'] = fastq1
+    elif fastq2:
+        options['r'] = fastq2
+
+    shell_call('megahit', **options)
 
     contigs_file = os.path.join(
         base_dir, 'result', work_prefix + '.contigs.fa')
