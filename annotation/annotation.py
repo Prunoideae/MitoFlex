@@ -167,10 +167,10 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         annotated_frag.append(frag)
         annotation_json[cds] = (start, end, 0, str(row.sseq))
 
-    if hmmer_frame:
+    if hmmer_frame is not None:
         for _, row in hmmer_frame.iterrows():
             start, end = (min(int(row.envfrom), int(row.envto)),
-                        max(int(row.envfrom), int(row.envto)))
+                          max(int(row.envfrom), int(row.envto)))
             frag = sequence_data[str(row.target)][start-1:end]
             frag.description = f'gene={str(row.query)} start={start} end={end}'
             annotated_frag.append(frag)

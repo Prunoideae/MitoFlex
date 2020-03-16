@@ -288,7 +288,7 @@ def assembly_regulator(args):
         args.assemble_dir = os.path.join(args.temp_dir, 'assemble')
     else:
         args.assemble_dir = os.path.join(os.getcwd(), 'assemble')
-    
+
     try:
         safe_makedirs(args.assemble_dir)
     except FileExistsError:

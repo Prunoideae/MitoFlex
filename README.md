@@ -68,6 +68,27 @@ MitoFlex requires a bunch of packages to run, you can install them in one line l
 conda create -n {environment name here} python=3.6.4 numpy pandas ete3 biopython megahit blast infernal circos hmmer wise2 samtools bwa infernal
 ```
 
+All directly required packages are listed, if you don't want to use conda to install them:
+
+```text
+numpy
+pandas
+ete3
+biopython
+
+megahit
+blast
+infernal
+circos
+hmmer
+wise2
+bwa
+samtools
+infernal
+```
+
+You will have to solve the dependencies of required packages if not using conda. The upper 4 are python modules, and the lower ones are programs.
+
 ### 2.2.4 Installing MitoFlex from Git
 
 ```bash

@@ -108,14 +108,16 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     generated_config.plots['plot', 2].file = gc_content_file
     with generated_config.plots['plot', 3] as depth_plot:
         depth_plot.file = gene_depth_file
-        depth_plot.rules['rule',
-                         0].condition = f'var(value) > {int(max_gene_depth*0.9)}'
-        depth_plot.rules['rule',
-                         1].condition = f'var(value) < {int(max_gene_depth*0.1)}'
+        depth_plot.rules['rule', 0
+                         ].condition = f'var(value) > {int(max_gene_depth*0.9)}'
+        depth_plot.rules['rule', 1
+                         ].condition = f'var(value) < {int(max_gene_depth*0.1)}'
 
     generated_config.highlights['highlight', 0].file = "Feature file here"
 
     # Writing to final
+    # I guess it would be better to use a f-string formatted cfg, but
+    # well this is fine.
     cfg_dict = circos.collapse(generated_config)
     cfg_file = path.join(basedir, f'{prefix}.circos.cfg')
     with open(cfg_file, 'w') as cfg_f:
