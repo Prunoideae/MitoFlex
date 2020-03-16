@@ -104,3 +104,10 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         pass
 
     return contigs_file
+
+
+# This is currently NOT a working module.
+# The effect of scaffolding using SOAPdenovo-fusion is still
+# under investigation.
+def scaffolding(fastq1=None, fastq2=None):
+    pass
