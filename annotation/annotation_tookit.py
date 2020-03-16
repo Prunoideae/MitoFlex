@@ -253,6 +253,11 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
         seq = wise_seqs[wise.sseq][wise.sstart-29: wise.send+30]
         if not wise.plus:
             seq = seq.reverse_complement()
+
+        # Truncating sequence to prevent future error of Biopython
+        if len(seq) % 3 != 0:
+            seq = seq[:-(len(seq) % 3)]
+
         try:
             trans = seq.translate(9, cds=True)
         except:
