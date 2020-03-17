@@ -34,24 +34,25 @@ try:
     from Bio import SeqIO
     from utility.bio import circos
     from visualize import circos_config
+    from utility import logger
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 
 def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
               prefix=None, basedir=None, threads=8):
+    logger.log(2, 'Entering visualize module.')
     # Validate the paths
     fasta_file = path.abspath(fasta_file)
     fastq1 = path.abspath(fastq1)
     fastq2 = path.abspath(fastq2)
     basedir = path.abspath(basedir)
-    #pos_json = path.abspath(pos_json)
+    pos_json = path.abspath(pos_json)
 
     fa_copy = path.join(basedir, f'{prefix}.fasta')
     list_conv = []
     counter = 1
 
-    # TODO have a test
     # Rename to a easier form
     index_list = {}
     for seq in SeqIO.parse(fasta_file, 'fasta'):
@@ -63,10 +64,34 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
         counter += 1
     SeqIO.write(list_conv, fa_copy, 'fasta')
 
-    # with open(pos_json, 'r') as f:
-    #    poses = json.load(pos_json)
+    with open(pos_json, 'r') as f:
+        poses = json.load(f)
 
-    #redirected_pos = {index_list[key]: value for key, value in poses.items()}
+    # Gene name files
+    logger.log(1, 'Generating gene name and feature files.')
+    gene_name_file = path.join(basedir, f'{prefix}.gene.txt')
+    with open(gene_name_file, 'w') as gn_f:
+        for key, value in poses.items():
+            start, end, gene_type, strand = value
+            strand_conv = index_list[strand]
+            print(strand_conv, start, end, key, sep='\t', file=gn_f)
+
+    # Gene feature files
+    gene_feature_file = path.join(basedir, f'{prefix}.features.txt')
+    with open(gene_feature_file, 'w') as gf_f:
+        for key, value in poses.items():
+            start, end, gene_type, strand = value
+            strand_conv = index_list[strand]
+            print(strand_conv, start, start,
+                  'fill_color=black,r0=0.965r,r1=1r', file=gf_f, sep='\t')
+            print(strand_conv, start, end,
+                  f'fill_color={circos_config.fill_colors[int(gene_type)]},r0=0.965r,r1=1r',
+                  file=gf_f, sep='\t')
+            print(strand_conv, end, end,
+                  'fill_color=black,r0=0.965r,r1=1r', file=gf_f, sep='\t')
+
+    logger.log(1, 'Generating depth files.')
+    # Using check_output directly because being too lazy to remove decoder
     from subprocess import check_output
 
     shell_call('bwa index', fa_copy)
@@ -103,27 +128,37 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
                 print(seq.id, s, s+len(seq_slice), gc_per, file=gc_f)
 
     # Karyotype
+    logger.log(1, 'Generating chr files.')
     karyotype_file = path.join(basedir, f'{prefix}.karyotype.txt')
     with open(karyotype_file, 'w') as ky_f:
         for seq in list_conv:
             chr_name = seq.id.replace('mt', 'chr')
-            print(f'{chr_name} - {seq.id}\t{seq.id_old}\t0\t{len(seq)}\tgrey')
+            print(
+                f'{chr_name} - {seq.id}\t{seq.id_old}\t0\t{len(seq)}\tgrey', file=ky_f)
+
+    # Plus generation
+    logger.log(1, 'Generating plus.')
+    plus_file = path.join(basedir, f'{prefix}.plus.txt')
+    with open(plus_file, 'w') as p_f:
+        print('mt1\t0\t300\t+\tr0=1r-150p,r1=1r-100p', file=p_f)
 
     # Giving the values
+    logger.log(1, 'Generating circos config file.')
     generated_config = circos_config.circos_conf
     generated_config.image.dir = basedir
     generated_config.karyotype = karyotype_file
-    generated_config.plots['plot', 0].file = 'Gene name and position file here'
-    generated_config.plots['plot', 1].file = 'Plus file here'
+    generated_config.plots['plot', 0].file = gene_name_file
+    generated_config.plots['plot', 1].file = plus_file
     generated_config.plots['plot', 2].file = gc_content_file
     with generated_config.plots['plot', 3] as depth_plot:
-        depth_plot.file = gene_depth_file
+        depth_plot.file = circos_depth_file
+        depth_plot.max = max_gene_depth
         depth_plot.rules['rule', 0
                          ].condition = f'var(value) > {int(max_gene_depth*0.9)}'
         depth_plot.rules['rule', 1
                          ].condition = f'var(value) < {int(max_gene_depth*0.1)}'
 
-    generated_config.highlights['highlight', 0].file = "Feature file here"
+    generated_config.highlights['highlight', 0].file = gene_feature_file
 
     # Writing to final
     # I guess it would be better to use a f-string formatted cfg, but
@@ -134,3 +169,7 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
         cfg_f.write('<<include etc/colors_fonts_patterns.conf>>\n')
         cfg_f.write(circos.dict2circos(cfg_dict) + '\n')
         cfg_f.write('<<include etc/housekeeping.conf>>')
+
+    logger.log(1, 'Running Circos.')
+    check_output('circos', shell=True, cwd=basedir)
+    return path.join(basedir, 'Circos.png'), path.join(basedir, 'Circos.svg')

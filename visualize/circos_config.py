@@ -30,6 +30,13 @@ try:
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
+# The color that will be used in marked genes.
+# 0 for protein, 1 for tRNAs, 2 for rRNAs
+fill_colors = ['141,211,199', '251,128,114', '253,192,134']
+
+# The main configuration entry of circos config file, can be
+# adjusted as will, but some part of the graph needs you to modify
+# visualize.py if some calculation is involved.
 circos_conf = circos.Circos()
 
 with circos_conf.image as image:
@@ -39,7 +46,7 @@ with circos_conf.image as image:
     image.png = "yes"
     image.svg = "yes"
 
-    image.raidus = "1500p"
+    image.radius = "1500p"
     image.angle_offset = -90
 
     image.auto_alpha_colors = "yes"
@@ -61,7 +68,7 @@ with circos_conf.ideogram as ideogram:
 
     ideogram.show_label = 'yes'
     ideogram.label_font = 'bolditalic'
-    ideogram.label_radius = 'dims(ideogram, radius_outer) - 0.1r'
+    ideogram.label_radius = 'dims(ideogram,radius_outer) - 0.1r'
     ideogram.label_size = 28
     ideogram.label_parallel = "yes"
     ideogram.label_case = 'lower'
@@ -207,5 +214,3 @@ with circos_conf.highlights as highlights:
 
     with highlights['highlight'] as highlight:
         highlight.file = None
-
-

@@ -191,19 +191,38 @@ def annotate(args):
 
 
 @parse_func(func_help='visualization of sequences',
-            parents=[])
+            parents=[universal_parser, fasta_parser, fastq_parser])
+@arg_prop(dest='pos_json', help='specify the json file for marking genes')
 def visualize(args):
 
-    # TODO fill the blanks of visualize method
-    pass
+    basedir = args.temp_dir if args.__calling == 'visualize' else path.join(
+        args.temp_dir, 'visualize')
+    try:
+        os.makedirs(basedir, exist_ok=True)
+    except Exception:
+        raise RuntimeError("Cannot validate folder for visualization!")
+
+    from visualize.visualize import visualize as _visualize
+    circos_png, circos_svg = _visualize(fasta_file=args.fastafile, fastq1=args.fastq1, fastq2=args.fastq2,
+                                        pos_json=args.pos_json, prefix=args.workname, basedir=basedir, threads=args.threads)
+
+    # Further processing for calling directly
+    if args.__calling == 'visualize':
+        os.rename(circos_png, path.join(
+            args.result_dir, path.basename(circos_png)))
+        os.rename(circos_svg, path.join(
+            args.result_dir, path.basename(circos_svg)))
+        return None, None
+
+    return circos_png, circos_svg
 
 
 @parse_func(func_help='run all the methods',
             parents=[universal_parser, assembly_parser, filter_parser, fastq_parser,
                      search_parser, saa_parser, annotation_parser])
-@arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on')
+@arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on', default=False)
 def all(args):
-
+    # TODO : Run a full-size all method.
     # Go filtering
     #
     # Why I'm NOT using .gz ext here even I have implemented this:
@@ -227,7 +246,7 @@ def all(args):
         # Visualization is of no way if not annotated.
         # fastafile = findmitoscafed file
         # fastq1, fastq2 = filtered fastq file
-        visualize(args)
+        args.circos_png, args.circos_svg = visualize(args)
 
 
 # This is for initializing the framework right before the command executed,

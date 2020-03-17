@@ -213,6 +213,6 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     SeqIO.write(annotated_frag, annotated_rnas, 'fasta')
     with open(locs_file, 'w') as f:
-        json.dump(annotation_json, f)
+        json.dump(annotation_json, f, indent=4, separators=(',', ': '))
 
     return locs_file, annotated_fa, annotated_rnas
