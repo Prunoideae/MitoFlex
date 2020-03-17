@@ -131,12 +131,24 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                                  nhmmer_profile=nhmmer_profile, prefix=prefix,
                                  basedir=basedir)
 
+    logger.log(1, f'Generating hmm-filtered fasta.')
+    hmm_seqs = [record
+                for record in SeqIO.parse(filtered_fa, 'fasta')
+                if record.id in set(hmm_frame['target'])
+                ]
+    if not hmm_seqs:
+        raise RuntimeError("Parsed fasta file is empty!")
+
+    hmm_fa = path.join(basedir, f'{prefix}.hmm.filtered.fa')
+    with open(hmm_fa, 'w') as f:
+        SeqIO.write(hmm_seqs, f, 'fasta')
+
     # filter by taxanomy
     if taxa is not None:
         # We use an overall protein dataset to determine what clades diffrent seqs belonged to.
         tbn_profile = path.join(profile_dir_tbn, f'Animal.fa')
         hmm_frame = filter_taxanomy(
-            taxa=taxa, fasta_file=filtered_fa, hmm_frame=hmm_frame,
+            taxa=taxa, fasta_file=hmm_fa, hmm_frame=hmm_frame,
             basedir=basedir, prefix=prefix, dbfile=tbn_profile, gene_code=gene_code,
             relaxing=relaxing, threads=thread_number)
     else:
@@ -144,7 +156,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             2, 'Skipping taxanomy filtering because the disable-taxa option is on.')
 
     contig_data = [x
-                   for x in SeqIO.parse(filtered_fa, 'fasta')
+                   for x in SeqIO.parse(hmm_fa, 'fasta')
                    if hmm_frame.target.str.contains(x.id).any()]
 
     if not contig_data:
@@ -303,19 +315,8 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     logger.log(2, f'Filtering taxanomy with tblastn.')
     # Extract sequences from input fasta file according to hmm frame
 
-    seqs = [record
-            for record in SeqIO.parse(fasta_file, 'fasta')
-            if record.id in set(hmm_frame['target'])
-            ]
-    if not seqs:
-        raise Exception("Parsed fasta file is empty!")
-
-    hmm_fa = path.join(basedir, f'{prefix}.hmm.filtered.fa')
-    with open(hmm_fa, 'w') as f:
-        SeqIO.write(seqs, f, 'fasta')
-
     # Do tblastn to search out the possible taxanomy of the gene
-    blast_file = tk.tblastn_multi(dbfile=dbfile, infile=hmm_fa,
+    blast_file = tk.tblastn_multi(dbfile=dbfile, infile=fasta_file,
                                   genetic_code=gene_code, basedir=basedir, prefix=prefix, threads=threads)
     blast_frame, _ = tk.blast_to_csv(blast_file)
     blast_frame = tk.wash_blast_results(blast_frame)
