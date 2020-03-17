@@ -40,7 +40,7 @@ except Exception as identifier:
 
 
 def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
-              prefix=None, basedir=None, threads=8):
+              prefix=None, basedir=None, threads=8, circular=False):
     logger.log(2, 'Entering visualize module.')
     # Validate the paths
     fasta_file = path.abspath(fasta_file)
@@ -52,6 +52,8 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     fa_copy = path.join(basedir, f'{prefix}.fasta')
     list_conv = []
     counter = 1
+
+    circular = True
 
     # Rename to a easier form
     index_list = {}
@@ -145,6 +147,7 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     # Giving the values
     logger.log(1, 'Generating circos config file.')
     generated_config = circos_config.circos_conf
+    generated_config.ideogram.spacing._break = "0.5r" if not circular else "0.01r"
     generated_config.image.dir = basedir
     generated_config.karyotype = karyotype_file
     generated_config.plots['plot', 0].file = gene_name_file

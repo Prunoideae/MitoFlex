@@ -155,12 +155,18 @@ def findmitoscaf(args):
             parents=[universal_parser, fasta_parser, annotation_parser, saa_parser, search_parser])
 def annotate(args):
 
-    from annotation.annotation import annotate as _annotate
+    from annotation.annotation import annotate as _annotate, fix_circular
+
+    # Check assemble file, if only one sequence and itself is circular, it was circular.
+    circular = fix_circular(fa_file=args.fasta_file)
+
+    # Annotate the file
     annotate_json, fa_file, rna_file = _annotate(basedir=args.annotation_dir, prefix=args.workname,
                                                  ident=30, fastafile=args.fastafile, genetic_code=args.genetic_code,
                                                  clade=args.clade, thread_number=args.threads,
                                                  wildcard_profile=args.wider_taxa, trna_overlapping=30,
                                                  hmmer_search=args.use_hmmer, score=args.hmmer_score, e_value=args.hmmer_e)
+
     # Further processing for calling directly
     if args.__calling == 'annotate':
         import json
@@ -183,16 +189,19 @@ def annotate(args):
             print('\nrRNAs found :')
             for key, value in rrna.items():
                 print(key, ':', value[0], '-', value[1], 'from', value[3])
+        if circular:
+            print('The final mitogenome is circular and trimmed.')
         os.rename(fa_file, path.join(args.result_dir, path.basename(fa_file)))
         os.rename(rna_file, path.join(
             args.result_dir, path.basename(rna_file)))
 
-    return annotate_json
+    return annotate_json, circular
 
 
 @parse_func(func_help='visualization of sequences',
             parents=[universal_parser, fasta_parser, fastq_parser])
 @arg_prop(dest='pos_json', help='specify the json file for marking genes')
+@arg_prop(dest='circular', help='draw the genome like a circle or have some break', default=False)
 def visualize(args):
 
     basedir = args.temp_dir if args.__calling == 'visualize' else path.join(
@@ -204,7 +213,8 @@ def visualize(args):
 
     from visualize.visualize import visualize as _visualize
     circos_png, circos_svg = _visualize(fasta_file=args.fastafile, fastq1=args.fastq1, fastq2=args.fastq2,
-                                        pos_json=args.pos_json, prefix=args.workname, basedir=basedir, threads=args.threads)
+                                        pos_json=args.pos_json, prefix=args.workname, basedir=basedir,
+                                        threads=args.threads, circular=args.circular)
 
     # Further processing for calling directly
     if args.__calling == 'visualize':
@@ -241,7 +251,7 @@ def all(args):
     args.fastafile = findmitoscaf(args)
 
     if not args.disable_annotation:
-        args.pos_json = annotate(args)
+        args.pos_json, args.circular = annotate(args)
 
         # Visualization is of no way if not annotated.
         # fastafile = findmitoscafed file

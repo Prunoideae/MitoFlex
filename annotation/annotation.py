@@ -39,6 +39,8 @@ try:
     from utility import logger
     from utility.bio import infernal
     from utility.bio import wuss
+    from utility.bio import seq
+    from misc.check_circular import check_circular
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -216,3 +218,29 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         json.dump(annotation_json, f, indent=4, separators=(',', ': '))
 
     return locs_file, annotated_fa, annotated_rnas
+
+
+def fix_circular(fa_file: str):
+    genome = [x for x in SeqIO.parse(fa_file, 'fasta')]
+    circular = False
+    # Only one sequence
+    if len(genome) == 1:
+        traits = seq.decompile(genome[0].description, sep=' ')
+        # The sequence is circular
+        if 'flag' in traits and traits['flag'] == '3':
+            results = check_circular(final_fasta=fa_file)
+            # The overlapped region is determined
+            if results:
+                result = results[0]
+                if result[0] != -1:
+                    # Trim the genome and returns
+                    circular = True
+                    des = genome[0].description
+                    end = genome[0].seq.rfind(result[1])
+                    genome[0] = genome[0][result[0][0]:end]
+                    with open(fa_file, 'w') as f:
+                        SeqIO.write(genome, f, 'fasta')
+    return circular
+
+
+fix_circular('/home/prunoideae/dev/test/k141_11177.fa')

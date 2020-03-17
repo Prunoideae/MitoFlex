@@ -57,6 +57,7 @@ with circos_conf.ideogram as ideogram:
 
     with ideogram.spacing as spacing:
         spacing.default = "0.01r"
+        # Circular will be 0
         spacing._break = "0.5r"
 
     ideogram.radius = "0.82r"
