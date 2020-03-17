@@ -45,9 +45,9 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     fastq1 = path.abspath(fastq1)
     fastq2 = path.abspath(fastq2)
     basedir = path.abspath(basedir)
-    pos_json = path.abspath(pos_json)
+    #pos_json = path.abspath(pos_json)
 
-    fa_copy = path.join(basedir, f'{prefix}.{path.splitext(fasta_file)[1]}')
+    fa_copy = path.join(basedir, f'{prefix}.fasta')
     list_conv = []
     counter = 1
 
@@ -56,25 +56,28 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     index_list = {}
     for seq in SeqIO.parse(fasta_file, 'fasta'):
         index_list[seq.id] = f'mt{counter}'
+        seq.id_old = seq.id
         seq.id = f'mt{counter}'
         seq.description = ''
         list_conv.append(seq)
         counter += 1
     SeqIO.write(list_conv, fa_copy, 'fasta')
 
-    with open(pos_json, 'r') as f:
-        poses = json.load(pos_json)
+    # with open(pos_json, 'r') as f:
+    #    poses = json.load(pos_json)
 
-    redirected_pos = {index_list[key]: value for key, value in poses.items()}
+    #redirected_pos = {index_list[key]: value for key, value in poses.items()}
+    from subprocess import check_output
 
     shell_call('bwa index', fa_copy)
     bam_file = path.join(basedir, f'{prefix}.bam')
-    shell_call(f'bwa mem -t {threads} "{fasta_file}", "{fastq1}", "{fastq2}" |',
-               'samtools view -bS', q=30, h=True, o=bam_file)
+    check_output(
+        f'bwa mem -t {threads} {fa_copy} {fastq1} {fastq2} |samtools view -bS -q 30 -h -o {bam_file} -', shell=True)
     bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')
-    shell_call('samtools sort', bam_file, o=bam_sorted_file)
-    gene_depth_file = path.join(f'{prefix}.dep')
-    shell_call('samtools depth -aa', bam_sorted_file, '>', gene_depth_file)
+    check_output(f'samtools sort -f {bam_file} {bam_sorted_file}', shell=True)
+    gene_depth_file = path.join(basedir, f'{prefix}.dep')
+    check_output(
+        f'samtools depth {bam_sorted_file} > {gene_depth_file}', shell=True)
 
     # Calculate the things
     circos_depth_file = path.join(basedir, f'{prefix}.depth.txt')
@@ -99,10 +102,17 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
                 gc_per = gc_num / len(seq_slice)
                 print(seq.id, s, s+len(seq_slice), gc_per, file=gc_f)
 
+    # Karyotype
+    karyotype_file = path.join(basedir, f'{prefix}.karyotype.txt')
+    with open(karyotype_file, 'w') as ky_f:
+        for seq in list_conv:
+            chr_name = seq.id.replace('mt', 'chr')
+            print(f'{chr_name} - {seq.id}\t{seq.id_old}\t0\t{len(seq)}\tgrey')
+
     # Giving the values
     generated_config = circos_config.circos_conf
     generated_config.image.dir = basedir
-    generated_config.karyotype = 'Karyotype file here'
+    generated_config.karyotype = karyotype_file
     generated_config.plots['plot', 0].file = 'Gene name and position file here'
     generated_config.plots['plot', 1].file = 'Plus file here'
     generated_config.plots['plot', 2].file = gc_content_file
@@ -119,6 +129,8 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     # I guess it would be better to use a f-string formatted cfg, but
     # well this is fine.
     cfg_dict = circos.collapse(generated_config)
-    cfg_file = path.join(basedir, f'{prefix}.circos.cfg')
+    cfg_file = path.join(basedir, 'circos.conf')
     with open(cfg_file, 'w') as cfg_f:
-        cfg_f.write(circos.dict2circos(cfg_dict))
+        cfg_f.write('<<include etc/colors_fonts_patterns.conf>>\n')
+        cfg_f.write(circos.dict2circos(cfg_dict) + '\n')
+        cfg_f.write('<<include etc/housekeeping.conf>>')
