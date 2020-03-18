@@ -235,12 +235,11 @@ def fix_circular(fa_file: str):
                 if result[0] != -1:
                     # Trim the genome and returns
                     circular = True
+                    logger.log(
+                        2, f'An overlapped region was found starting at {result[0][0]} with length {result[0][1]}. Trimming it.')
                     des = genome[0].description
                     end = genome[0].seq.rfind(result[1])
                     genome[0] = genome[0][result[0][0]:end]
                     with open(fa_file, 'w') as f:
                         SeqIO.write(genome, f, 'fasta')
     return circular
-
-
-fix_circular('/home/prunoideae/dev/test/k141_11177.fa')
