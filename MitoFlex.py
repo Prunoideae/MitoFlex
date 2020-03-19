@@ -43,7 +43,7 @@ try:
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility import logger
     from arguments import *  # pylint: disable=unused-wildcard-import
-
+    import configurations
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoFlex installation!')
@@ -239,12 +239,15 @@ def all(args):
     # 1. flate2 is slow, it takes much compressing data if single-threaded.
     # 2. plug in a SSD is much more easier than adding a CPU.
     #
-    # You can still set this to xx.gz then it will surely make a
-    # gzip for you, but this will have a great impact on the program's
-    # running time, and it's strongly not recommended to do this.
-    #
+    # Some further codes may only accept plain-text input, and I'm not adding
+    # support to it.
+
     args.cleanq1 = 'clean.1.fq'
     args.cleanq2 = 'clean.2.fq'
+    if configurations.filter_rawdata.compress_output_in_all:
+        args.cleanq1 += '.gz'
+        args.cleanq2 += '.gz'
+
     args.fastq1, args.fastq2 = filter(args)
 
     args.fastafile = assemble(args)
