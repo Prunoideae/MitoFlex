@@ -101,10 +101,10 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     check_output(
         f'bwa mem -t {threads} {fa_copy} {fastq1} {fastq2} |samtools view -bS -q 30 -h -o {bam_file} -', shell=True)
     bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')
-    check_output(f'samtools sort -f {bam_file} {bam_sorted_file}', shell=True)
+    check_output(f'samtools sort -o {bam_sorted_file} {bam_file}', shell=True)
     gene_depth_file = path.join(basedir, f'{prefix}.dep')
     check_output(
-        f'samtools depth {bam_sorted_file} > {gene_depth_file}', shell=True)
+        f'samtools depth -aa {bam_sorted_file} > {gene_depth_file}', shell=True)
 
     # Calculate the things
     circos_depth_file = path.join(basedir, f'{prefix}.depth.txt')
