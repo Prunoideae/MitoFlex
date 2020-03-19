@@ -54,7 +54,7 @@ except ImportError as identifier:
     sys.exit()
 
 # Constants
-VERSION = '0.0.7'
+VERSION = '0.1.0'
 
 # Command processing
 desc = f"""
@@ -158,7 +158,7 @@ def annotate(args):
     from annotation.annotation import annotate as _annotate, fix_circular
 
     # Check assemble file, if only one sequence and itself is circular, it was circular.
-    circular = fix_circular(fa_file=args.fasta_file)
+    circular = fix_circular(fa_file=args.fastafile)
 
     # Annotate the file
     annotate_json, fa_file, rna_file = _annotate(basedir=args.annotation_dir, prefix=args.workname,

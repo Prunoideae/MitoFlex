@@ -96,7 +96,8 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     wise_frame.to_csv(wise_csv)
     wise_frame = tk.reloc_genes(fasta_file=fastafile,
                                 wises=wise_frame, code=genetic_code)
-    logger.log(1, f'Genewise results generated at {wise_csv}')
+    logger.log(2, f'Genewise results generated at {wise_csv}.')
+    logger.log(2, f'For taxanomy data, please open this file to have a view.')
 
     cds_indexes = {}
     cds_found = []
@@ -154,18 +155,16 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     annotated_fa = path.join(basedir, f'{prefix}.annotated.cds.fa')
     annotated_frag = []
+    start = end = -1
     for _, row in wise_frame.iterrows():
         cds = str(row).split('_')[3]
         if cds in annotation_json:
             count = sum(x.startswith(cds) for x in annotation_json.keys())
             cds = f'{cds}{"_" if count > 0 else ""}{count}'
-            if count > 0:
-                logger.log(
-                    3, f'Duplicated gene {cds} detected at {start} - {end}!')
         start, end = (min(int(row.wise_min_start), int(row.wise_max_end)),
                       max(int(row.wise_min_start), int(row.wise_max_end)))
         frag = sequence_data[str(row.sseq)][start-1:end]
-        frag.description = f'gene={cds} start={start} end={end}'
+        frag.description = f'gene={cds} start={start} end={end} from={row.sseq}'
         annotated_frag.append(frag)
         annotation_json[cds] = (start, end, 0, str(row.sseq))
 
