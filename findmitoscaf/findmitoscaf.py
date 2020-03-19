@@ -166,6 +166,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     # filter by multi
     contig_data_high = []
     contig_data_low = []
+    contig_multis = {}
 
     for contig in contig_data:
         if contig.description.startswith(contig.id + ' '):
@@ -175,6 +176,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         if float(traits['multi']) >= multi:
             # Append traits to avoid parsing again
             contig_data_high.append(contig)
+            contig_multis[contig.id] = float(traits['multi'])
         else:
             contig_data_low.append(contig)
             # Here we dispose all the low abundance contigs,
@@ -212,7 +214,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         if index not in candidates:
             candidates[index] = {}
         candidates[index][query] = (
-            score, query_start, query_to, complete
+            score*contig_multis[index], query_start, query_to, complete
         )
 
     flatten_candidates = [(key, value) for key, value in candidates.items()]
@@ -233,6 +235,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             selected_candidates[c] = index
 
     # For fragments, select non-conflict sequence as much as possible
+    conflicts = []
     for empty_pcg in [x for x in selected_candidates if selected_candidates[x] == None]:
         for index, mapping in candidates.items():
             # No pcg in this sequence, next sequence
@@ -268,15 +271,20 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                         else:
                             gene_map.remove(right)
                             gene_map.remove(right)
+                        conflicts.append((left, right))
                         return True
                 return False
 
             while overlapping():
                 pass
-
-            selected_candidates[empty_pcg] = list(
+            final_candidates = list(
                 set([x[0] for x in gene_map])
             )
+
+            for conf in conflicts:
+                print(conf)
+
+            selected_candidates[empty_pcg] = final_candidates
 
             total_length = sum([abs(candidates[index][empty_pcg][2] - candidates[index][empty_pcg][1])
                                 for index in selected_candidates[empty_pcg]])
