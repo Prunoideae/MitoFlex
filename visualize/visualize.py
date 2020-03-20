@@ -53,8 +53,6 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     list_conv = []
     counter = 1
 
-    circular = True
-
     # Rename to a easier form
     index_list = {}
     for seq in SeqIO.parse(fasta_file, 'fasta'):
