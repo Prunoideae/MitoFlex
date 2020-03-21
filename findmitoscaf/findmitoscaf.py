@@ -326,8 +326,8 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     # Do tblastn to search out the possible taxanomy of the gene
     blast_file = tk.tblastn_multi(dbfile=dbfile, infile=fasta_file,
                                   genetic_code=gene_code, basedir=basedir, prefix=prefix, threads=threads)
-    blast_frame, _ = tk.blast_to_csv(blast_file)
-    blast_frame = tk.wash_blast_results(blast_frame)
+    blast_frame_unfiltered, _ = tk.blast_to_csv(blast_file)
+    blast_frame = tk.wash_blast_results(blast_frame_unfiltered)
 
     # Drop the sequences which don't have even a gene related to taxa
     by_seqid = dict(tuple(blast_frame.groupby(['sseq'])))

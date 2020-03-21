@@ -74,7 +74,8 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
         for key, value in poses.items():
             start, end, gene_type, strand = value
             strand_conv = index_list[strand]
-            print(strand_conv, start, end, key, sep='\t', file=gn_f)
+            print(strand_conv, start, end, key.split(
+                '_')[0] if '_' in key else key, sep='\t', file=gn_f)
 
     # Gene feature files
     gene_feature_file = path.join(basedir, f'{prefix}.features.txt')
