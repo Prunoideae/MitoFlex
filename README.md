@@ -6,7 +6,7 @@ MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembli
 
 ## 1.1 Platform
 
-MitoFlex is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL2)`, compiled and tested under `CentOS release 7.3.1611`. Unix like system should work fine, but since some part of the program is compiled in Ubuntu, MitoFlex may have risk to fail if running on other OS, like MacOS, Windows system is obviously not suitable to run MitoFlex, but `WSL` can, though there will be some performance loss.
+MitoFlex is developed under `Ubuntu 18.04.3 LTS on Windows Subsystem of Linux(WSL2)`, compiled and tested under `CentOS release 7.3.1611`. Unix like system should work fine, but since some part of the program is compiled in `Ubuntu` or `CentOS`, MitoFlex may have risk to fail if running on other OS, like MacOS, Windows system is obviously not suitable to run MitoFlex, but `WSL` can, though there will be some performance loss.
 
 ## 1.2 File system
 
@@ -24,15 +24,15 @@ CAUTION : I said it needs 5-30G, is because all the dataset I used in the test a
 
 ## 1.4 CPU
 
-MitoFlex makes use of a multi k-mer assemble strategy from [MEGAHIT](https://github.com/voutcn/megahit), thus requires more calculate power because multiple iteration of the graph is needed. Using MitoFlex with high iteration count (21-141, 8 generation) will takes more time than MitoZ in low thread number (8), but the time will be almost equivalent in a higher thread number (80). The speed of the process depends highly on the data quality too, an iteration could use from 4min to 20min, which makes the total processing time ranges from 30min to over 2hrs.
+MitoFlex uses [MEGAHIT](https://github.com/voutcn/megahit) as assembler, thus requires more calculate power because multiple iteration of the graph is needed. The speed of assembly is mainly depends on how fragmentized the input reads are.
 
 ## 1.5 GPU
 
-MitoFlex does not explicitly requires GPU in the work, but a GPU will highly accelerate the process of sDBG building. The server I'm developing MitoFlex on has no GPU, so I can't tell this part.
+MitoFlex does not explicitly requires GPU in the work, but a GPU will accelerate the process of sDBG building. The server I'm developing MitoFlex on has no GPU, so I can't tell much at this part.
 
 # 2. Installation
 
-## 2.1 From Docker Image (Not yet implemented)
+## 2.1 From Docker Image (Implementation rejected)
 
 ## 2.2 From git repository (Conda required)
 
@@ -48,7 +48,7 @@ And git will pull the MitoFlex into your current directory, downloading zip file
 
 ### 2.2.1 Installing Conda
 
-Conda is required to be present to create the environment MitoFlex needed instead, or you can install all the packages manually. Both [Anaconda](https://anaconda.org/anaconda/python) and [Miniconda](https://conda.io/miniconda.html) could be useful, but Miniconda is recommended if you don't need a big environment.
+Conda is required to create the environment MitoFlex needed instead, or you can install all the packages manually. Both [Anaconda](https://anaconda.org/anaconda/python) and [Miniconda](https://conda.io/miniconda.html) could be useful, but Miniconda is recommended if you don't need a big environment.
 
 ### 2.2.2 Setting up channels
 
@@ -75,20 +75,8 @@ conda create -n {environment name here} python=3.6.4 numpy pandas ete3 biopython
 All directly required packages are listed, if you don't want to use conda to install them:
 
 ```text
-numpy
-pandas
-ete3
-biopython
-
-megahit
-blast
-infernal
-circos
-hmmer
-wise2
-bwa
-samtools
-infernal
+numpy pandas ete3 biopython
+megahit blast infernal circos hmmer wise2 bwa samtools infernal
 ```
 
 You will have to solve the dependencies of required packages if not using conda. The upper 4 are python modules, and the lower ones are programs.
@@ -120,7 +108,13 @@ To run MitoFlex, type :
 ./MitoFlex.py
 ```
 
-Info should be printed if there's no error in your installation, otherwise you need to check the whole progress.
+Info should be printed if there's no error in your installation, otherwise you need to check the whole progress. Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
+
+```bash
+echo 'export $PATH="/path/to/installation/directory:$PATH"' >> '/path/to/rc'
+```
+
+Where rc stands for the .*rc file used by your terminal to load a certain set of commands at logging. Like `.bashrc` or `.zshrc`.
 
 # 3. Data requirement
 
@@ -128,7 +122,7 @@ MitoFlex depends on the quality more than the size of data, it will not throw an
 
 # 4. Specifying parameters in configuration file
 
-MitoFlex created a very flexible argument catching and processing mechanism, which is aimed to make it easier for further developing. [An example configuration file](example.config.py) is created under the main directory.
+MitoFlex uses a very flexible argument catching and processing mechanism, which is aimed to make it easier for further developing. [An example configuration file](example.config.py) is created under the main directory.
 
 ## 4.1 Configuration file structure
 
@@ -172,6 +166,10 @@ Besides creating a highly customized configuration file from the earth, you can 
 
 Configuration generated in this way will have all the arguments needed by the specified subcommand (e.g. all or filter) in place, arguments passed latter will also be written into the config, overrides the default values predefined in scripts.
 
+## 4.3 Specifying special parameters
+
+Some parameters are freezed and specified to fit into the mitogenome analysis, they are either not performing good in most circumstances, or even will make the output result worse. But they may have some usage under special circumstances, so these parameters can be set in the [configuration](configurations.py) file.
+
 # 5. Modules provided by MitoFlex
 
 Most modules of MitoFlex are just the same as MitoZ. But some of the methods are rewritten and optimized.
@@ -182,11 +180,11 @@ Run the whole workflow, including methods listed below. Some part of module can 
 
 ## 5.2 filter
 
-Filter out fastq sequences of low quality, binary is written in Rust to ensure speed and data safety. The method will not output compressed clean data by default, and most workflow is designed to directly process with plain data format, clean data will be deleted after the workflow is done if `--keep-temp` option is not set. If you really need to output compressed format, you can modify `args.cleanq1 = ''` and `args.cleanq2 = ''` in the [MitoFlex.py](https://github.com/Prunoideae/MitoFlex/blob/5a56ab4f567dfc1109acc561d748e44d621af18e/MitoFlex.py#L210-L211) in code of `all`, in a complete run, or specify output data ends with `.gz`, in a direct call to filter method.
+Filter out fastq sequences of low quality, binary is written in Rust to ensure speed and data safety. The method will not output compressed clean data by default, and most workflow is designed to directly process with plain data format, clean data will be deleted after the workflow is done if `--keep-temp` option is not set.
 
 ## 5.3 assemble
 
-Assemble the fastq file to output contigs. This method use Megahit for faster and better results, but since Megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 2h for a 5Gbps dataset) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
+Assemble the fastq file to output contigs. This method use Megahit for faster and better results, but since Megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 40min for a 5Gbps dataset, ranging from 5min to 2h) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
 
 ## 5.4 findmitoscaf
 
@@ -196,7 +194,9 @@ To pick out candidate sequences which likely to be mitochondrial sequences. This
 
 To annotate sequences using tblastn and infernal.
 
-## 5.6 visualize (Not yet implemented)
+## 5.6 visualize
+
+To generate PNG and SVG file representing current mitogenome in a more direct way.
 
 # 6. Adding new profile data to MitoFlex
 
@@ -218,7 +218,7 @@ MitoFlex uses a given set of protein sequences to do tblastn, for picking up mos
 
 ### 6.2.2 Adding a new clade
 
-To add a new clade, these three files should be noticed: `{clade}.hmm` and `required_cds.json` in `profile/CDS_HMM` and `{clade}.fa` in `profile/MT_database`. The hmm file is used for nhmmer to search out possible sequences, and the fasta file is for tblastn to mark the potential sequence with genes, and the required_cds.json is for telling MitoFlex what gene should be taken into count, because some gene is rarely reported in several species, so it would be better for users to tell how MitoFlex will judge the gene is missing or not.
+To add a new clade, these three files should be noticed: `{clade}.hmm` and `required_cds.json` in `profile/CDS_HMM` and `{clade}.fa` in `profile/MT_database`. The hmm file is used for nhmmer to search out possible sequences, and the fasta file is for tblastn to mark the potential sequence with genes, and the `required_cds.json` is for telling MitoFlex what gene should be taken into count, because some gene is rarely reported in several species, so it would be better for users to tell how MitoFlex will judge the gene is missing or not. MitoFlex requires all these three to be set properly in order to be functional.
 
 ### 6.2.3 Adding Covariance Models for tRNA search
 
