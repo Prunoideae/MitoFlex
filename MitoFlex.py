@@ -67,7 +67,7 @@ Version
     {VERSION}
 
 Citation
-    MitoFlex
+    MitoFlex - a mitogenome toolkit inspired from MitoZ for imporving result quality and performance
     
 """
 
@@ -195,7 +195,7 @@ def annotate(args):
         os.rename(rna_file, path.join(
             args.result_dir, path.basename(rna_file)))
 
-    return annotate_json, circular
+    return annotate_json, circular, fa_file, rna_file
 
 
 @parse_func(func_help='visualization of sequences',
@@ -254,22 +254,30 @@ def all(args):
     args.fastafile = findmitoscaf(args)
 
     if not args.disable_annotation:
-        args.pos_json, args.circular = annotate(args)
+        args.pos_json, args.circular, args.annotated_cds, args.annotated_rna = annotate(
+            args)
 
         # Visualization is of no way if not annotated.
         args.circos_png, args.circos_svg = visualize(args)
 
     # Add command check if there's something further
+    # If you warpped the 'all' module in other task or workflow
+    # the results will be retained since we don't know what you
+    # want.
     if args.__calling == 'all':
-        def move_to_result(file: str):
-            pass
-        pass
+        def move_to_result(*files):
+            for file in files:
+                os.rename(file, path.join(
+                    args.result_dir, path.basename(file)))
+        # Iteratively collects all the results generated in the whole process
+        move_to_result(args.circos_png, args.circos_svg,
+                       args.pos_json, args.fastafile,
+                       args.annotated_cds, args.annotated_rna)
+
 
 # This is for initializing the framework right before the command executed,
 # but after the arguments are processed. Pre will initialize something no
 # matter what command is called. Not pretty.
-
-
 def pre(args):
 
     # Initialize the logger.

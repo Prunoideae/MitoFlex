@@ -101,7 +101,6 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
     if not keep_temp:
         logger.log(1, f'Cleaning intermidiate contig files.')
-        pass
 
     return contigs_file
 
