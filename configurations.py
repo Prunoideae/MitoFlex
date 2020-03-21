@@ -82,3 +82,9 @@ annotation.reloc_genes = False
 # Disabling the genome trimming will also disable the program's ability of detecting
 # circular genome sequences, where the output will always be linear.
 annotation.trim_circular = True
+
+# The ratio of two 'valid' overlapping gene
+# MitoFlex will remove overlapped tblastn results if the overlapped region is
+# longer than the ratio*min(seq1, seq2). Increasing this may have more tolerate result,
+# though with lower accuracy and vise versa.
+annotation.overlap_ratio = 0.2

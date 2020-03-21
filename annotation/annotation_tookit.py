@@ -42,6 +42,7 @@ try:
     from Bio import SeqIO
     from Bio.Seq import Seq
     from Bio.Data import CodonTable
+    import configurations
 except Exception as iden:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -124,7 +125,8 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
 
 # Filter out the most important sequences
-def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.2):
+def wash_blast_results(blast_frame: pandas.DataFrame = None):
+    cutoff = configurations.annotation.overlap_ratio
     blast_frame['plus'] = blast_frame.send - blast_frame.sstart > 0
     blast_frame['sstart'], blast_frame['send'] = np.where(
         blast_frame['sstart'] > blast_frame['send'],
