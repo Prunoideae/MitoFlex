@@ -322,6 +322,7 @@ def assembly_regulator(args):
 
     if args.prune_depth < 0:
         print('Prune depth lower than 0.')
+        valid = False
 
     return valid
 
@@ -358,11 +359,6 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'help': 'increment of kmer size of each iteration (<= 28), must be even number.'
     },
     {
-        'name': 'mercy-edges',
-        'default': False,
-        'help': 'mercy edges are allowed in sDBG if switched on, use when sequence is of low coverage.',
-    },
-    {
         'name': 'prune-level',
         'default': 2,
         'choices': list(range(0, 4)),
@@ -372,11 +368,6 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'name': 'prune-depth',
         'default': 2,
         'help': 'remove unitigs with avg kmer depth less than this value.'
-    },
-    {
-        'name': 'disable-acc',
-        'default': False,
-        'help': 'force disable the hardware accerlation if there\'s some problem in using it, only use as a last resort.'
     }
 ], func=assembly_regulator)
 

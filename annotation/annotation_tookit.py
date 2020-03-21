@@ -337,7 +337,7 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
             # Can't read the center tri-base codon
             if '-' in center.hairpin.to_str()[2:5]:
                 logger.log(
-                    1, f'Unqualified fold discarded, fold : {center.hairpin.to_str()}, sequence : {center.sequence}')
+                    1, f'Unqualified fold discarded, central hairpin : {center.hairpin.to_str()}, sequence : {center.sequence}')
                 continue
 
             code = Seq(center.hairpin.to_str()[2:5]).reverse_complement()
@@ -424,7 +424,7 @@ def rrna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, e_
 def nhmmer_search(fasta_file=None, thread_number=None, nhmmer_profile=None,
                   prefix=None, basedir=None):
 
-    logger.log(2, 'Calling nhmmer.')
+    logger.log(1, 'Calling nhmmer.')
 
     # Call nhmmer
     hmm_out = os.path.join(basedir, f'{prefix}.nhmmer.out')

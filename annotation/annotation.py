@@ -114,6 +114,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     hmmer_frame = None
 
     cds_notfound = [x for x in cds_indexes if x not in cds_found]
+    logger.log(2, f'PCGs found in annotation : {cds_found}')
     if cds_notfound and not hmmer_search:
         logger.log(3, f'Expected PCG {cds_notfound} not found!')
     elif cds_notfound and hmmer_search:

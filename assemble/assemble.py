@@ -30,13 +30,14 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call, direct_call
     from utility import logger
+    from configurations import assemble as a_conf  # Prevent naming confliction
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 
 def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              uselist=False, kmin=21, kmax=141, kstep=12, klist=None,
-             no_mercy=False, disable_acc=False, disable_local=False,
+             disable_local=False,
              prune_level=2, prune_depth=2, keep_temp=False,
              threads=8):
 
@@ -44,13 +45,13 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
     if(uselist):
         kmin = kmax = kstep = None
-        logger.log(1, f'Using step list : {klist}')
+        logger.log(1, f'Using kmer list : {klist}')
     else:
         klist = None
         logger.log(1, f'Using step parameters : min={kmin}, max={kmax}')
 
     logger.log(
-        1, f'Using arguments : mercy={not no_mercy}, no_acc={disable_acc}, no_local={disable_local} ,p_lv = {prune_level}, p_dep = {prune_depth}')
+        1, f'Using arguments : no_local={disable_local} ,p_lv = {prune_level}, p_dep = {prune_depth}')
 
     tmp_dir = path.join(base_dir, 'temp')
     try:
@@ -63,18 +64,21 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         'k_max': kmax,
         'k_step': kstep,
         'k_list': klist,
-        'no_mercy': no_mercy,
+        'no_mercy': a_conf.no_mercy,
         'prune_level': prune_level,
         'prune_depth': prune_depth,
         'keep_tmp_files': keep_temp,
         'tmp_dir': tmp_dir,
         'out_dir': path.join(base_dir, 'result'),
         'out_prefix': work_prefix,
-        'no_hw_accel': disable_acc,
+        'no_hw_accel': a_conf.disable_acc,
         'num_cpu_threads': threads,
         'no_local': disable_local,
-        'min_count': 3
+        'min_count': a_conf.min_multi,
+        'kmin_1pass': a_conf.one_pass
     }
+
+    logger.log(0, f'Calling megahit with : {options}')
 
     # Mutable options
     if fastq1 and fastq2:

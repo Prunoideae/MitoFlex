@@ -122,7 +122,7 @@ def assemble(args):
     assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, base_dir=args.assemble_dir,
                                   work_prefix=args.workname, uselist=args.use_list, disable_local=args.disable_local,
                                   kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
-                                  no_mercy=not args.mercy_edges, disable_acc=args.disable_acc, prune_level=args.prune_level,
+                                  prune_level=args.prune_level,
                                   prune_depth=args.prune_depth, keep_temp=args.keep_temp, threads=args.threads)
 
     # Further processing for calling directly
@@ -157,8 +157,10 @@ def annotate(args):
 
     from annotation.annotation import annotate as _annotate, fix_circular
 
-    # Check assemble file, if only one sequence and itself is circular, it was circular.
-    circular = fix_circular(fa_file=args.fastafile)
+    # Check assemble file, if only one sequence and itself is circular, the genome is then circular.
+    circular = False
+    if configurations.annotation.trim_circualr:
+        circular = fix_circular(fa_file=args.fastafile)
 
     # Annotate the file
     annotate_json, fa_file, rna_file = _annotate(basedir=args.annotation_dir, prefix=args.workname,
@@ -273,6 +275,7 @@ def all(args):
         move_to_result(args.circos_png, args.circos_svg,
                        args.pos_json, args.fastafile,
                        args.annotated_cds, args.annotated_rna)
+        logger.log(2, f'Results dumped at {args.result_dir}')
 
 
 # This is for initializing the framework right before the command executed,

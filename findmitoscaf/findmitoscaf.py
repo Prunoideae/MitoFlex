@@ -92,7 +92,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     logger.log(2, 'Finding mitochondrial scaffold.')
 
     # Update the total profile before the process
-    logger.log(2, 'Updating the general protein database.')
+    logger.log(1, 'Updating the general protein database.')
     lc = 0
     with open(path.join(profile_dir_tbn, 'Animal.fa'), 'w') as fout:
         for protein_fas in os.listdir(profile_dir_tbn):
@@ -153,7 +153,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             relaxing=relaxing, threads=thread_number)
     else:
         logger.log(
-            2, 'Skipping taxanomy filtering because the disable-taxa option is on.')
+            3, 'Skipping taxanomy filtering because the disable-taxa option is on.')
 
     contig_data = [x
                    for x in SeqIO.parse(hmm_fa, 'fasta')
@@ -320,7 +320,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = None, basedir=None,
                     prefix=None, dbfile=None, gene_code=9, relaxing=0, threads=8):
 
-    logger.log(2, f'Filtering taxanomy with tblastn.')
+    logger.log(1, f'Filtering taxanomy with tblastn.')
     # Extract sequences from input fasta file according to hmm frame
 
     # Do tblastn to search out the possible taxanomy of the gene
@@ -359,5 +359,5 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     filtered_frame.to_csv(
         path.join(basedir, f'{prefix}.taxa.csv'), index=False)
     logger.log(
-        2, f'{len(filtered_frame.index)} records were selected after the taxanomy filtering.')
+        1, f'{len(filtered_frame.index)} records were selected after the taxanomy filtering.')
     return filtered_frame
