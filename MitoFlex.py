@@ -257,14 +257,19 @@ def all(args):
         args.pos_json, args.circular = annotate(args)
 
         # Visualization is of no way if not annotated.
-        # fastafile = findmitoscafed file
-        # fastq1, fastq2 = filtered fastq file
         args.circos_png, args.circos_svg = visualize(args)
 
+    # Add command check if there's something further
+    if args.__calling == 'all':
+        def move_to_result(file: str):
+            pass
+        pass
 
 # This is for initializing the framework right before the command executed,
 # but after the arguments are processed. Pre will initialize something no
 # matter what command is called. Not pretty.
+
+
 def pre(args):
 
     # Initialize the logger.

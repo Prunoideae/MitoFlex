@@ -44,7 +44,7 @@ class Infernal():
 
     class Result():
         def __init__(self, data: str):
-            lines = data.split('\n')[0:-1]
+            lines = data.split('\n')
             ids = lines[0].split()
             self.sequence = ids[0]
             paras = lines[3].split()
@@ -103,7 +103,7 @@ class Infernal():
         except Exception:
             raise IOError("Cannot read infernal file!")
 
-        alignments = ''.join(alignments).split('>> ')[1:]
+        alignments = ''.join(alignments).split('\n>> ')[1:]
         self.alignments = [Infernal.Result(
             data) for data in alignments if '[No hits detected that satisfy reporting thresholds]' not in data]
 
