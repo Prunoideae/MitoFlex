@@ -159,7 +159,7 @@ def annotate(args):
 
     # Check assemble file, if only one sequence and itself is circular, the genome is then circular.
     circular = False
-    if configurations.annotation.trim_circualr:
+    if configurations.annotation.trim_circular:
         circular = fix_circular(fa_file=args.fastafile)
 
     # Annotate the file

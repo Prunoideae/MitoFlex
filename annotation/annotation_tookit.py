@@ -124,7 +124,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
 
 # Filter out the most important sequences
-def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
+def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.2):
     blast_frame['plus'] = blast_frame.send - blast_frame.sstart > 0
     blast_frame['sstart'], blast_frame['send'] = np.where(
         blast_frame['sstart'] > blast_frame['send'],
@@ -151,8 +151,8 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, cutoff=0.5):
 
             frame = frame.drop(highest.index)
             cutoffs = np.minimum(max_len, frame.send - frame.sstart) * cutoff
-            overlays = np.minimum(frame.send - max_start,
-                                  max_end - frame.sstart)
+            overlays = np.minimum(frame.send, max_end) - \
+                np.maximum(frame.sstart, max_start)
             frame = frame[overlays <= cutoffs]
 
     return pandas.concat(results)
