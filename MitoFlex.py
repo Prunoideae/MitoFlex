@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-MitoFlex.py
+MitoFlex
 ========
 
 Copyright (c) 2019-2020 Li Junyu <2018301050@szu.edu.cn>.

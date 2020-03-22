@@ -105,7 +105,7 @@ Updating database from network is not always stable. `ncbi.py` will fall back to
 To run MitoFlex, type :
 
 ```bash
-./MitoFlex.py
+./MitoFlex
 ```
 
 Info should be printed if there's no error in your installation, otherwise you need to check the whole progress. Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
