@@ -150,9 +150,19 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None):
             max_len = int(highest.send - highest.sstart)+1
             max_start = int(highest.sstart)+1
             max_end = int(highest.send)
+            max_gene = str(highest.qseq).split('_')[3]
 
             frame = frame.drop(highest.index)
-            cutoffs = np.minimum(max_len, frame.send - frame.sstart) * cutoff
+
+            # Apply a conflict check for genes
+            # If the gene overlapping is equal to the highest, set
+            # the overlapping cutoff to 0 (No tolerance).
+            conf = ~frame.qseq.str.contains(max_gene)
+            conf = conf.map(lambda x: max_len if x else 0)
+
+            cutoffs = np.minimum(max_len, frame.send - frame.sstart)
+            cutoffs = np.minimum(cutoffs, conf) * cutoff
+            
             overlays = np.minimum(frame.send, max_end) - \
                 np.maximum(frame.sstart, max_start)
             frame = frame[overlays <= cutoffs]
