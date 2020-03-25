@@ -72,7 +72,7 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     gene_name_file = path.join(basedir, f'{prefix}.gene.txt')
     with open(gene_name_file, 'w') as gn_f:
         for key, value in poses.items():
-            start, end, gene_type, strand = value
+            start, end, gene_type, strand, _ = value
             strand_conv = index_list[strand]
             print(strand_conv, start, end, key.split(
                 '_')[0] if '_' in key else key, sep='\t', file=gn_f)
@@ -81,15 +81,18 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     gene_feature_file = path.join(basedir, f'{prefix}.features.txt')
     with open(gene_feature_file, 'w') as gf_f:
         for key, value in poses.items():
-            start, end, gene_type, strand = value
+            start, end, gene_type, strand, plus = value
+            plus = plus == '+'
+            r0 = 0.965 if plus else 1
+            r1 = 1 if plus else 1.035
             strand_conv = index_list[strand]
             print(strand_conv, start, start,
-                  'fill_color=black,r0=0.965r,r1=1r', file=gf_f, sep='\t')
+                  f'fill_color=black,r0={r0}r,r1={r1}r', file=gf_f, sep='\t')
             print(strand_conv, start, end,
-                  f'fill_color={circos_config.fill_colors[int(gene_type)]},r0=0.965r,r1=1r',
+                  f'fill_color={circos_config.fill_colors[int(gene_type)]},r0={r0},r1={r1}r',
                   file=gf_f, sep='\t')
             print(strand_conv, end, end,
-                  'fill_color=black,r0=0.965r,r1=1r', file=gf_f, sep='\t')
+                  f'fill_color=black,r0={r0},r1={r1}r', file=gf_f, sep='\t')
 
     logger.log(1, 'Generating depth files.')
     # Using check_output directly because being too lazy to remove decoder

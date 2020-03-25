@@ -157,12 +157,15 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None):
             # Apply a conflict check for genes
             # If the gene overlapping is equal to the highest, set
             # the overlapping cutoff to 0 (No tolerance).
+            # The check is used for situations where multiple queries
+            # overlapped, but they all have a same PCG, which is
+            # hard to detect the border of the single gene.
             conf = ~frame.qseq.str.contains(max_gene)
             conf = conf.map(lambda x: max_len if x else 0)
 
             cutoffs = np.minimum(max_len, frame.send - frame.sstart)
             cutoffs = np.minimum(cutoffs, conf) * cutoff
-            
+
             overlays = np.minimum(frame.send, max_end) - \
                 np.maximum(frame.sstart, max_start)
             frame = frame[overlays <= cutoffs]

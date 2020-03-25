@@ -168,18 +168,20 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         start, end = (min(int(row.wise_min_start), int(row.wise_max_end)),
                       max(int(row.wise_min_start), int(row.wise_max_end)))
         frag = sequence_data[str(row.sseq)][start-1:end]
-        frag.description = f'gene={cds} start={start} end={end} from={row.sseq}'
+        frag.description = f'gene={cds} start={start} end={end} from={row.sseq} strand={"+" if row.plus else "-"}'
         annotated_frag.append(frag)
-        annotation_json[cds] = (start, end, 0, str(row.sseq))
+        annotation_json[cds] = (start, end, 0, str(
+            row.sseq), "+" if row.plus else "-")
 
     if hmmer_frame is not None:
         for _, row in hmmer_frame.iterrows():
             start, end = (min(int(row.envfrom), int(row.envto)),
                           max(int(row.envfrom), int(row.envto)))
             frag = sequence_data[str(row.target)][start-1:end]
-            frag.description = f'gene={str(row.query)} start={start} end={end}'
+            frag.description = f'gene={str(row.query)} start={start} end={end} from={row.target} strand={row.strand}'
             annotated_frag.append(frag)
-            annotation_json[str(row.query)] = (start, end, 0, str(row.target))
+            annotation_json[str(row.query)] = (
+                start, end, 0, str(row.target), str(row.strand))
 
     SeqIO.write(annotated_frag, annotated_fa, 'fasta')
 
