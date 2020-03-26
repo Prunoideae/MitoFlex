@@ -27,12 +27,13 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.bio import circos
+    from configurations import visualize as v_conf
 except Exception as identifier:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 # The color that will be used in marked genes.
 # 0 for protein, 1 for tRNAs, 2 for rRNAs
-fill_colors = ['141,211,199', '251,128,114', '253,192,134']
+fill_colors = [v_conf.color_cds, v_conf.color_trna, v_conf.color_rrna]
 
 # The main configuration entry of circos config file, can be
 # adjusted as will, but some part of the graph needs you to modify

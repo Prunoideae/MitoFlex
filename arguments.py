@@ -183,7 +183,7 @@ fasta_parser, fasta_group = register_group('Fasta arugments', [
     {
         'name': 'fastafile',
         'meta': 'file',
-        'help': 'fasta file'
+        'help': 'fasta file, automatically assembled in all method'
     }
 ], func=fasta_regulator)
 
@@ -239,12 +239,12 @@ filter_parser, filter_group = register_group('Filter arguments', [
     {
         'name': 'cleanq1',
         'meta': 'file',
-        'help': 'cleandata output file 1'
+        'help': 'cleandata output file 1, automatically set in all method'
     },
     {
         'name': 'cleanq2',
         'meta': 'file',
-        'help': 'cleandata output file 2'
+        'help': 'cleandata output file 2, automatically set in all method'
     },
     {
         'name': 'deduplication',

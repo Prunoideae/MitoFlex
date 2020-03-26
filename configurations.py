@@ -85,6 +85,11 @@ annotation.trim_circular = True
 
 # The ratio of two 'valid' overlapping gene
 # MitoFlex will remove overlapped tblastn results if the overlapped region is
-# longer than the ratio*min(seq1, seq2). Increasing this may have more tolerate result,
-# though with lower accuracy and vise versa.
+# longer than the ratio*min(seq1, seq2). Increasing this will have more results
+# with lower accuracy, and vise versa.
 annotation.overlap_ratio = 0.2
+
+# The fill color of genes in visualize method
+visualize.color_cds = '141,211,199'
+visualize.color_trna = '251,128,114'
+visualize.color_rrna = '253,192,134'
