@@ -87,7 +87,10 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
     washed_frame = tk.wash_blast_results(blast_frame)
+    # Add an extra washing here, since Pandas will have some
+    # strange behaviour processing data this large...
     washed_frame = tk.wash_blast_results(washed_frame)
+
     wise_frame, _, _ = tk.genewise(
         basedir=basedir, prefix=prefix, wises=washed_frame,
         infile=fastafile, dbfile=tbn_profile, cutoff=0.5)
