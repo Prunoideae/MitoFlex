@@ -39,7 +39,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              uselist=False, kmin=21, kmax=141, kstep=12, klist=None,
              disable_local=False,
              prune_level=2, prune_depth=2, keep_temp=False,
-             threads=8):
+             threads=8, addtional_kmers=[]):
 
     logger.log(2, 'Start assembling mitochondrial sequences.')
 
@@ -102,6 +102,9 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         logger.log(
             1, f'Output contigs file size : {path.getsize(contigs_file)}')
         logger.log(1, f'Contig number : {len(contigs)}')
+
+    if addtional_kmers:
+        pass
 
     if not keep_temp:
         logger.log(1, f'Cleaning intermidiate contig files.')

@@ -324,6 +324,16 @@ def assembly_regulator(args):
         print('Prune depth lower than 0.')
         valid = False
 
+    try:
+        args.additional_finals = [
+            int(x)
+            for x in args.additional_finals.split(',')
+            if x
+        ]
+    except Exception:
+        print('Error parsing final kmers.')
+        valid = False
+
     return valid
 
 
@@ -368,6 +378,11 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'name': 'prune-depth',
         'default': 2,
         'help': 'remove unitigs with avg kmer depth less than this value.'
+    },
+    {
+        'name': 'additional_finals',
+        'default': '',
+        'help': 'input a list of kmers seperated by comma, to specify what kmer results will be added in the end.'
     }
 ], func=assembly_regulator)
 
