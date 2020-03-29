@@ -24,25 +24,21 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 from os import path
-import subprocess
-import multiprocessing
 import json
 import warnings
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, direct_call, concat_command
+    from utility.helper import concat_command
     from annotation import annotation_tookit as tk  # pylint: disable=import-error, no-name-in-module
     from Bio import SeqIO
     from Bio import BiopythonWarning
     from utility import logger
-    from utility.bio import infernal
-    from utility.bio import wuss
     from utility.bio import seq
     from misc.check_circular import check_circular
     import configurations
-except Exception as identifier:
+except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 mitoflex_dir = path.abspath(path.join(path.dirname(__file__), '..'))
@@ -245,7 +241,6 @@ def fix_circular(fa_file: str):
                     circular = True
                     logger.log(
                         2, f'An overlapped region was found starting at {result[0][0]} with length {result[0][1]}. Trimming it.')
-                    des = genome[0].description
                     end = genome[0].seq.rfind(result[1])
                     genome[0] = genome[0][result[0][0]:end]
                     with open(fa_file, 'w') as f:

@@ -23,7 +23,6 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import subprocess
 import sys
-import os
 
 # cmd runner
 

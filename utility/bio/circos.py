@@ -26,7 +26,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
      a object to a runnable Circos configuration file.
 
     It's really hacky, but also convinient, the main purpose
-    to write this is to make a bridge between python and 
+    to write this is to make a bridge between python and
     circos, so it may not be very beautiful.
 
     Equvilant python <=> configuration:
@@ -39,7 +39,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
     img = circos.image # Set a reference here to simplify the code.
     img.png = "yes"
     img.svg = "yes"
- 
+
     circos.show_ticks = "yes"
 
     Configuration outputted:

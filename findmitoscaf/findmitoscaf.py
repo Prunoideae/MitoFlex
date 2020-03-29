@@ -24,10 +24,8 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 import json
-import operator
 
 import pandas
-import numpy as np
 from Bio import SeqIO
 from ete3 import NCBITaxa
 from os import path
@@ -36,8 +34,7 @@ from os import path
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, direct_call, maxs
-    from utility.bio.seq import compile_seq, decompile
+    from utility.bio.seq import decompile
     from annotation import annotation_tookit as tk
     from utility import logger
 except Exception:
@@ -229,20 +226,20 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         mapping = candidate[1]
         completed = [x for x in mapping if mapping[x][3]]
 
-        if any([selected_candidates[c] != None for c in completed]):
+        if any([selected_candidates[c] is not None for c in completed]):
             continue
         for c in completed:
             selected_candidates[c] = index
 
     # For fragments, select non-conflict sequence as much as possible
     conflicts = []
-    for empty_pcg in [x for x in selected_candidates if selected_candidates[x] == None]:
+    for empty_pcg in [x for x in selected_candidates if selected_candidates[x] is None]:
         for index, mapping in candidates.items():
             # No pcg in this sequence, next sequence
             if empty_pcg not in mapping:
                 continue
 
-            if selected_candidates[empty_pcg] == None:
+            if selected_candidates[empty_pcg] is None:
                 selected_candidates[empty_pcg] = []
             # Collect all the sequences
             selected_candidates[empty_pcg].append(

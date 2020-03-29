@@ -25,8 +25,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 from os import path
-from os.path import getmtime
-from datetime import datetime
+
 
 import sys
 if sys.version_info[0] < 3:
@@ -56,7 +55,7 @@ try:
     ncbi.update_taxonomy_database()
     if os.path.isfile(dump_file_old):
         os.remove(dump_file_old)
-except Exception as idd:
+except Exception:
     print("Errors occured when fetching data from NCBI database, falling back to the last fetched database.")
     if path.isfile(dump_file):
         ncbi = NCBITaxa(taxdump_file=os.path.abspath(dump_file_old))

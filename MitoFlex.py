@@ -23,23 +23,15 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from glob import glob
-import time
-import subprocess
-import re
 from os import path
 import os
 import sys
-import argparse
 import traceback
 
 if sys.version_info[0] < 3:
     sys.exit('Python 3 must be installed in current environment! Please check if any of your environment setup(like conda environment) is deactivated or wrong!')
 
 try:
-    import Bio
-    from Bio import SeqIO
-    from Bio import SeqRecord
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility import logger
     from arguments import *  # pylint: disable=unused-wildcard-import
@@ -60,7 +52,7 @@ VERSION = '0.1.0'
 desc = f"""
 Description
 
-    MitoFlex - A rewritten toolkit of its ancestor MitoZ for faster and better 
+    MitoFlex - A rewritten toolkit of its ancestor MitoZ for faster and better
     mitochondrial assembly, annotation and visualization with high expandability.
 
 Version
@@ -68,7 +60,7 @@ Version
 
 Citation
     MitoFlex - a mitogenome toolkit inspired from MitoZ for imporving result quality and performance
-    
+
 """
 
 @parse_func(func_help='filter out unqualified reads from fastq',

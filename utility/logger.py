@@ -28,7 +28,6 @@ is quite annoying.
 '''
 
 
-import os
 import inspect
 import datetime
 import sys

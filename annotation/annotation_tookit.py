@@ -27,15 +27,12 @@ import sys
 import subprocess
 import multiprocessing
 from itertools import tee, chain
-import warnings
-from Bio import BiopythonWarning
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import concat_command, direct_call, shell_call
     from utility import logger
-    from utility.bio.seq import compile_seq, decompile
     from utility.bio import wuss, infernal
     import pandas
     import numpy as np
@@ -43,7 +40,7 @@ try:
     from Bio.Seq import Seq
     from Bio.Data import CodonTable
     import configurations
-except Exception as iden:
+except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 
@@ -190,7 +187,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         os.makedirs(wisedir, exist_ok=True)
         os.makedirs(dbdir, exist_ok=True)
         os.makedirs(query_dir, exist_ok=True)
-    except:
+    except Exception:
         logger.log(4, 'Cannot validate folders for genewise, exiting.')
         sys.exit(-1)
 
@@ -275,7 +272,7 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
 
         try:
             trans = seq.translate(9, cds=True)
-        except:
+        except Exception:
             trans = seq.translate(9)
         # Finding stop
         if trans.seq.find('*') != -1:

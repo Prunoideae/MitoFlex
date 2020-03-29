@@ -26,12 +26,11 @@ import os
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import concat_command
     from utility.parser import parse_func, parse_then_call, freeze_main, arg_prop
-except Exception as identifier:
+except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
-from Bio import Seq, SeqIO, SeqRecord
+from Bio import SeqIO
 import subprocess
 
 
@@ -127,11 +126,11 @@ desc = '''
 check_circular.py
 
 Description
-    This is a script written to check if a input of sequences could 
+    This is a script written to check if a input of sequences could
     be a circle or just linear.
-    Input fasta file, print found sequences, or you can set output to 
+    Input fasta file, print found sequences, or you can set output to
     json or something else.
-    This uses an algorithm of O(n^2) time complexity, and should be 
+    This uses an algorithm of O(n^2) time complexity, and should be
     fast enough with any inputs with search regions from 300 to 3k bps.
 '''
 

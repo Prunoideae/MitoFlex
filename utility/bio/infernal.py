@@ -27,9 +27,9 @@ import sys
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    #import wuss
+    # import wuss
     from utility.bio import wuss
-except Exception as iden:
+except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 

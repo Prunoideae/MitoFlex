@@ -28,10 +28,10 @@ from os import path
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, direct_call
+    from utility.helper import shell_call
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
-except Exception as identifier:
+except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 
@@ -56,7 +56,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
     tmp_dir = path.join(base_dir, 'temp')
     try:
         os.makedirs(tmp_dir, exist_ok=True)
-    except:
+    except Exception:
         tmp_dir = None
 
     options = {

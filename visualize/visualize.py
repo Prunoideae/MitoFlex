@@ -24,18 +24,17 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import sys
-import shutil
 from os import path
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, direct_call
+    from utility.helper import shell_call
     from Bio import SeqIO
     from utility.bio import circos
     from visualize import circos_config
     from utility import logger
-except Exception as identifier:
+except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 
