@@ -193,7 +193,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         frag.description = f'gene=trn{key} start={start} end={end}'
         annotated_frag.append(frag)
         annotation_json[f'trn{key}'] = (
-            start, end, 1, value.sequence)
+            start, end, 1, value.sequence, '+' if value.plus else '-')
 
     if result_12:
         start, end = (min(result_12.seqfrom, result_12.seqto),
@@ -204,7 +204,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         frag.description = f'gene=rrnS start={start} end={end}'
         annotated_frag.append(frag)
         annotation_json['rrnS'] = (
-            start, end, 2, result_12.sequence)
+            start, end, 2, result_12.sequence, '+' if result_12.plus else '-')
 
     if result_16:
         start, end = (min(result_16.seqfrom, result_16.seqto),
@@ -215,7 +215,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         frag.description = f'gene=rrnL start={start} end={end}'
         annotated_frag.append(frag)
         annotation_json['rrnL'] = (
-            start, end, 2, result_16.sequence)
+            start, end, 2, result_16.sequence, '+' if result_16.plus else '-')
 
     SeqIO.write(annotated_frag, annotated_rnas, 'fasta')
     with open(locs_file, 'w') as f:
