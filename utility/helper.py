@@ -78,8 +78,7 @@ def direct_call(command):
         return subprocess.check_output(command, shell=True).decode('utf-8')
     except subprocess.CalledProcessError as err:
         print(err)
-        sys.exit(f"Error when running command '{command}'. Exiting.")
-        pass
+        raise RuntimeError(f"Error when running command '{command}'. Exiting.")
 
 
 # playing with items

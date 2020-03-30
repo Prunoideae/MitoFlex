@@ -288,11 +288,10 @@ def load_modules(args):
     finally:
         logger.log(2, 'All modules are loaded correctly.')
 
+
 # This is for initializing the framework right before the command executed,
 # but after the arguments are processed. Pre will initialize something no
 # matter what command is called. Not pretty.
-
-
 def pre(args):
 
     # Initialize the logger.
@@ -337,14 +336,14 @@ def pre(args):
                 logger.log(
                     4, f"Error type : {exception_type.__name__}, value : {value}")
                 logger.log(
-                    4, f"The traceback should be saved along with the log file, please also send it to give a more detailed message. ")
+                    4, f"Traceback :")
+                logger.__log(traceback.format_tb())
                 with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
                     traceback.print_tb(tb, file=f)
             else:
                 logger.log(2, "This run was terminated manually.")
             logger.finalize()
             sys.__excepthook__(exception_type, value, tb)
-        pass
 
     sys.excepthook = runtime_error_logger
 

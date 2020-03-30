@@ -448,4 +448,3 @@ def process_arguments(command, args):
                     expression=None, message='Errors occured while parsing arguments')
     else:
         raise KeyError('Command not found in collected profiles.')
-    pass
