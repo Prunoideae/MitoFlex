@@ -270,9 +270,29 @@ def all(args):
         logger.log(2, f'Results dumped at {args.result_dir}')
 
 
+@parse_func(func_help='load all modules provided by MitoFlex, use to test if some modules are not installed correctly.')
+def load_modules(args):
+    try:
+        logger.log(2, 'Loading filter module.')
+        from filter.filter import filter_pe, filter_se
+        logger.log(2, 'Loading assemble module.')
+        from assemble.assemble import assemble
+        logger.log(2, 'Loading findmitoscaf module.')
+        from findmitoscaf.findmitoscaf import findmitoscaf
+        logger.log(2, 'Loading annotation module.')
+        from annotation.annotation import annotate
+        logger.log(2, 'Loading visualize module.')
+        from visualize.visualize import visualize
+    except Exception:
+        logger.log(4, 'Cannot load module!')
+    finally:
+        logger.log(2, 'All modules are loaded correctly.')
+
 # This is for initializing the framework right before the command executed,
 # but after the arguments are processed. Pre will initialize something no
 # matter what command is called. Not pretty.
+
+
 def pre(args):
 
     # Initialize the logger.
@@ -280,7 +300,8 @@ def pre(args):
         logger.init(path.join(args.work_dir, f'{args.workname}.log'))
     else:
         logger.init(path.join(os.getcwd(), 'summary.log'))
-    logger.set_level(args.level)
+    if hasattr(args, 'level'):
+        logger.set_level(args.level)
     logger.log(
         2, f'MitoFlex {VERSION}, run {args.workname if hasattr(args, "workname") else "1"}')
 
@@ -334,7 +355,7 @@ def post(args):
 
     if args is None:
         return
-    if not args.keep_temp and args.__calling != 'filter' and hasattr(args, 'cleanq1'):
+    if hasattr(args, 'keep_temp') and not args.keep_temp and args.__calling != 'filter' and hasattr(args, 'cleanq1'):
         # Not removing until here since cleanq1 and cleanq2 have many other usage other than assembling
         logger.log(1, 'Removing filtered data files.')
         os.remove(args.cleanq1)
