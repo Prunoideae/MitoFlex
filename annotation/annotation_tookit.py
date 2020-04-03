@@ -220,7 +220,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                            appending=[
                                path.join(dbdir, f'{wise.qseq}.fa'), query_file]
                            ).replace("--", '-'), env=env_var, shell=True).decode('utf-8')
-        with open('gw.txt','a') as fgw:
+        with open(path.join(basedir, 'genewise.txt'), 'a') as fgw:
             print(result, file=fgw)
         # Parse the results
         splited = result.split('//\n')
