@@ -38,8 +38,8 @@ try:
     from utility.bio import seq
     from misc.check_circular import check_circular
     import configurations
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except Exception as identifier:
+    sys.exit(f"Unable to import helper module {identifier.name}, is the installation of MitoFlex valid?")
 
 mitoflex_dir = path.abspath(path.join(path.dirname(__file__), '..'))
 profile_dir = path.join(mitoflex_dir, 'profile')
@@ -83,22 +83,20 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
     washed_frame = tk.wash_blast_results(blast_frame)
-    # Add an extra washing here, since Pandas will have some
-    # strange behaviour processing data this large...
-    washed_frame = tk.wash_blast_results(washed_frame)
 
     wise_frame, _, _ = tk.genewise(
         basedir=basedir, prefix=prefix, wises=washed_frame,
         infile=fastafile, dbfile=tbn_profile, cutoff=0.5)
 
-    # Output wise frame
-    wise_csv = path.join(basedir, f'{prefix}.genewise.result.csv')
-    wise_frame.to_csv(wise_csv)
+    # Add an extra washing here, since Pandas will have some
+    # strange behaviour processing data this large...
+    wise_frame = tk.wash_blast_results(wise_frame)
+
     if configurations.annotation.reloc_genes:
         logger.log(2, 'Relocating genes.')
         wise_frame = tk.reloc_genes(fasta_file=fastafile,
                                     wises=wise_frame, code=genetic_code)
-    logger.log(2, f'Genewise results generated at {wise_csv}.')
+    logger.log(2, f'Genewise results generated at annotation temp folder.')
     logger.log(2, f'For taxanomy data, please open this file to have a view.')
 
     cds_indexes = {}

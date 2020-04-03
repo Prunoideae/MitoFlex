@@ -63,6 +63,7 @@ def is_init():
 def __log(info: str):
     print(info, file=__logger)
     if __logger:
+        print(info)
         __logger.flush()
 
 

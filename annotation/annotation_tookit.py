@@ -188,8 +188,8 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         os.makedirs(dbdir, exist_ok=True)
         os.makedirs(query_dir, exist_ok=True)
     except Exception:
-        logger.log(4, 'Cannot validate folders for genewise, exiting.')
-        sys.exit(-1)
+        raise RumtimeException(4, 'Cannot validate folders for genewise, exiting.')
+        
 
     queries = {record.id: record
                for record in SeqIO.parse(infile, 'fasta')
@@ -220,7 +220,8 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                            appending=[
                                path.join(dbdir, f'{wise.qseq}.fa'), query_file]
                            ).replace("--", '-'), env=env_var, shell=True).decode('utf-8')
-
+        with open('gw.txt','a') as fgw:
+            print(result, file=fgw)
         # Parse the results
         splited = result.split('//\n')
         info = splited[0].split('\n')[1].split()
