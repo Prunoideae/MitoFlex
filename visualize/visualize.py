@@ -88,7 +88,7 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
             print(strand_conv, start, start,
                   f'fill_color=black,r0={r0}r,r1={r1}r', file=gf_f, sep='\t')
             print(strand_conv, start, end,
-                  f'fill_color={circos_config.fill_colors[int(gene_type)]},r0={r0},r1={r1}r',
+                  f'fill_color={circos_config.fill_colors[int(gene_type)]},r0={r0}r,r1={r1}r',
                   file=gf_f, sep='\t')
             print(strand_conv, end, end,
                   f'fill_color=black,r0={r0},r1={r1}r', file=gf_f, sep='\t')
