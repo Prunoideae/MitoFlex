@@ -41,7 +41,7 @@ For certain conditions, like if you don't have a sudo permission or root command
 To download MitoFlex from Github, simply type:
 
 ``` bash
-git clone https://github.com/Prunoideae/MitoFlex
+git clone --depth=1 https://github.com/Prunoideae/MitoFlex
 ```
 
 And git will pull the MitoFlex into your current directory, downloading zip file and extract it to installation folder is also ok.
