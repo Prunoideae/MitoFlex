@@ -91,7 +91,7 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
                   f'fill_color={circos_config.fill_colors[int(gene_type)]},r0={r0}r,r1={r1}r',
                   file=gf_f, sep='\t')
             print(strand_conv, end, end,
-                  f'fill_color=black,r0={r0},r1={r1}r', file=gf_f, sep='\t')
+                  f'fill_color=black,r0={r0}r,r1={r1}r', file=gf_f, sep='\t')
 
     logger.log(1, 'Generating depth files.')
     # Using check_output directly because being too lazy to remove decoder
