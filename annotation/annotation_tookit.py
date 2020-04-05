@@ -188,8 +188,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         os.makedirs(dbdir, exist_ok=True)
         os.makedirs(query_dir, exist_ok=True)
     except Exception:
-        raise RumtimeException(4, 'Cannot validate folders for genewise, exiting.')
-        
+        raise RuntimeError(4, 'Cannot validate folders for genewise, exiting.')
 
     queries = {record.id: record
                for record in SeqIO.parse(infile, 'fasta')

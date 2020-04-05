@@ -82,8 +82,9 @@ def get_file():
 
 def log(level: int = 2, info: str = None):
     if not __initialized:
-        raise RuntimeWarning(
+        print(
             "A logging function was called when the logger is not initialized!")
+        return
 
     if level < __level_valve:
         return

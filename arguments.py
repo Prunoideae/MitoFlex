@@ -43,7 +43,7 @@ profile_dir_hmm = os.path.join(os.path.dirname(__file__), 'profile', 'CDS_HMM')
 def safe_makedirs(path, exist_ok=False):
     if os.path.isdir(path) and not exist_ok:
         raise FileExistsError()
-    os.makedirs(path, exist_ok=exist_ok)
+    os.makedirs(path, exist_ok=True)
 
 
 # Universal group
