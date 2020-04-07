@@ -38,8 +38,9 @@ try:
     from utility.bio import seq
     from misc.check_circular import check_circular
     import configurations
-except Exception as identifier:
-    sys.exit(f"Unable to import helper module {identifier.name}, is the installation of MitoFlex valid?")
+except ImportError as identifier:
+    sys.exit(
+        f"Unable to import helper module {identifier.name}, is the installation of MitoFlex valid?")
 
 mitoflex_dir = path.abspath(path.join(path.dirname(__file__), '..'))
 profile_dir = path.join(mitoflex_dir, 'profile')

@@ -91,6 +91,7 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
     with open(out_blast, 'w') as f:
         f.write(''.join(results))
 
+    shell_call('rm -r', protein_data_dir)
     os.remove(f'{infile}.nhr')
     os.remove(f'{infile}.nin')
     os.remove(f'{infile}.nsq')
@@ -115,6 +116,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
                               >= blast_frame.qmax*0.25]
 
     # For logging purpose
+    os.remove(blast_file)
     out_blast_csv = f'{blast_file}.csv'
     blast_frame.to_csv(out_blast_csv, index=False)
 

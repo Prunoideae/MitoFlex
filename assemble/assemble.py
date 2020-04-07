@@ -34,6 +34,8 @@ try:
 except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
+bin_dir = path.dirname(__file__)
+
 
 def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              uselist=False, kmin=21, kmax=141, kstep=12, klist=None,
@@ -128,4 +130,6 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 # The effect of scaffolding using SOAPdenovo-fusion is still
 # under investigation.
 def scaffolding(fastq1=None, fastq2=None):
+    soap_fusion = path.join(bin_dir, 'SOAPdenovo-fusion')
+    soap_127 = path.join(bin_dir, 'SOAPdenovo-127mer')
     pass
