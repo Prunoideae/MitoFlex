@@ -325,9 +325,9 @@ def assembly_regulator(args):
         valid = False
 
     try:
-        args.additional_finals = [
+        args.additional_kmers = [
             int(x)
-            for x in args.additional_finals.split(',')
+            for x in args.additional_kmers.split(',')
             if x
         ]
     except Exception:
@@ -380,7 +380,7 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'help': 'remove unitigs with avg kmer depth less than this value.'
     },
     {
-        'name': 'additional_finals',
+        'name': 'additional-kmers',
         'default': '',
         'help': 'input a list of kmers seperated by comma, to specify what kmer results will be added in the end.'
     }

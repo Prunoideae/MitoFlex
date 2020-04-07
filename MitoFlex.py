@@ -114,7 +114,7 @@ def assemble(args):
     assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, base_dir=args.assemble_dir,
                                   work_prefix=args.workname, uselist=args.use_list, disable_local=args.disable_local,
                                   kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
-                                  prune_level=args.prune_level,
+                                  prune_level=args.prune_level, addtional_kmers=args.additional_kmers,
                                   prune_depth=args.prune_depth, keep_temp=args.keep_temp, threads=args.threads)
 
     # Further processing for calling directly
@@ -225,6 +225,7 @@ def visualize(args):
             parents=[universal_parser, assembly_parser, filter_parser, fastq_parser,
                      search_parser, saa_parser, annotation_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on', default=False)
+@arg_prop(dest='disable_visualization', help='visualization will be not enabled if this switched on', default=False)
 def all(args):
     # TODO : Run a full-size all method.
     # Go filtering
@@ -252,7 +253,9 @@ def all(args):
             args)
 
         # Visualization is of no way if not annotated.
-        args.circos_png, args.circos_svg = visualize(args)
+
+        args.circos_png, args.circos_svg = visualize(
+            args) if not args.disable_visualization else (None, None)
 
     # Add command check if there's something further
     # If you warpped the 'all' module in other task or workflow
@@ -261,8 +264,9 @@ def all(args):
     if args.__calling == 'all':
         def move_to_result(*files):
             for file in files:
-                os.rename(file, path.join(
-                    args.result_dir, path.basename(file)))
+                if path.isfile(str(file)):
+                    os.rename(file, path.join(
+                        args.result_dir, path.basename(file)))
         # Iteratively collects all the results generated in the whole process
         move_to_result(args.circos_png, args.circos_svg,
                        args.pos_json, args.fastafile,
@@ -337,7 +341,7 @@ def pre(args):
                     4, f"Error type : {exception_type.__name__}, value : {value}")
                 logger.log(
                     4, f"Traceback :")
-                logger.__log(traceback.format_tb())
+                logger.__log(traceback.format_tb(tb=tb))
                 with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
                     traceback.print_tb(tb, file=f)
             else:

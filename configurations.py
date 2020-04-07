@@ -51,7 +51,7 @@ filter_rawdata.compress_output_in_all = False
 # Setting the min multiplicity of k-mer input.
 # Low value works well if the input reads are of low depth and coverage,
 # but obviously mitogenome shouldn't.
-assemble.min_multi = 3
+assemble.min_multi = 3.0
 
 # Do not allow mercy edges?
 # Disable this will allow mercy edges in graph. Works well if input reads

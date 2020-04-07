@@ -103,16 +103,28 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
             1, f'Output contigs file size : {path.getsize(contigs_file)}')
         logger.log(1, f'Contig number : {len(contigs)}')
 
+    inter_dir = path.join(base_dir, "result", "intermediate_contigs")
+
     if addtional_kmers:
-        pass
+        logger.log(
+            1, f"Merging intermediate contigs {addtional_kmers} with finals.")
+
+        shell_call(
+            "cat",
+            *[path.join(inter_dir, f'k{x}.contigs.fa')
+              for x in addtional_kmers],
+            '>>',
+            contigs_file
+        )
 
     if not keep_temp:
         logger.log(1, f'Cleaning intermidiate contig files.')
+        shell_call("rm -r", inter_dir)
 
     return contigs_file
 
 
-# This is currently NOT a working module.
+# This is currently NOT a working function.
 # The effect of scaffolding using SOAPdenovo-fusion is still
 # under investigation.
 def scaffolding(fastq1=None, fastq2=None):
