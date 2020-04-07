@@ -358,3 +358,11 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     logger.log(
         1, f'{len(filtered_frame.index)} records were selected after the taxanomy filtering.')
     return filtered_frame
+
+
+# Accepts a bunch of external sequences, and treat hit sequences as a valid mitogenome candidate.
+# You must be sure that the sequences you provided is firmly oringinated from mitogenome, otherwise
+# it could make the result worse.
+def filter_external(fasta_file=None, external_fasta=None):
+    
+    pass

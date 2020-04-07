@@ -86,8 +86,8 @@ universal_parser, universal_group = register_group('Universal arguments', [
     },
     {
         'name': 'threads',
-        'default': 8,
-        'help': 'thread numbers.'
+        'default': os.cpu_count(),
+        'help': 'thread numbers, default set to the logical cores count.'
     },
     {
         'name': 'keep-temp',
@@ -101,8 +101,8 @@ universal_parser, universal_group = register_group('Universal arguments', [
     },
     {
         'name': 'level',
-        'default': 2,
-        'choices': [0, 1, 2, 3, 4],
+        'default': 'info',
+        'choices': ['code', 'debug', 'info', 'warn', 'error'],
         'help': 'how verbose will MitoFlex output logs, the lower the log outputs more, level 0 is mainly for code debugging and reporting.'
     }], func=universal_regulator
 )
@@ -138,6 +138,8 @@ def fastq_regulator(args):
         if min_kmer >= args.fastq_read_length:
             valid = False
             print("Specified fastq read length lower than the mininum kmer.")
+
+    args.level = ['code', 'debug', 'info', 'warn', 'error'].index(args.level)
 
     if args.level == 0:
         print("Using logger level 0, this could lead to a very verbose logging.")
