@@ -124,6 +124,14 @@ echo 'export $PATH="/path/to/installation/directory:$PATH"' >> '/path/to/rc'
 
 Where rc stands for the .*rc file used by your terminal to load a certain set of commands at logging. Like `.bashrc` or `.zshrc`.
 
+For a more detailed explanation of MitoFlex's arguments, please check out the program's help :
+
+```bash
+MitoFlex.py [module] <-h or --help>
+```
+
+This helps you better understand how MitoFlex will work, and so you can tune MitoFlex to meet your need in mitogenome assembly.
+
 # 3. Data requirement
 
 MitoFlex depends on the quality more than the size of data, it will not throw any error if your input fastq file is too small or something, but the result may be of low quality if the raw dataset is small or unqualified.
