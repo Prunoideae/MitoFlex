@@ -227,7 +227,7 @@ def visualize(args):
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on', default=False)
 @arg_prop(dest='disable_visualization', help='visualization will be not enabled if this switched on', default=False)
 def all(args):
-    # TODO : Run a full-size all method.
+
     # Go filtering
     #
     # Why I'm NOT using .gz ext here even I have implemented this:
