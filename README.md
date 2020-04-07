@@ -108,7 +108,15 @@ To run and test if MitoFlex is installed correctly, type :
 ./MitoFlex.py load_modules
 ```
 
-Info should be printed if there's no error in your installation, otherwise you need to check the whole progress. Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
+If all modules are appeared to be correctly loaded, it indicates that you have all the required python modules installed, to have a test run on MitoFlex, please extract the `test.1.fq` and the `test.2.fq` to somewhere from the `test.tar.gz`, and run :
+
+```bash
+/install/folder/to/MitoFlex.py all workname test --use-list --fastq1 /path/to/fastq1 --fastq2 /path/to/fastq2
+```
+
+The test sample is done in 3min on my computer (Intel i7-9700KF, WSL2 Ubuntu) with 8 threads. 1-2 GB of spare RAM is required to run MitoFlex.
+
+Result the same as the result in `test.tar.gz` if there's no error in your installation, otherwise you need to check the whole progress. Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
 
 ```bash
 echo 'export $PATH="/path/to/installation/directory:$PATH"' >> '/path/to/rc'
