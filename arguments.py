@@ -372,13 +372,13 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     },
     {
         'name': 'prune-level',
-        'default': 2,
+        'default': 3,
         'choices': list(range(0, 4)),
         'help': 'strength of low depth pruning.'
     },
     {
         'name': 'prune-depth',
-        'default': 2,
+        'default': 3,
         'help': 'remove unitigs with avg kmer depth less than this value.'
     },
     {
