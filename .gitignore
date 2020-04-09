@@ -5,4 +5,5 @@ filter/__pycache__/
 taxdump.tar.gz
 findmitoscaf/brutepacking/target/
 filter/filter_bin/target/
+assemble/fastfilter/target/
 profile/MT_database/Animal.fa
