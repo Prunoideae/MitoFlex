@@ -102,17 +102,25 @@ Updating database from network is not always stable. `ncbi.py` will fall back to
 
 ### 2.2.6 Run MitoFlex
 
-To run and test if MitoFlex is installed correctly, type :
+To test if MitoFlex is installed correctly, type :
 
 ```bash
 ./MitoFlex.py load_modules
 ```
 
-If all modules are appeared to be correctly loaded, it indicates that you have all the required python modules installed, to have a test run on MitoFlex, please extract the `test.1.fq` and the `test.2.fq` to somewhere from the `test.tar.gz`, and run :
+If all modules are appeared to be correctly loaded, it indicates that you have all the required python modules installed, to have a test run on MitoFlex, please extract the files to somewhere from the `test.tar.gz`, and run :
 
 ```bash
-/install/folder/to/MitoFlex.py all workname test --use-list --fastq1 /path/to/fastq1 --fastq2 /path/to/fastq2
+/path/to/MitoFlex.py all workname test --use-list --fastq1 /path/to/fastq1 --fastq2 /path/to/fastq2
 ```
+
+or you can use the `test_config.py` config file in the directory to test if the things are running correctly, just run:
+
+```bash
+/path/to/MitoFlex.py --config /path/to/config
+```
+
+this config assumes that the sample fastq is under the same directory as config does.
 
 The test sample is done in 3min on my computer (Intel i7-9700KF, WSL2 Ubuntu) with 8 threads. 1-2 GB of spare RAM is required to run MitoFlex.
 
@@ -336,7 +344,7 @@ def foo(args):
     print(args.switch)
 
     # For further consideration, attributes are modifiable in the object, and
-    # this will not change outside the scope because it's actually accessing
+    # this will not be dropped outside the scope because it's actually accessing
     # the class data. This could be powerful, but it needs you to take it
     # carefully.
     def bar(args):
@@ -406,4 +414,4 @@ I'm very glad to see that my code is used in other fields, even in non-bioinform
 
 The argument [parser](utility/parser.py) of this software is quite useful, but sadly I strongly not recommend you to use it directly in the program, since it was a temporarily made argparse wrapper just in three days, much code here is neither clean, nor easy to use, though already suitable for MitoFlex's current need and hard to rewrite one in short time. If you want to implement a workflow into a similar framework without having too much coding(like directly facing the argparse module), better integration of other caller besides bash or command prompt, for example a `Jupyter` web notebook or a `Django` or `Flask` server, and more flexible, modularized, clean code and code structure, please refer to the `Workflow Descriptor for Python (WDP)`, a [repo](https://github.com/Prunoideae/WDP) pinned on my GitHub page.
 
-For the analyzer of Washington University Secondary Structure (WUSS), any rewriting is welcomed, since the output format of Infernal is quite messy, the parser of this can only accept annotations in one line (though it can parse any structure if sequence and fold string are given directly). Any help on this is gratefully welcomed.
+For the analyzer of Washington University Secondary Structure (WUSS), any rewriting is welcomed, since the output format of Infernal is quite messy, the parser of this can only accept annotations in one line (though it can parse any structure if sequence and fold string are given directly), and I have no idea on how to parse the file since it seems to have no actual format for me to write the parser. Any help on this is gratefully welcomed.
