@@ -43,6 +43,8 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              prune_level=2, prune_depth=2, keep_temp=False,
              threads=8, addtional_kmers=[]):
 
+    # TODO : Modify the megahit's default workflow to make it optimized.
+
     logger.log(2, 'Start assembling mitochondrial sequences.')
 
     if(uselist):
