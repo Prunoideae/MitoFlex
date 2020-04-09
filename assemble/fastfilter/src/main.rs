@@ -64,6 +64,4 @@ fn main() {
         write!(outfile, "{}", title).unwrap();
         write!(outfile, "{}", seq).unwrap();
     }
-
-    println!("Hello, world!");
 }
