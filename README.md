@@ -108,7 +108,7 @@ To test if MitoFlex is installed correctly, type :
 ./MitoFlex.py load_modules
 ```
 
-If all modules are appeared to be correctly loaded, it indicates that you have all the required python modules installed, to have a test run on MitoFlex, please extract the files to somewhere from the `test.tar.gz`, and run :
+If all modules are appeared to be correctly loaded, it indicates that you have all the required python modules installed, to have a test run on MitoFlex, please extract the files to somewhere from the `test.tar.gz` (in this [repository](https://github.com/Prunoideae/Samples)), and run :
 
 ```bash
 /path/to/MitoFlex.py all workname test --use-list --fastq1 /path/to/fastq1 --fastq2 /path/to/fastq2
