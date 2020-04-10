@@ -57,11 +57,15 @@ fn main() {
         let title = l1.ok().unwrap();
         let seq = l2.ok().unwrap();
 
+        if !title.starts_with(">") {
+            continue;
+        }
+
         let length = seq.len() - 1;
         if length < min || length > max {
             continue;
         }
-        write!(outfile, "{}", title).unwrap();
-        write!(outfile, "{}", seq).unwrap();
+        writeln!(outfile, "{}", title).unwrap();
+        writeln!(outfile, "{}", seq).unwrap();
     }
 }
