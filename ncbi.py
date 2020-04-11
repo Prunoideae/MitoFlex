@@ -57,10 +57,9 @@ try:
         os.remove(dump_file_old)
 except Exception:
     print("Errors occured when fetching data from NCBI database, falling back to the last fetched database.")
-    if path.isfile(dump_file):
-        ncbi = NCBITaxa(taxdump_file=os.path.abspath(dump_file_old))
-        if os.path.isfile(dump_file_old):
-            os.rename(dump_file_old, dump_file)
+    if path.isfile(dump_file_old):
+        os.rename(dump_file_old, dump_file)
+        ncbi = NCBITaxa(taxdump_file=os.path.abspath(dump_file))
     else:
         print("A taxdump file is not found under installation directory, cannot build NCBI taxanomy database.")
         print("Please manually download it from http://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz , and move it to the installation directory.")
