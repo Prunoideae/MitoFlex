@@ -25,9 +25,10 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 '''
 This file is for storing things that can be configurated, but too
 static and less used, like some experimental methods, strange modules
-and functions that behaves badly in most of the time.
-Some parameters I don't see a use to change in the circumstance of mitogenome
-assembling are also here.
+and functions that behaves badly in most of the time, and things that just
+too fit to be changed.
+But this may work well in certain situations, so you may will want to modify
+the value inside this configuration if needed.
 '''
 
 # It's not acutally circos configuration file, but used to make the file structure clean
@@ -80,6 +81,13 @@ assemble.disable_acc = False
 # Disabling it will make MEGAHIT work as original, which may have bad results on
 # mitogenome sequences.
 assemble.no_filter = False
+
+# What contig matching the conditions will be retained in assembly?
+# Use to specify how you want to control your contig output, stricter
+# values will lead to more accurate but less results, and vise versa.
+assemble.min_length = 200
+assemble.max_length = 30000
+assemble.min_depth = 3
 
 # Findmitoscaf
 

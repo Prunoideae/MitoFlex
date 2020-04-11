@@ -84,8 +84,8 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
     for (p, c, n) in kmer_list:
         megahit.graph(p, c)
         megahit.assemble(c)
-        megahit.filter(c, min_depth=3,
-                       min_length=0 if n != -1 else 200, max_length=20000)
+        megahit.filter(c, min_depth=a_conf.min_depth,
+                       min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.min_length)
         if n == -1:
             break
         megahit.local(c, n)
