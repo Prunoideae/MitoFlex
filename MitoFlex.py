@@ -112,10 +112,9 @@ def assemble(args):
     from assemble.assemble import assemble as _assemble
 
     assembled_contigs = _assemble(fastq1=args.fastq1, fastq2=args.fastq2, base_dir=args.assemble_dir,
-                                  work_prefix=args.workname, uselist=args.use_list, disable_local=args.disable_local,
-                                  kmin=args.kmer_min, kmax=args.kmer_max, kstep=args.kmer_step, klist=args.kmer_list,
-                                  prune_level=args.prune_level, addtional_kmers=args.additional_kmers,
-                                  prune_depth=args.prune_depth, keep_temp=args.keep_temp, threads=args.threads)
+                                  work_prefix=args.workname, disable_local=args.disable_local,
+                                  kmer_list=args.kmer_list, prune_level=args.prune_level, prune_depth=args.prune_depth,
+                                  keep_temp=args.keep_temp, threads=args.threads)
 
     # Further processing for calling directly
     if args.__calling == 'assemble':
@@ -133,8 +132,7 @@ def findmitoscaf(args):
     picked_fa = _findmitoscaf(
         thread_number=args.threads, clade=args.clade, relaxing=args.taxa_tolerance, gene_code=args.genetic_code,
         multi=args.min_abundance, taxa=args.required_taxa if not args.disable_taxa else None,
-        prefix=args.workname, basedir=args.findmitoscaf_dir, contigs_file=args.fastafile, cover_valve=1,
-        max_contig_len=args.max_contig_length)
+        prefix=args.workname, basedir=args.findmitoscaf_dir, contigs_file=args.fastafile)
 
     # Further processing for calling directly
     if args.__calling == 'findmitoscaf':

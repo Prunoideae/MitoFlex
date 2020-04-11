@@ -62,7 +62,7 @@ def is_init():
 
 def __log(info: str):
     print(info, file=__logger)
-    if __logger:
+    if __logger is not sys.stdout:
         print(info)
         __logger.flush()
 
@@ -104,7 +104,7 @@ def log(level: int = 2, info: str = None):
         caller = f'({module_name} -> {caller_name}@{line_number})'
 
     determined_level = __level_list[level] if \
-        0 <= level <= len(__level_list)-1 \
+        0 <= level <= len(__level_list) - 1 \
         else 'UNKNOWN'
     __log(f'[{time_now} {determined_level}] {caller} : {info}')
 

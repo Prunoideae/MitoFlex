@@ -23,6 +23,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import subprocess
 import sys
+import os
 
 # cmd runner
 
@@ -75,7 +76,7 @@ def direct_call(command):
     Call a command directly.
     '''
     try:
-        return subprocess.check_output(command, shell=True).decode('utf-8')
+        return subprocess.check_output(command, shell=True, stderr=subprocess.DEVNULL).decode('utf-8')
     except subprocess.CalledProcessError as err:
         print(err)
         raise RuntimeError(f"Error when running command '{command}'. Exiting.")
@@ -85,3 +86,15 @@ def direct_call(command):
 def maxs(iterable, key=lambda x: x):
     maxv = max(key(i) for i in iterable)
     return [i for i in iterable if key(i) == maxv]
+
+
+def safe_makedirs(path, exist_ok=False):
+    '''
+    Make a tree of directories.
+    Raise error only when end point directory exists.
+    '''
+    if os.path.isdir(path) and not exist_ok:
+        raise FileExistsError()
+    os.makedirs(path, exist_ok=True)
+
+    return path

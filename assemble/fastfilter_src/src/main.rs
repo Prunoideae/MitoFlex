@@ -21,6 +21,15 @@ fn main() {
                 .value_name("INT,INT"),
         )
         .arg(
+            Arg::with_name("depth")
+                .short("d")
+                .default_value("0")
+                //.required(true)
+                .takes_value(true)
+                .help("min depth")
+                .value_name("INT"),
+        )
+        .arg(
             Arg::with_name("input")
                 .short("i")
                 .required(true)
@@ -52,6 +61,7 @@ fn main() {
 
     let infile = helper::read_file(app.value_of("input").unwrap());
     let mut outfile = helper::write_file(app.value_of("output").unwrap());
+    let depth: i32 = app.value_of("depth").unwrap().parse().unwrap();
 
     for (l1, l2) in infile.lines().tuples() {
         let title = l1.ok().unwrap();
@@ -59,6 +69,19 @@ fn main() {
 
         if !title.starts_with(">") {
             continue;
+        }
+
+        if depth != 0 {
+            let seq_depth = title.split_whitespace().collect::<Vec<&str>>()[2]
+                .to_string()
+                .split('=')
+                .collect::<Vec<&str>>()[1]
+                .parse::<f32>()
+                .unwrap();
+
+            if depth as f32 > seq_depth {
+                continue;
+            }
         }
 
         let length = seq.len() - 1;
