@@ -255,8 +255,15 @@ class MEGAHIT():
                                self._contig_prefix(kmer) + suffix)
 
     def finalize(self):
-        if self.additional_kmers:
-            pass
+        self.final_contig = path.join(
+            self.result_dir,
+            f'k{self.kmax}.contig.fa'
+        )
+
+        shell_call('cat',
+                   path.join(self.contig_dir, '*.final.contigs.fa'),
+                   self._contig_prefix(self.kmax) + '.contigs.fa',
+                   '>', self.final_contig)
 
         if not self.keep_temp:
             os.system(f'rm -r {self.temp_dir}')

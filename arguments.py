@@ -307,11 +307,17 @@ def assembly_regulator(args):
             args.kmer_min <= 0,
             args.kmer_max <= 0,
             args.kmer_step <= 0,
-            args.kmer_max < args.kmer_min
+            args.kmer_max < args.kmer_min,
+            args.kmer_step >= 28
         ]:
 
             print('Input kmer arguments have invalid values.')
             valid = False
+
+        args.kmer_list = [
+            *[x for x in range(args.kmer_min, args.kmer_max, args.kmer_step)],
+            args.kmer_max
+        ]
 
         if args.kmer_min % 2 == 0 or (args.kmer_min + args.kmer_step) % 2 == 0:
             print('All kmer length must be odd.')
@@ -347,7 +353,7 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     },
     {
         'name': 'kmer-list',
-        'default': '31,39,59,79,99,119,141',
+        'default': '31,51,75,99,119,141',
         'help': 'list of kmer to use in sDBG building, all length must be odd.'
     },
     {

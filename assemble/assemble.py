@@ -39,94 +39,61 @@ bin_dir = path.dirname(__file__)
 
 
 def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
-             uselist=False, kmin=21, kmax=141, kstep=12, klist=None,
-             disable_local=False,
+             kmer_list=None, disable_local=False,
              prune_level=2, prune_depth=2, keep_temp=False,
-             threads=8, addtional_kmers=[], min_multi=3.0):
+             threads=8, min_multi=3.0):
 
     # TODO : Modify the megahit's default workflow to make it optimized.
 
     logger.log(2, 'Start assembling mitochondrial sequences.')
 
-    if(uselist):
-        kmin = kmax = kstep = None
-        logger.log(1, f'Using kmer list : {klist}')
-    else:
-        klist = None
-        logger.log(1, f'Using step parameters : min={kmin}, max={kmax}')
-
-    logger.log(
-        1, f'Using arguments : no_local={disable_local} ,p_lv = {prune_level}, p_dep = {prune_depth}')
-
-    tmp_dir = path.join(base_dir, 'temp')
-    try:
-        os.makedirs(tmp_dir, exist_ok=True)
-    except Exception:
-        tmp_dir = None
+    logger.log(1, f'Using kmer list : {kmer_list}')
 
     options = {
-        'k_min': kmin,
-        'k_max': kmax,
-        'k_step': kstep,
-        'k_list': klist,
-        'no_mercy': a_conf.no_mercy,
         'prune_level': prune_level,
         'prune_depth': prune_depth,
-        'keep_tmp_files': keep_temp,
-        'tmp_dir': tmp_dir,
-        'out_dir': path.join(base_dir, 'result'),
-        'out_prefix': work_prefix,
-        'no_hw_accel': a_conf.disable_acc,
-        'num_cpu_threads': threads,
+        'keep_temp': keep_temp,
+        'basedir': base_dir,
+        'prefix': work_prefix,
+        'threads': threads,
         'no_local': disable_local,
-        'min_count': a_conf.min_multi,
-        'kmin_1pass': a_conf.one_pass
+        'fq1': fastq1,
+        'fq2': fastq2,
     }
 
-    logger.log(0, f'Calling megahit with : {options}')
+    logger.log(2, f'Initializing megahit wrapper.')
+    megahit = MEGAHIT(**options)
 
-    # Mutable options
-    if fastq1 and fastq2:
-        options['_1'] = fastq1
-        options['_2'] = fastq2
-    elif fastq1:
-        options['r'] = fastq1
-    elif fastq2:
-        options['r'] = fastq2
+    megahit.initialize()
+    libread = megahit.build_lib()
 
-    shell_call('megahit', **options)
-
-    contigs_file = os.path.join(
-        base_dir, 'result', work_prefix + '.contigs.fa')
-    if not path.isfile(contigs_file):
-        raise RuntimeError(
-            'Megahit finished with no results! This could be an error caused memory overflow or something will halt the process of Megahit!')
-    if logger.get_level() <= 1:
-        from Bio import SeqIO
-        contigs = [x for x in SeqIO.parse(contigs_file, 'fasta')]
+    if libread.max_len < kmer_list[-1]:
         logger.log(
-            1, f'Output contigs file size : {path.getsize(contigs_file)}')
-        logger.log(1, f'Contig number : {len(contigs)}')
+            3, f'Input max read length {libread.max_len} < max k-mer length {kmer_list[-1]}, resizing.')
+        kmer_list = [*[x for x in kmer_list if x < libread.max_len],
+                     libread.max_len]
 
-    inter_dir = path.join(base_dir, "result", "intermediate_contigs")
+    megahit.kmax = kmer_list[-1]
 
-    if addtional_kmers:
-        logger.log(
-            1, f"Merging intermediate contigs {addtional_kmers} with finals.")
+    kmer_list = [0, *kmer_list, -1]
+    kmer_list = [(kmer_list[i],
+                  kmer_list[i + 1],
+                  kmer_list[i + 2])
+                 for i in range(len(kmer_list) - 2)]
 
-        shell_call(
-            "cat",
-            *[path.join(inter_dir, f'k{x}.contigs.fa')
-              for x in addtional_kmers],
-            '>>',
-            contigs_file
-        )
+    for (p, c, n) in kmer_list:
+        megahit.graph(p, c)
+        megahit.assemble(c)
+        megahit.filter(c, min_depth=3,
+                       min_length=0 if n != -1 else 200, max_length=20000)
+        if n == -1:
+            break
+        megahit.local(c, n)
+        megahit.iterate(c, n)
 
-    if not keep_temp:
-        logger.log(1, f'Cleaning intermidiate contig files.')
-        shell_call("rm -r", inter_dir)
+    megahit.finalize()
 
-    return contigs_file
+    return megahit.final_contig
 
 
 # This is currently NOT a working function.
