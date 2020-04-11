@@ -294,45 +294,16 @@ def assembly_regulator(args):
         valid = False
         print('Error occured when validating the directories, please check your permissions or things could be related.')
 
-    if args.use_list:
-        args.kmer_list = [int(x) for x in args.kmer_list.split(',')]
-        args.kmer_list.sort()
-        if 0 in [x % 2 for x in args.kmer_list]:
-            print('All kmer length must be odd.')
-            valid = False
-    else:
-        if True in [
-            args.kmer_min <= 0,
-            args.kmer_max <= 0,
-            args.kmer_step <= 0,
-            args.kmer_max < args.kmer_min,
-            args.kmer_step >= 28
-        ]:
+    args.kmer_list = [int(x) for x in args.kmer_list.split(',')]
+    args.kmer_list.sort()
+    if 0 in [x % 2 for x in args.kmer_list]:
+        print('All kmer length must be odd.')
+        valid = False
 
-            print('Input kmer arguments have invalid values.')
-            valid = False
-
-        args.kmer_list = [
-            *[x for x in range(args.kmer_min, args.kmer_max, args.kmer_step)],
-            args.kmer_max
-        ]
-
-        if args.kmer_min % 2 == 0 or (args.kmer_min + args.kmer_step) % 2 == 0:
-            print('All kmer length must be odd.')
-            valid = False
+    args.depth_list = [int(x) for x in args.depth_list.split(',')]
 
     if args.prune_depth < 0:
         print('Prune depth lower than 0.')
-        valid = False
-
-    try:
-        args.additional_kmers = [
-            int(x)
-            for x in args.additional_kmers.split(',')
-            if x
-        ]
-    except Exception:
-        print('Error parsing final kmers.')
         valid = False
 
     return valid
@@ -340,34 +311,19 @@ def assembly_regulator(args):
 
 assembly_parser, assembly_group = register_group('Assembly arguments', [
     {
-        'name': 'use-list',
-        'default': False,
-        'help': 'k-mer list arguments will be used if this switched on.'
-    },
-    {
         'name': 'disable-local',
         'default': False,
         'help': 'disable the local assembly of MEGAHIT, will have a performance imporve but may lowers the result quality.'
     },
     {
         'name': 'kmer-list',
-        'default': '31,51,75,99,119,141',
-        'help': 'list of kmer to use in sDBG building, all length must be odd.'
+        'default': '31,39,59,79,99,119,141',
+        'help': 'list of kmer to use in sDBG building, all length must be odd, will be sorted when building.'
     },
     {
-        'name': 'kmer-min',
-        'default': 31,
-        'help': 'the minimum length kmer used in MEGAHIT\'s multiple kmer assemble strategy.'
-    },
-    {
-        'name': 'kmer-max',
-        'default': 141,
-        'help': 'the maximum length kmer used in MEGAHIT\'s multiple kmer assemble strategy.'
-    },
-    {
-        'name': 'kmer-step',
-        'default': 22,
-        'help': 'increment of kmer size of each iteration (<= 28), must be even number.'
+        'name': 'depth-list',
+        'default': '10,20,20,50,50,100,100',
+        'help': 'list of depths to limit the output in assembly, paired with kmer-list.'
     },
     {
         'name': 'prune-level',
@@ -379,11 +335,6 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'name': 'prune-depth',
         'default': 2,
         'help': 'remove unitigs with avg kmer depth less than this value.'
-    },
-    {
-        'name': 'additional-kmers',
-        'default': '',
-        'help': 'input a list of kmers seperated by comma, to specify what kmer results will be added in the end.'
     }
 ], func=assembly_regulator)
 

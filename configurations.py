@@ -83,13 +83,14 @@ assemble.disable_acc = False
 assemble.no_filter = False
 
 # What contig matching the conditions will be retained in assembly?
-# Use to specify how you want to control your contig output, stricter
+# Use to specify how you want to control your contig output, more strict
 # values will lead to more accurate but less results, and vise versa.
+
+# The minimum length for contig to output in the iteration.
 assemble.min_length = 200
 
+# The maximum length for contig to output in the iteration.
 assemble.max_length = 30000
-
-assemble.min_depth = 5
 
 # Findmitoscaf
 

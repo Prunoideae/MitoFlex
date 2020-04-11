@@ -39,7 +39,7 @@ bin_dir = path.dirname(__file__)
 
 
 def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
-             kmer_list=None, disable_local=False,
+             kmer_list=None, depth_list=None, disable_local=False,
              prune_level=2, prune_depth=2, keep_temp=False,
              threads=8, min_multi=3.0):
 
@@ -82,10 +82,10 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
                   kmer_list[i + 2])
                  for i in range(len(kmer_list) - 2)]
 
-    for (p, c, n) in kmer_list:
+    for i, (p, c, n) in enumerate(kmer_list):
         megahit.graph(p, c)
         megahit.assemble(c)
-        megahit.filter(c, min_depth=a_conf.min_depth,
+        megahit.filter(c, min_depth=depth_list[i],
                        min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.max_length)
         if n == -1:
             break
