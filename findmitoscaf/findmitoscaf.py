@@ -84,7 +84,7 @@ def get_rank(taxa_name=None):
 
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
-                 contigs_file=None, relaxing=0, multi=10, cover_valve=1, min_multi=3.0):
+                 contigs_file=None, relaxing=0, multi=10):
 
     logger.log(2, 'Finding mitochondrial scaffold.')
 
@@ -100,37 +100,18 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                         lc += 1
     logger.log(1, f'Generation finished with {lc} writes.')
 
-    # Drop all the sequences where multi is too low to do further analysis
-    filtered_fa = path.join(basedir, f'{prefix}.contigs.filtered.fa')
-    filtered_contigs = []
-    for seq in SeqIO.parse(contigs_file, 'fasta'):
-        trait_string = seq.description.replace(seq.id + ' ', '', 1)
-        trait = decompile(trait_string, sep=' ')
-        if float(trait['multi']) >= min_multi:
-            filtered_contigs.append(seq)
-
-    logger.log(
-        1, f'{len(filtered_contigs)} sequences above depth {min_multi} was selected.')
-
-    filtered_contigs = [x for x in filtered_contigs if len(x) < max_contig_len]
-
-    logger.log(
-        1, f'{len(filtered_contigs)} sequences below {max_contig_len} was selected.')
-
-    SeqIO.write(filtered_contigs, filtered_fa, 'fasta')
-
     # Do nhmmer search and collect, filter results
     nhmmer_profile = path.join(profile_dir_hmm, f'{clade}.hmm')
     logger.log(1, f'nhmmer profile : {nhmmer_profile}')
 
     # do hmmer search
-    hmm_frame = tk.nhmmer_search(fasta_file=filtered_fa, thread_number=thread_number,
+    hmm_frame = tk.nhmmer_search(fasta_file=contigs_file, thread_number=thread_number,
                                  nhmmer_profile=nhmmer_profile, prefix=prefix,
                                  basedir=basedir)
 
     logger.log(1, f'Generating hmm-filtered fasta.')
     hmm_seqs = [record
-                for record in SeqIO.parse(filtered_fa, 'fasta')
+                for record in SeqIO.parse(contigs_file, 'fasta')
                 if record.id in set(hmm_frame['target'])
                 ]
     if not hmm_seqs:
@@ -203,7 +184,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         score = int(row.score)
         align_start = int(row.alifrom)
         align_end = int(row.alito)
-        align_length = abs(align_start-align_end)+1
+        align_length = abs(align_start - align_end) + 1
         query_start = int(row.hmmfrom)
         query_to = int(row['hmm to'])
         complete = align_length >= cds_indexes[query]
@@ -211,7 +192,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         if index not in candidates:
             candidates[index] = {}
         candidates[index][query] = (
-            score*contig_multis[index], query_start, query_to, complete
+            score * contig_multis[index], query_start, query_to, complete
         )
 
     flatten_candidates = [(key, value) for key, value in candidates.items()]
@@ -258,9 +239,9 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             gene_map = [x[1] for x in gene_map]
 
             def overlapping():
-                for i in range(0, len(gene_map)-1, 2):
+                for i in range(0, len(gene_map) - 1, 2):
                     left = gene_map[i]
-                    right = gene_map[i+1]
+                    right = gene_map[i + 1]
                     if left[0] != right[0]:
                         if left[1] < right[1]:
                             gene_map.remove(left)
@@ -364,5 +345,5 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
 # You must be sure that the sequences you provided is firmly oringinated from mitogenome, otherwise
 # it could make the result worse.
 def filter_external(fasta_file=None, external_fasta=None):
-    
+
     pass

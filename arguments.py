@@ -26,6 +26,7 @@ import os
 
 try:
     from utility.parser import register_group
+    from utility.helper import safe_makedirs
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoFlex installation!')
@@ -38,12 +39,6 @@ except ImportError as identifier:
 profile_dir_tbn = os.path.join(
     os.path.dirname(__file__), 'profile', 'MT_database')
 profile_dir_hmm = os.path.join(os.path.dirname(__file__), 'profile', 'CDS_HMM')
-
-
-def safe_makedirs(path, exist_ok=False):
-    if os.path.isdir(path) and not exist_ok:
-        raise FileExistsError()
-    os.makedirs(path, exist_ok=True)
 
 
 # Universal group
@@ -385,6 +380,21 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'name': 'additional-kmers',
         'default': '',
         'help': 'input a list of kmers seperated by comma, to specify what kmer results will be added in the end.'
+    },
+    {
+        'name': 'min-depth',
+        'default': 3,
+        'help': 'minimum depth of the results'
+    },
+    {
+        'name': 'min-len',
+        'default': 100,
+        'help': 'minimum len for megahit to output'
+    },
+    {
+        'name': 'max-depth',
+        'default': 30000,
+        'help': 'maximum depth for megahit to output'
     }
 ], func=assembly_regulator)
 

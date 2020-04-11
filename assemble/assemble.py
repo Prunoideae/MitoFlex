@@ -31,6 +31,7 @@ try:
     from utility.helper import shell_call
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
+    from assemble.assemble_wrapper import MEGAHIT  # pylint: disable=import-error, no-name-in-module
 except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -41,7 +42,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              uselist=False, kmin=21, kmax=141, kstep=12, klist=None,
              disable_local=False,
              prune_level=2, prune_depth=2, keep_temp=False,
-             threads=8, addtional_kmers=[]):
+             threads=8, addtional_kmers=[], min_multi=3.0):
 
     # TODO : Modify the megahit's default workflow to make it optimized.
 

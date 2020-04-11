@@ -48,6 +48,12 @@ filter_rawdata.compress_output_in_all = False
 
 # Assemble
 
+# Setting the max memory percent for MEGAHIT to use .
+# MEGAHIT will NOT allocate all the memory at once, but will only allocate
+# this percentage at most.
+
+assemble.max_mem_percent = 0.9
+
 # Setting the min multiplicity of k-mer input.
 # Low value works well if the input reads are of low depth and coverage,
 # but obviously mitogenome shouldn't.
@@ -68,6 +74,12 @@ assemble.one_pass = False
 # May have a performance impact. But it may makes the assembler work on old
 # CPUs, only use as a last resort.
 assemble.disable_acc = False
+
+# Disable Fast-Filter for controlling MEGAHIT's assemble results?
+# Use for concentrating graph to sequences more likely to be mitogenome's sequences.
+# Disabling it will make MEGAHIT work as original, which may have bad results on
+# mitogenome sequences.
+assemble.no_filter = False
 
 # Findmitoscaf
 
