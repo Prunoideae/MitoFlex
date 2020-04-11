@@ -67,11 +67,12 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
     megahit.initialize()
     libread = megahit.build_lib()
 
-    if libread.max_len < kmer_list[-1]:
+    if libread.max_len + 20 < kmer_list[-1]:
         logger.log(
             3, f'Input max read length {libread.max_len} < max k-mer length {kmer_list[-1]}, resizing.')
-        kmer_list = [*[x for x in kmer_list if x < libread.max_len],
-                     libread.max_len]
+        kmer_list = [*[x for x in kmer_list if x < libread.max_len + 20],
+                     libread.max_len + 20]
+        logger.log(3, f'K-mers after resized : {kmer_list}')
 
     megahit.kmax = kmer_list[-1]
 
@@ -85,7 +86,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         megahit.graph(p, c)
         megahit.assemble(c)
         megahit.filter(c, min_depth=a_conf.min_depth,
-                       min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.min_length)
+                       min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.max_length)
         if n == -1:
             break
         megahit.local(c, n)

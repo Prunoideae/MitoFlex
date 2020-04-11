@@ -86,8 +86,10 @@ assemble.no_filter = False
 # Use to specify how you want to control your contig output, stricter
 # values will lead to more accurate but less results, and vise versa.
 assemble.min_length = 200
+
 assemble.max_length = 30000
-assemble.min_depth = 3
+
+assemble.min_depth = 5
 
 # Findmitoscaf
 

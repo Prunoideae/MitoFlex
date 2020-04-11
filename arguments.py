@@ -128,8 +128,7 @@ def fastq_regulator(args):
         print("Specified fastq read length is not valid.")
 
     if hasattr(args, 'use_list'):
-        min_kmer = int(args.kmer_list.split(
-            ',')[0]) if args.use_list else args.kmer_min
+        min_kmer = int(args.kmer_list[0]) if args.use_list else args.kmer_min
         if min_kmer >= args.fastq_read_length:
             valid = False
             print("Specified fastq read length lower than the mininum kmer.")
@@ -301,7 +300,6 @@ def assembly_regulator(args):
         if 0 in [x % 2 for x in args.kmer_list]:
             print('All kmer length must be odd.')
             valid = False
-        args.kmer_list = ','.join([str(x) for x in args.kmer_list])
     else:
         if True in [
             args.kmer_min <= 0,
@@ -373,34 +371,19 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     },
     {
         'name': 'prune-level',
-        'default': 3,
+        'default': 2,
         'choices': list(range(0, 4)),
         'help': 'strength of low depth pruning.'
     },
     {
         'name': 'prune-depth',
-        'default': 3,
+        'default': 2,
         'help': 'remove unitigs with avg kmer depth less than this value.'
     },
     {
         'name': 'additional-kmers',
         'default': '',
         'help': 'input a list of kmers seperated by comma, to specify what kmer results will be added in the end.'
-    },
-    {
-        'name': 'min-depth',
-        'default': 3,
-        'help': 'minimum depth of the results'
-    },
-    {
-        'name': 'min-len',
-        'default': 100,
-        'help': 'minimum len for megahit to output'
-    },
-    {
-        'name': 'max-depth',
-        'default': 30000,
-        'help': 'maximum depth for megahit to output'
     }
 ], func=assembly_regulator)
 
