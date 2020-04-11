@@ -69,13 +69,13 @@ Though you actually can setup the environment from the ground, using conda for c
 MitoFlex requires a bunch of packages to run, you can install them in one line like:
 
 ```bash
-conda create -n {environment name here} python=3.6.4 numpy pandas ete3 biopython megahit blast infernal circos hmmer wise2 samtools bwa infernal
+conda create -n {environment name here} --file requirements.txt
 ```
 
 All directly required packages are listed, if you don't want to use conda to install them:
 
 ```text
-numpy pandas ete3 biopython
+numpy pandas ete3 biopython psutil
 megahit blast infernal circos hmmer wise2 bwa samtools infernal
 ```
 

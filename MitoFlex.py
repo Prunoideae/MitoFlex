@@ -46,7 +46,7 @@ except ImportError as identifier:
     sys.exit()
 
 # Constants
-VERSION = '0.1.0'
+VERSION = '0.2.1'
 
 # Command processing
 desc = f"""
