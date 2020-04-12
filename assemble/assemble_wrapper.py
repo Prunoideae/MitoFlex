@@ -38,11 +38,22 @@ except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
 
+class EmptyGraph(Exception):
+    pass
+
+
 class LibInfo():
     def __init__(self, info):
         self.read_size = int(info[0][0])
         self.read_count = int(info[0][1])
         self.max_len = int(info[2][2])
+
+
+class ContigInfo():
+    def __init__(self, file):
+        info = file.readlines()[0].rstrip().split(' ')
+        self.count = int(info[0])
+        self.bytes = int(info[1])
 
 
 class MEGAHIT():
@@ -63,6 +74,7 @@ class MEGAHIT():
     prune_level = 2
     prune_depth = 2
     min_depth = 3
+    kmin = 31
     kmax = 141
     additional_kmers = []
     min_length = 200
@@ -124,9 +136,9 @@ class MEGAHIT():
 
         vm = psutil.virtual_memory()
         logger.log(
-            1, f"System memory status : {', '.join([f'{k}={v/1024}MB' for k,v in vm._asdict().items() if type(v) is int])}")
-        self.available_memory = vm.available * a_conf.max_mem_percent
-        logger.log(2, f'Scheduled {self.available_memory/1024}MB to use.')
+            1, f"System memory status : {', '.join([f'{k}={v/1024/1024}MB' for k,v in vm._asdict().items() if type(v) is int])}")
+        self.available_memory = int(vm.available * a_conf.max_mem_percent)
+        logger.log(2, f'Scheduled {self.available_memory/1024/1024}MB to use.')
 
     def build_lib(self):
 
@@ -153,7 +165,7 @@ class MEGAHIT():
             'mem_flag': 1,
             'output_prefix': self._graph_prefix(next_kmer),
             'num_cpu_threads': self.threads,
-            'need_mercy': not self.no_mercy,
+            'need_mercy': not self.no_mercy and current_kmer == self.kmin,
             'kmer_from': current_kmer,
             'useconv': False
         }
@@ -166,32 +178,44 @@ class MEGAHIT():
                 count_opts['read_lib_file'] = self.read_lib
                 count_opts.pop('need_mercy')
                 count_opts.pop('kmer_from')
-                logger.log(2, f"Extract options : {count_opts}")
+                logger.log(0, f"Extract options : {count_opts}")
                 shell_call(self.MEGAHIT_CORE, 'count', **count_opts)
+
+        file_size = 0
 
         if path.exists(self._graph_prefix(next_kmer) + '.edges.0'):
             options['input_prefix'] = self._graph_prefix(next_kmer)
+            file_size += path.getsize(self._graph_prefix(next_kmer) + '.edges.0')
 
         if path.exists(self._contig_prefix(current_kmer) + '.addi.fa'):
             options['addi_contig'] = \
                 self._contig_prefix(current_kmer) + '.addi.fa'
+            file_size += path.getsize(
+                self._contig_prefix(current_kmer) + '.addi.fa')
 
         if path.exists(self._contig_prefix(current_kmer) + '.local.fa'):
             options['local_contig'] = \
                 self._contig_prefix(current_kmer) + '.local.fa'
+            file_size += path.getsize(
+                self._contig_prefix(current_kmer) + '.addi.fa')
 
         if path.exists(self._contig_prefix(current_kmer) + '.contigs.fa'):
             options['contig'] = \
                 self._contig_prefix(current_kmer) + '.contigs.fa'
             options['bubble'] = \
                 self._contig_prefix(current_kmer) + '.bubble_seq.fa'
+            file_size += path.getsize(
+                self._contig_prefix(current_kmer) + '.contigs.fa')
+
+        if file_size == 0 and current_kmer != 0:
+            raise EmptyGraph
 
         logger.log(2, f'Building graph for k={next_kmer}')
         logger.log(0, f'Build options : {options}')
 
         shell_call(self.MEGAHIT_CORE, 'seq2sdbg', **options)
 
-    def assemble(self, kmer):
+    def assemble(self, kmer) -> (ContigInfo, ContigInfo):
         min_standalone = max(
             min(self.kmax * 3 - 1, int(self.min_length * 1.5)),
             self.min_length)
@@ -220,6 +244,9 @@ class MEGAHIT():
         logger.log(0, f'Assemble arguments : {options}')
 
         shell_call(self.MEGAHIT_CORE, 'assemble', **options)
+        with open(self._contig_prefix(kmer) + '.contigs.fa.info', 'r') as c, \
+                open(self._contig_prefix(kmer) + '.addi.fa.info', 'r') as a:
+            return ContigInfo(c), ContigInfo(a)
 
     def local(self, current_kmer, next_kmer):
         logger.log(2, f'Local assembly for k = {current_kmer}')
@@ -254,15 +281,15 @@ class MEGAHIT():
                     shell_call('mv', self._contig_prefix(kmer) + '.filtered' + suffix,
                                self._contig_prefix(kmer) + suffix)
 
-    def finalize(self):
+    def finalize(self, kmer):
         self.final_contig = path.join(
             self.result_dir,
-            f'k{self.kmax}.contig.fa'
+            f'k{kmer}.contig.fa'
         )
 
         shell_call('cat',
                    path.join(self.contig_dir, '*.final.contigs.fa'),
-                   self._contig_prefix(self.kmax) + '.contigs.fa',
+                   self._contig_prefix(kmer) + '.contigs.fa',
                    '>', self.final_contig)
 
         if not self.keep_temp:

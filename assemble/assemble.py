@@ -31,7 +31,7 @@ try:
     from utility.helper import shell_call
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
-    from assemble.assemble_wrapper import MEGAHIT  # pylint: disable=import-error, no-name-in-module
+    from assemble.assemble_wrapper import MEGAHIT, EmptyGraph  # pylint: disable=import-error, no-name-in-module
 except Exception:
     sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
 
@@ -75,6 +75,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         logger.log(3, f'K-mers after resized : {kmer_list}')
 
     megahit.kmax = kmer_list[-1]
+    megahit.kmin = kmer_list[0]
 
     kmer_list = [0, *kmer_list, -1]
     kmer_list = [(kmer_list[i],
@@ -83,8 +84,18 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
                  for i in range(len(kmer_list) - 2)]
 
     for i, (p, c, n) in enumerate(kmer_list):
-        megahit.graph(p, c)
-        megahit.assemble(c)
+        try:
+            megahit.graph(p, c)
+        except EmptyGraph:
+            logger.log(
+                3, f'Iteration broke at kmer = {p}, since no valid contig in kmer = {c} is done!')
+            megahit.kmax = p
+            break
+
+        contig, _ = megahit.assemble(c)
+        logger.log(
+            1, f'Contigs for kmer = {c} : {contig.count}@{contig.bytes}bytes')
+
         megahit.filter(c, min_depth=depth_list[i],
                        min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.max_length)
         if n == -1:
@@ -92,7 +103,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         megahit.local(c, n)
         megahit.iterate(c, n)
 
-    megahit.finalize()
+    megahit.finalize(megahit.kmax)
 
     return megahit.final_contig
 
