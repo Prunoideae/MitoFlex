@@ -269,17 +269,21 @@ class MEGAHIT():
     def filter(self, kmer=None, min_depth=3, min_length=0, max_length=20000, force_filter=False):
         logger.log(2, f'Filtering output contig files of k = {kmer}')
 
+        results = [0, 0, 0]
         if not a_conf.no_filter or force_filter:
-            for suffix in ['.contigs.fa', '.addi.fa', '.bubble_seq.fa']:
+            for idx, suffix in enumerate(['.contigs.fa', '.addi.fa', '.bubble_seq.fa']):
                 if path.exists(self._contig_prefix(kmer) + suffix):
-                    shell_call(self.FAST_FILTER,
-                               i=self._contig_prefix(kmer) + suffix,
-                               o=self._contig_prefix(kmer) +
-                               '.filtered' + suffix,
-                               l=f"{min_length},{max_length}",
-                               d=min_depth)
+                    results[idx] = int(
+                        shell_call(self.FAST_FILTER,
+                                   i=self._contig_prefix(kmer) + suffix,
+                                   o=self._contig_prefix(
+                                       kmer) + '.filtered' + suffix,
+                                   l=f"{min_length},{max_length}",
+                                   d=min_depth))
                     shell_call('mv', self._contig_prefix(kmer) + '.filtered' + suffix,
                                self._contig_prefix(kmer) + suffix)
+
+        return tuple(results)
 
     def finalize(self, kmer):
         self.final_contig = path.join(

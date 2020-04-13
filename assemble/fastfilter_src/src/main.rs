@@ -63,6 +63,8 @@ fn main() {
     let mut outfile = helper::write_file(app.value_of("output").unwrap());
     let depth: i32 = app.value_of("depth").unwrap().parse().unwrap();
 
+    let mut count = 0;
+
     for (l1, l2) in infile.lines().tuples() {
         let title = l1.ok().unwrap();
         let seq = l2.ok().unwrap();
@@ -90,5 +92,8 @@ fn main() {
         }
         writeln!(outfile, "{}", title).unwrap();
         writeln!(outfile, "{}", seq).unwrap();
+        count += 1;
     }
+
+    println!("{}", count);
 }

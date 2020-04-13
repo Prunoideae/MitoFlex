@@ -93,12 +93,11 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
             megahit.kmax = p
             break
 
-        contig, _ = megahit.assemble(c)
+        contig_info, _ = megahit.assemble(c)
+        contig_filtered, *_ = megahit.filter(c, min_depth=depth_list[i], force_filter=c == megahit.kmax,
+                                             min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.max_length)
         logger.log(
-            1, f'Contigs for kmer = {c} : {contig.count}@{contig.bytes}bytes')
-
-        megahit.filter(c, min_depth=depth_list[i],
-                       min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.max_length)
+            1, f'Contig for kmer = {c} : {contig_filtered}/{contig_info.count}')
         if n == -1:
             break
         megahit.local(c, n)
