@@ -27,6 +27,7 @@ from os import path
 import os
 import sys
 import traceback
+import time
 
 if sys.version_info[0] < 3:
     sys.exit('Python 3 must be installed in current environment! Please check if any of your environment setup(like conda environment) is deactivated or wrong!')
@@ -47,6 +48,9 @@ except ImportError as identifier:
 
 # Constants
 VERSION = '0.2.3'
+
+# Static variables
+start_time = time.time()
 
 # Command processing
 desc = f"""
@@ -363,7 +367,7 @@ def post(args):
         os.remove(args.cleanq1)
         if hasattr(args, 'cleanq2'):
             os.remove(args.cleanq2)
-
+    logger.log(2, f'All done! Time elapsed : {time.time()-start_time:.2f}s.')
     logger.finalize()
 
 
