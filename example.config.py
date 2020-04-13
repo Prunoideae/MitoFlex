@@ -46,7 +46,6 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 # fastq1 = ''
 # fastq2 = ''
 # fastq_alter_format = False
-# fastq_read_length = 150
 # fq_size = 5
 #
 # # Fasta configuration

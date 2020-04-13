@@ -123,16 +123,6 @@ def fastq_regulator(args):
         valid = False
         print("Input FASTQ file is not valid.")
 
-    if args.fastq_read_length <= 0:
-        valid = False
-        print("Specified fastq read length is not valid.")
-
-    if hasattr(args, 'use_list'):
-        min_kmer = int(args.kmer_list[0]) if args.use_list else args.kmer_min
-        if min_kmer >= args.fastq_read_length:
-            valid = False
-            print("Specified fastq read length lower than the mininum kmer.")
-
     args.level = ['code', 'debug', 'info', 'warn', 'error'].index(args.level)
 
     if args.level == 0:
@@ -151,17 +141,6 @@ fastq_parser, fastq_group = register_group('Fastq arguments', [
         'name': 'fastq2',
         'meta': 'file',
         'help': 'fastq file 2 input.'
-    },
-    {
-        'name': 'fastq-alter-format',
-        'default': False,
-        'help': 'using FASTQ-like (Q+64) format or Q+33 file format.'
-    },
-    {
-        'name': 'fastq-read-length',
-        'default': 150,
-        'help': '''read length of fastq reads, used in MEGAHIT and bwa,
-        it must be at least larger than the k-min if assemble specified.'''
     }
 ], func=fastq_regulator)
 
