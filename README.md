@@ -2,7 +2,7 @@
 
 MitoFlex is a Python3 based toolkit designated for mitochondrial genome assembling, it's inspired from [MitoZ](https://github.com/linzhi2013/MitoZ), but with improved performance and result quality. And also it implemented a both easy and flexible mechanism to extend the program feature. It accepts both single-end and pair-end data, and follows an already set workflow to output results. Working mechanism is highly flexible and can be easily reconfigured here.
 
-# 1. System requirements
+# 1 System requirements
 
 ## 1.1 Platform
 
@@ -30,7 +30,7 @@ MitoFlex uses [MEGAHIT](https://github.com/voutcn/megahit) as assembler, thus re
 
 MitoFlex does not explicitly requires GPU in the work, but a GPU will accelerate the process of sDBG building. The server I'm developing MitoFlex on has no GPU, so I can't tell much at this part.
 
-# 2. Installation
+# 2 Installation
 
 ## 2.1 From Docker Image (Implementation rejected)
 
@@ -140,11 +140,11 @@ MitoFlex.py [module] <-h or --help>
 
 This helps you better understand how MitoFlex will work, and so you can tune MitoFlex to meet your need in mitogenome assembly.
 
-# 3. Data requirement
+# 3 Data requirement
 
 MitoFlex depends on the quality more than the size of data, it will not throw any error if your input fastq file is too small or something, but the result may be of low quality if the raw dataset is small or unqualified.
 
-# 4. Specifying parameters in configuration file
+# 4 Specifying parameters in configuration file
 
 MitoFlex uses a very flexible argument catching and processing mechanism, which is aimed to make it easier for further developing. [An example configuration file](example.config.py) is created under the main directory.
 
@@ -194,7 +194,7 @@ Configuration generated in this way will have all the arguments needed by the sp
 
 Some parameters are freezed and specified to fit into the mitogenome analysis, they are either not performing good in most circumstances, or even will make the output result worse. But they may have some usage under special circumstances, so these parameters can be set in the [configuration](configurations.py) file.
 
-# 5. Modules provided by MitoFlex
+# 5 Modules provided by MitoFlex
 
 Most modules of MitoFlex are just the same as MitoZ. But some of the methods are rewritten and optimized.
 
@@ -222,45 +222,76 @@ To annotate sequences using tblastn and infernal.
 
 To generate PNG and SVG file representing current mitogenome in a more direct way.
 
-# 6. Adding new profile data to MitoFlex
+# 6 Frequently occured problems
+
+## 6.1 "Killed" or showing not enough memory, or something like that
+
+Your machine is running out of memory, please add more.
+
+## 6.2 Mitogenome sequences not found in `findmitoscaf`, or not outputting enough sequences in assembly
+
+There are several possible problems to make this happen. Check if your run is :
+
+1. of low bps? Like only 1.5Gbps of the data, if so, please specify a more tolerant depth list, less reads decrease the overall depth of sequences, your result may be filtered out during the iteration.
+2. of low quality? It could be happened sometimes, if your raw data is of too many other sequences, like contaminated or just because it's poor, then it will happens as above.
+3. specified a too strict depth list? In most test cases, target sequence depths varies from 300 to 1000, in dedicated result it can go even up to 10000, result sequences will just be dropped out if your sequences is of not enough depth.
+4. analysing species of small database? `findmitoscaf` module depends on database much, if the species you want to assemble is having too few data, it could make MitoFlex fail to detect mitogenome sequences, if so, please enrich the database by adding more profile.
+
+## 6.3 "Iteration broke at kmer = x, since no no valid contig in kmer = y is done!"
+
+This is because no sequences is output during the last iteration, no any of the contig will output if the iteration continues, so MitoFlex terminate the assembly. It's similar to problem `6.2`.
+
+## 6.4 Input file 1 and 2 have different sizes! This could cause loss on rawdata, or even crash the program
+
+Your input PE reads are not of the same size, it indicates a mismatch between two file, and it will likely stop the programs like `bwa` from starting, halting the pipeline.
+
+## 6.5 Module XXX is not found! / Cannot import helper module XXX
+
+You have an invalid installation, or environment setup, please check if your installation is good, and you have switched to a proper conda environment.
+
+## 6.6 Cannot validate folder / Folder X is already existed
+
+MitoFlex failed to create a folder, or a previous folder exists so MitoFlex can't make sure if the folder is removable or not. Please check your permission or try to investigate the files in the folder and remove it if it's save to remove.
+
+# 7 Adding new profile data to MitoFlex
 
 MitoFlex has already integrated protein and nucleic acid data into the profile, but it can't cover all the species for sure. So it's necessary to add data of other taxonomy classes if current MitoFlex doesn't have it for better assemble and annotation performance.
 
-## 6.1 Building nhmmer profile
+## 7.1 Building nhmmer profile
 
 For official documentation refers to [here](http://www.csb.yale.edu/userguides/seq/hmmer/docs/node19.html).
 
 Building HMM profile needs the access of `hmmbuild`, which is included in the HMMER package, the command requires a Multiple Sequence Alignment (MSA) file, which is obtained from aligning sequences you want to build profile with by serveral alignment program like MAFFT or ClustalW. The `hmmbuild` in installed version supports most file format, like FASTA, Stockholm or ClustalW.
 
-## 6.2 Adding profile data
+## 7.2 Adding profile data
 
 MitoFlex has its internal profile for basic mitogenome assembly and annotation, but it comes to be inaccurate if a specific speciemen is required. You can implement your own set of profile of the specific speciemen you want if feeling like MitoFlex is not giving good results.
 
-### 6.2.1 Adding or modifying clade protein database
+### 7.2.1 Adding or modifying clade protein database
 
 MitoFlex uses a given set of protein sequences to do tblastn, for picking up most possible sequences and for annotating the genes, if you found the species you requested is not quite covered in the database (Like Rhabditophora in Playthelminthes), you can of course add your sequences into the profile. The set of sequences can be found in `profile/MT_database/{clade}.fa`, written in FASTA file format, the id of the sequence must be in `gi_NC_{record id}_{gene}_{genus}_{species}_{length}_aa`, only gene, genus and species were taken into recognition of sequences and clades, but please keep underscores in place for the program to detect and parse the information.
 
-### 6.2.2 Adding a new clade
+### 7.2.2 Adding a new clade
 
 To add a new clade, these three files should be noticed: `{clade}.hmm` and `required_cds.json` in `profile/CDS_HMM` and `{clade}.fa` in `profile/MT_database`. The hmm file is used for nhmmer to search out possible sequences, and the fasta file is for tblastn to mark the potential sequence with genes, and the `required_cds.json` is for telling MitoFlex what gene should be taken into count, because some gene is rarely reported in several species, so it would be better for users to tell how MitoFlex will judge the gene is missing or not. MitoFlex requires all these three to be set properly in order to be functional.
 
-### 6.2.3 Adding Covariance Models for tRNA search
+### 7.2.3 Adding Covariance Models for tRNA search
 
 Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex will automatically use files under this directory for tRNA searching.
 
-# 7. Things that will effect MitoFlex's overall performance
+# 8 Things that will effect MitoFlex's overall performance
 
 MitoFlex itself isn't doing magic, though it's fast and (more) reliable, bad result could be outputted if you don't even give it a good result input, but at least it will be the most reliable result of all contigs that MEGAHIT can assemble.
 
 There are mainly two factors influencing result quality : 1. The quality of rawdata itself. 2. The size of genome profile that MitoFlex currently have in the profile folder.
 
-## 7.1 Data quality
+## 8.1 Data quality
 
 MitoFlex doesn't depends on the size of data too much, since only a portion of total reads is filtered and extracted, resulted to be the clean data, the data actually used in the workflow is small, no more than 5Gbps(can be adjusted if needed). The speed of assembly is then depends on the data quality, which is mainly representing how filtered reads are concentrated on your final sequence, this is quite obvious, if the reads are aparted and have no linkage, the assembler will have to retain them at each iteration because you can't actually concat them into a single sequence, which leads to a slower iteration, and a bigger contig file. So, the findmitoscaf will have to pick out mitogenome sequences from a much larger contig file, where it could also be quite slow.
 
 The other part of data quality, is how much mitogenome is covered in the raw data, this could be varied a lot, if the input data is small, or just because the filter module extracted too much nuclear genomic sequences. Since the mitogenome is really small and possess a high depth number over the nuclear genome, the latter is rarely happened. But if you ensures that your dataset is of enough size and quality, you can increase the truncation threshold by specifing `--trimming <INT>` to X Gbps you want.
 
-## 7.2 Genome profile
+## 8.2 Genome profile
 
 MitoFlex uses `nhmmer` and `tblastn` to search for mitogenome candidates, where `nhmmer` is used to identify how a region on a sequence is related to some PCG, which is quite remote but accurate enough. This process is of high tolerance and profile can be used across phylums. BUT, the accuracy, and the average length of alignment, will be then severely reduced, where it may be difficult for MitoFlex to identify the fragments of contigs, or to determine where the sequence is belong to.
 
@@ -268,7 +299,7 @@ The `tblastn` is used for a more closely related homology search, and used to de
 
 Further adjustment on the process may be scheduled, but not now.
 
-# 8. Extending the function of MitoFlex
+# 9 Extending the function of MitoFlex
 
 Although MitoFlex has already implemented a full workflow to filter, assemble and annotate the mitogenome, and all of this can be done in one-click, it also support to modify some behaviour if you want to do.
 
@@ -276,7 +307,7 @@ MitoFlex is designed for extendability and readability, to make users to extend 
 
 MitoFlex is written in Python 3.6, so modifying the original workflow of MitoFlex requires a basic knowledge of the Python programming language.
 
-## 8.0 Calling the MitoFlex from other ways
+## 9.0 Calling the MitoFlex from other ways
 
 Bash is not always the solution, in a certain circumstances an call from python inside could be better because it allows deeper profiling and monitoring, and controlling. For example deploying and integrating the MitoFlex with environments like `Jupyter` or web servers like `Django` or `Flask`.
 
@@ -311,7 +342,7 @@ process_arguments(command='test', args=args)
 MitoFlex.test(args)
 ```
 
-## 8.1 Creating more subcommands
+## 9.1 Creating more subcommands
 
 MitoFlex mainly use two decorators, `@parse_func` and `@arg_prop` from [parser.py](utility/parser.py), to profile and collect functions needed to be a subcommand of MitoFlex runtime, which means that  attaching the `@parse_func` decorator will expose the function to commandline, and using a `@arg_prop` decorator will add a argument to it.
 
@@ -364,7 +395,7 @@ True    # print(args.switch)
 1       # print(args.c)
 ```
 
-## 8.2 Creating parameter groups
+## 9.2 Creating parameter groups
 
 Most methods shares a set of parameters, like thread numbers or input fastq file. Specifying the parameters repeatedly could be a problem, and validation will be difficult. So MitoFlex implements a parameter group processing mechanism to make this progress easier to be defined.
 To create a argument group, you need to import and execute the method `register_group` from the module [parser.py](utility/parser.py):
@@ -408,7 +439,7 @@ def bar(args):
 
 Actually you can `register_group` anywhere as long as your `@parser_func` decorator can reach there, but I strongly recommends to write all the argument settings into the [arguments.py](arguments.py) to keep the code structure clean.
 
-# 9 Reusing my code
+# 10 Reusing my code
 
 I'm very glad to see that my code is used in other fields, even in non-bioinformatic way, the [utility](utility/) folder contains most helper classes and methods used in the program development. If you want to directly reuse the code I wrote in related research field(mitogenome analyzing, for example), please cite my paper if you will publish one, if you want to implement a similar workflow yourself, please cite the MitoZ's paper since this program is inspired from the former toolkit.
 

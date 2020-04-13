@@ -31,6 +31,9 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 # # Also, this configuration used a trick to make python import and
 # # execute it as an module, thus you may add your config with some
 # # code to make it even more flexible.
+# # Please notice that arguments will change during the development, this
+# # config file is not valid between the versions, if you need a detailed
+# # config file, please use MitoFlex -g {arguments} 
 
 # # Global configuration
 # command = 'all'

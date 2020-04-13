@@ -236,7 +236,8 @@ def all(args):
     # Why I'm NOT using .gz ext here even I have implemented this:
     # 1. flate2 is slow, it takes much compressing data if single-threaded.
     # 2. plug in a SSD is much more easier than adding a CPU.
-    #
+    # 3. Some method uses only plain text data, so you need an extra (de)compression
+    #    but it means nothing in the process. 
     # Some further codes may only accept plain-text input, and I'm not adding
     # support to it.
 
@@ -323,15 +324,15 @@ def pre(args):
 
     def runtime_error_logger(exception_type, value, tb):
         if exception_type == RuntimeError:
+            logger.log(4, value)
             logger.log(
                 4,
                 'A RuntimeError was occured! This is already considered in the code'
                 ', but since it\'s thought to be errors in parts outside the MitoFlex can handle, it\'s'
-                ' NOT a bug caused by MitoFlex itself. Please check the error message below'
+                ' NOT a bug caused by MitoFlex itself. Please check the error message'
                 ' and try to fix the possible cause of the crash, only as a last resort, send '
-                'github a issue with a rerun with logger level set to 0!'
+                'github a issue with a rerun with logger level set to 0.'
             )
-            logger.log(4, value)
             logger.finalize()
             sys.exit()
         else:
