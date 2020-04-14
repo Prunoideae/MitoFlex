@@ -24,7 +24,9 @@ CAUTION : I said it needs 5-30G, is because all the dataset I used in the test a
 
 ## 1.4 CPU
 
-MitoFlex uses [MEGAHIT](https://github.com/voutcn/megahit) as assembler, thus requires more calculate power because multiple iteration of the graph is needed. The speed of assembly is mainly depends on how fragmentized the input reads are.
+MitoFlex uses [megahit](https://github.com/voutcn/megahit) as assembler, thus requires more calculate power because multiple iteration of the graph is needed. The speed of assembly is mainly depends on how fragmentized the input reads are.
+
+A recent modification enables MitoFlex to shorten the process time by over 75%, while maintaining, or even improving the accuracy of the assembly. Using a dataset of 5Gbps ([Run browser](https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1946581)), MitoFlex took 15min to finish the whole pipeline with 8 threads of Intel 9700KF and 20GB RAM usage on my develop environment.
 
 ## 1.5 GPU
 
@@ -208,7 +210,9 @@ Filter out fastq sequences of low quality, binary is written in Rust to ensure s
 
 ## 5.3 assemble
 
-Assemble the fastq file to output contigs. This method use Megahit for faster and better results, but since Megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 40min for a 5Gbps dataset, ranging from 5min to 2h) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
+Assemble the fastq file to output contigs. This method use megahit for faster and better results, but since megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 10min for a 5Gbps dataset, ranging from 1min to 40min if filtered correctly with 8 threads, will be faster if more processors specified) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
+
+To eliminate this problem and make the assembler stay focus on the mitogenome sequences, MitoFlex tweaked how the megahit's original pipeline works, inserted a filter method to filter out sequence of not enough depth - which is considered to be nuclear genome or contamination, since mitogenome should possess a much higher copy number in the reads. This strategy can be configured via `--depth-list` option.
 
 ## 5.4 findmitoscaf
 
@@ -281,7 +285,7 @@ Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex wil
 
 # 8 Things that will effect MitoFlex's overall performance
 
-MitoFlex itself isn't doing magic, though it's fast and (more) reliable, bad result could be outputted if you don't even give it a good result input, but at least it will be the most reliable result of all contigs that MEGAHIT can assemble.
+MitoFlex itself isn't doing magic, though it's fast and (more) reliable, bad result could be outputted if you don't even give it a good result input, but at least it will be the most reliable result of all contigs that megahit can assemble.
 
 There are mainly two factors influencing result quality : 1. The quality of rawdata itself. 2. The size of genome profile that MitoFlex currently have in the profile folder.
 
