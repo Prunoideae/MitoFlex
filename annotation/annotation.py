@@ -93,12 +93,32 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     # strange behaviour processing data this large...
     wise_frame = tk.wash_blast_results(wise_frame)
 
+    taxa_data = {}
+    for _, row in wise_frame.iterrows():
+        splited = str(row.qseq).split('_')
+        PCG = splited[3]
+        taxa_name = ' '.join(splited[4:6])
+        taxa_score = float(row.score)
+
+        if PCG not in taxa_data or taxa_data[PCG][1] < taxa_score:
+            taxa_data[PCG] = (taxa_name, taxa_score)
+
+    score_data = {}
+    for k, (taxa_name, taxa_score) in taxa_data.items():
+        score_data[taxa_name] = score_data[taxa_name] + \
+            1 if taxa_name in score_data else 0
+
+    most_possible = list(score_data.keys())[0]
+    for taxa_name, taxa_score in score_data.items():
+        if score_data[most_possible] < taxa_score:
+            most_possible = taxa_name
+
+    logger.log(2, f'Determined most possible species : {most_possible}')
+
     if configurations.annotation.reloc_genes:
         logger.log(2, 'Relocating genes.')
         wise_frame = tk.reloc_genes(fasta_file=fastafile,
                                     wises=wise_frame, code=genetic_code)
-    logger.log(2, f'Genewise results generated at annotation temp folder.')
-    logger.log(2, f'For taxanomy data, please open this file to have a view.')
 
     cds_indexes = {}
     cds_found = []
@@ -124,7 +144,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         hmmer_frame = hmmer_frame[~hmmer_frame['query'].isin(cds_found)]
         hmmer_frame = hmmer_frame[hmmer_frame['e'] < e_value]
         hmmer_frame = hmmer_frame[hmmer_frame['score'] > score]
-        logger.log(2, 'Recovered pcgs : \n'+str(hmmer_frame))
+        logger.log(2, 'Recovered pcgs : \n' + str(hmmer_frame))
 
     trna_out_dir = path.join(basedir, 'trna')
     os.makedirs(trna_out_dir, exist_ok=True)
@@ -165,7 +185,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
             cds = f'{cds}{"_" if count > 0 else ""}{count}'
         start, end = (min(int(row.wise_min_start), int(row.wise_max_end)),
                       max(int(row.wise_min_start), int(row.wise_max_end)))
-        frag = sequence_data[str(row.sseq)][start-1:end]
+        frag = sequence_data[str(row.sseq)][start - 1:end]
         frag.description = f'gene={cds} start={start} end={end} from={row.sseq} strand={"+" if row.plus else "-"}'
         annotated_frag.append(frag)
         annotation_json[cds] = (start, end, 0, str(
@@ -175,7 +195,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
         for _, row in hmmer_frame.iterrows():
             start, end = (min(int(row.envfrom), int(row.envto)),
                           max(int(row.envfrom), int(row.envto)))
-            frag = sequence_data[str(row.target)][start-1:end]
+            frag = sequence_data[str(row.target)][start - 1:end]
             frag.description = f'gene={str(row.query)} start={start} end={end} from={row.target} strand={row.strand}'
             annotated_frag.append(frag)
             annotation_json[str(row.query)] = (
@@ -188,7 +208,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
     for key, value in query_dict.items():
         start, end = (min(value.seqfrom, value.seqto),
                       max(value.seqfrom, value.seqto))
-        frag = sequence_data[value.sequence][start-1:end]
+        frag = sequence_data[value.sequence][start - 1:end]
         frag.description = f'gene=trn{key} start={start} end={end}'
         annotated_frag.append(frag)
         annotation_json[f'trn{key}'] = (
@@ -199,7 +219,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
                       max(result_12.seqfrom, result_12.seqto))
         logger.log(
             2, f'12s rRNA found from {start} to {end}')
-        frag = sequence_data[result_12.sequence][start-1:end]
+        frag = sequence_data[result_12.sequence][start - 1:end]
         frag.description = f'gene=rrnS start={start} end={end}'
         annotated_frag.append(frag)
         annotation_json['rrnS'] = (
@@ -210,7 +230,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
                       max(result_16.seqfrom, result_16.seqto))
         logger.log(
             2, f'16s rRNA found from {start} to {end}')
-        frag = sequence_data[result_16.sequence][start-1:end]
+        frag = sequence_data[result_16.sequence][start - 1:end]
         frag.description = f'gene=rrnL start={start} end={end}'
         annotated_frag.append(frag)
         annotation_json['rrnL'] = (

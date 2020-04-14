@@ -237,9 +237,9 @@ def all(args):
     # 1. flate2 is slow, it takes much compressing data if single-threaded.
     # 2. plug in a SSD is much more easier than adding a CPU.
     # 3. Some method uses only plain text data, so you need an extra (de)compression
-    #    but it means nothing in the process. 
+    #    but it means nothing in the process.
     # Some further codes may only accept plain-text input, and I'm not adding
-    # support to it.
+    # support of gzip to it.
 
     args.cleanq1 = 'clean.1.fq'
     args.cleanq2 = 'clean.2.fq'
@@ -253,8 +253,8 @@ def all(args):
     args.fastafile = findmitoscaf(args)
 
     if not args.disable_annotation:
-        args.pos_json, args.circular, args.annotated_cds, args.annotated_rna = annotate(
-            args)
+        (args.pos_json, args.circular,
+         args.annotated_cds, args.annotated_rna) = annotate(args)
 
         # Visualization is of no way if not annotated.
 
@@ -262,7 +262,7 @@ def all(args):
             args) if not args.disable_visualization else (None, None)
 
     # Add command check if there's something further
-    # If you warpped the 'all' module in other task or workflow
+    # If you wrapped the 'all' module in other task or workflow
     # the results will be retained since we don't know what you
     # want.
     if args.__calling == 'all':
