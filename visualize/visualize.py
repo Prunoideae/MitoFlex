@@ -34,8 +34,9 @@ try:
     from utility.bio import circos
     from visualize import circos_config
     from utility import logger
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(
+        f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 
 def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
@@ -128,10 +129,10 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
         for seq in list_conv:
             # Stepping 50 to walk through
             for s in range(0, len(seq), 50):
-                seq_slice = seq[s:s+50]
+                seq_slice = seq[s:s + 50]
                 gc_num = sum(x == 'G' or x == 'C' for x in seq_slice)
                 gc_per = gc_num / len(seq_slice)
-                print(seq.id, s, s+len(seq_slice), gc_per, file=gc_f)
+                print(seq.id, s, s + len(seq_slice), gc_per, file=gc_f)
 
     # Karyotype
     logger.log(1, 'Generating chr files.')

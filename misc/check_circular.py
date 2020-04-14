@@ -27,8 +27,8 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.parser import parse_func, parse_then_call, freeze_main, arg_prop
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(f"Unable to import helper module {err}, is the installation of MitoFlex valid?")
 
 from Bio import SeqIO
 import subprocess

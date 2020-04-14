@@ -32,8 +32,8 @@ try:
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
     from assemble.assemble_wrapper import MEGAHIT, EmptyGraph  # pylint: disable=import-error, no-name-in-module
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 bin_dir = path.dirname(__file__)
 

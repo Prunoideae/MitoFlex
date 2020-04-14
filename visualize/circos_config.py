@@ -28,8 +28,8 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.bio import circos
     from configurations import visualize as v_conf
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 # The color that will be used in marked genes.
 # 0 for protein, 1 for tRNAs, 2 for rRNAs

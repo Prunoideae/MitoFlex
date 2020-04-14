@@ -37,8 +37,8 @@ try:
     from utility.bio.seq import decompile
     from annotation import annotation_tookit as tk
     from utility import logger
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 ncbi = NCBITaxa()
 mitoflex_dir = path.abspath(path.join(path.dirname(__file__), '..'))

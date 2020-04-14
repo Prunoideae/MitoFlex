@@ -40,8 +40,9 @@ try:
     from Bio.Seq import Seq
     from Bio.Data import CodonTable
     import configurations
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(
+        f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 
 # Truncates all the -- to - to suit blast's parsing style
@@ -113,7 +114,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
     blast_frame['qmax'] = blast_frame.groupby('qseq')['qend'].transform(
         lambda x: max(x) if x.count() > 2 else x)
     blast_frame = blast_frame[blast_frame.qend - blast_frame.qstart
-                              >= blast_frame.qmax*0.25]
+                              >= blast_frame.qmax * 0.25]
 
     # For logging purpose
     os.remove(blast_file)
@@ -146,8 +147,8 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None):
             highest = frame[frame.score == frame.score.max()].head(1)
             results.append(highest)
 
-            max_len = int(highest.send - highest.sstart)+1
-            max_start = int(highest.sstart)+1
+            max_len = int(highest.send - highest.sstart) + 1
+            max_start = int(highest.sstart) + 1
             max_end = int(highest.send)
             max_gene = str(highest.qseq).split('_')[3]
 
@@ -213,7 +214,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         query_file = path.join(query_dir, f'{query_prefix}.fa')
 
         SeqIO.write(queries[wise.sseq]
-                    [wise.sstart-1:wise.send], query_file, 'fasta')
+                    [wise.sstart - 1:wise.send], query_file, 'fasta')
 
         result = subprocess.check_output(
             concat_command('genewise', codon=codon_table,
@@ -235,10 +236,10 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                        if x.split('\t')[2] == 'cds']
         for x in wise_result:
             # Fix the actual position of seq
-            x[3] = str(int(x[3]) + wise.sstart-1)
-            x[4] = str(int(x[4]) + wise.sstart-1)
+            x[3] = str(int(x[3]) + wise.sstart - 1)
+            x[4] = str(int(x[4]) + wise.sstart - 1)
         wise_result.sort(key=lambda x: int(x[3]))
-        wise_shift = sum(x[2] == 'match' for x in wise_result)-1
+        wise_shift = sum(x[2] == 'match' for x in wise_result) - 1
         wise_start = min(int(x[3]) for x in wise_result)
         wise_end = max(int(x[4]) for x in wise_result)
         wise_dict[(wise.qseq, wise.sseq)] = (
@@ -264,7 +265,7 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
     wises.assign(start_real=np.nan, end_real=np.nan)
     for _, wise in wises.iterrows():
         start_real = end_real = -1
-        seq = wise_seqs[wise.sseq][wise.sstart-29: wise.send+30]
+        seq = wise_seqs[wise.sseq][wise.sstart - 29: wise.send + 30]
         if not wise.plus:
             seq = seq.reverse_complement()
 
@@ -279,7 +280,7 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
         # Finding stop
         if trans.seq.find('*') != -1:
             offset = trans.seq.find('*') * 3
-            end_real = (wise.sstart+1 + offset
+            end_real = (wise.sstart + 1 + offset
                         if wise.plus else
                         wise.send - offset)
         else:
@@ -290,13 +291,13 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
 
             if offset != -1:
                 end_real = (
-                    wise.send+30 + offset if wise.plus else wise.sstart - 28 - offset)
+                    wise.send + 30 + offset if wise.plus else wise.sstart - 28 - offset)
 
         # Finding start
         # Find the last M of mercied part of translated seq, where it should be the start codon
         mercy = trans[:10:-1].seq.find('M')
         if mercy != -1:
-            offset = (10-mercy) * 3
+            offset = (10 - mercy) * 3
             start_real = wise.sstart + offset - 29 if wise.plus else wise.send + 30 + offset
 
         wise.wise_min_start, wise.wise_max_end = (
@@ -403,7 +404,7 @@ def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, ge
             query_dict[gene.amino] = gene
         else:
             query_dict[gene.amino + str(sum(x.startswith(gene.amino)
-                                            for x in query_dict.keys())+1)] = gene
+                                            for x in query_dict.keys()) + 1)] = gene
 
     missing_trnas = [
         x for x in codon_table.back_table if x not in query_dict and x]

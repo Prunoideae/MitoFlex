@@ -34,8 +34,9 @@ try:
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
     import psutil
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(
+        f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 
 class EmptyGraph(Exception):

@@ -29,8 +29,8 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import shell_call
     from utility import logger
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 filter_dir = os.path.dirname(os.path.abspath(__file__))
 

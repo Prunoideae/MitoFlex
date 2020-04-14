@@ -409,7 +409,7 @@ from utility.parser import register_group
 def handler(args):
     try:
         args.arglist = args.str_list.split(',')
-    except Exception as i:
+    except Exception:
         print('Error occured when parsing the argument str-list!')
     # Returning value tells MitoFlex whether to run the process or not, returning
     # True means the processed arguments are valid, and vise versa.

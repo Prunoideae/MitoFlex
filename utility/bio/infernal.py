@@ -29,8 +29,8 @@ try:
         os.path.dirname(os.path.abspath(__file__)), "..")))
     # import wuss
     from utility.bio import wuss
-except Exception:
-    sys.exit("Unable to import helper module, is the installation of MitoFlex valid?")
+except ImportError as err:
+    sys.exit(f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 
 '''
