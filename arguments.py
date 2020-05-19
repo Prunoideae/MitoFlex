@@ -301,7 +301,7 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
     },
     {
         'name': 'depth-list',
-        'default': '10,20,20,50,50,100,100',
+        'default': '10,20,20,50,50,70,70',
         'help': 'list of depths to limit the output in assembly, paired with kmer-list.'
     },
     {

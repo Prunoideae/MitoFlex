@@ -21,8 +21,6 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-# TODO : Implement a workflow
-
 import os
 import sys
 from os import path

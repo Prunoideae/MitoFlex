@@ -43,8 +43,6 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              prune_level=2, prune_depth=2, keep_temp=False,
              threads=8, min_multi=3.0):
 
-    # TODO : Modify the megahit's default workflow to make it optimized.
-
     logger.log(2, 'Start assembling mitochondrial sequences.')
 
     logger.log(1, f'Using kmer list : {kmer_list}')
@@ -110,7 +108,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
 # This is currently NOT a working function.
 # The effect of scaffolding using SOAPdenovo-fusion is still
-# under investigation.
+# under investigation, and likely to be discarded.
 def scaffolding(fastq1=None, fastq2=None):
     soap_fusion = path.join(bin_dir, 'SOAPdenovo-fusion')
     soap_127 = path.join(bin_dir, 'SOAPdenovo-127mer')
