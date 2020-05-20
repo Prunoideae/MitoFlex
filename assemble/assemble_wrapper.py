@@ -58,6 +58,14 @@ class ContigInfo():
 class MEGAHIT():
     '''
     A more dedicated wrapper to assemble mitogenome sequences with megahit.
+    
+    Introduced a filter of depth and length, enabling a much more in-site
+    changes of the original pipeline, since MEGAHIT is original designed
+    for assembling metagenomes, which usually possess a ultra-low depth of
+    sequencing, almost contracted to the requirements of mitogenome assembly.
+
+    Such a filter can effectively reduce the noise of graph, while retaining
+    most of, even improve the quality of graph.
     '''
     basedir = None
     fq1 = None
@@ -148,7 +156,7 @@ class MEGAHIT():
                 print('pe', self.fq1, self.fq2, file=l)
             else:
                 print(self.fq1, file=l)
-                print('se', self.fq1, self.fq2)
+                print('se', self.fq1, file=l)
 
         logger.log(1, "Converting reads to binary library.")
         shell_call(self.MEGAHIT_CORE, 'buildlib', self.read_lib, self.read_lib)

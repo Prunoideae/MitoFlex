@@ -257,7 +257,6 @@ def all(args):
          args.annotated_cds, args.annotated_rna) = annotate(args)
 
         # Visualization is of no way if not annotated.
-
         args.circos_png, args.circos_svg = visualize(
             args) if not args.disable_visualization else (None, None)
 
@@ -366,13 +365,14 @@ def post(args):
         # Not removing until here since cleanq1 and cleanq2 have many other usage other than assembling
         logger.log(1, 'Removing filtered data files.')
         os.remove(args.cleanq1)
-        if hasattr(args, 'cleanq2'):
+        if args.fastq2 != None:
             os.remove(args.cleanq2)
     logger.log(2, f'All done! Time elapsed : {time.time()-start_time:.2f}s.')
     logger.finalize()
 
 
-# Entry starts at here
+# Entry starts at here, things are mainly handled by the built-in CLI, please
+# do not change anything here unless you really know what you are doing.
 if __name__ == '__main__':
     parser = freeze_arguments('MitoFlex', desc)
     parse_then_call(parser, pre=pre, post=post)
