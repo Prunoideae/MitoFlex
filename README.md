@@ -16,29 +16,27 @@ Installing MitoFlex requires about 1GB of space (Including dependency packages).
 
 It takes about 5-30G to assemble the genome from a 5Gbps pair-end rawdata sample with thread number set to 80 (`--thread_number 80`). The memory consumption is highly varied, mainly depends on the fragmentation of the quality of rawdata, a dataset with more focus reads on mitogenome will absolutely takes much lesser memory since the contigs are limited. It takes much lower memory space in comparison to MitoZ, as MitoFlex uses the succinct de Brujin Graph (sDBG), a succinct representation of de Brujin Graph. Improving the data quality could reduce the memory usage.
 
-The average RAM consumption of MitoFlex is usually at 5G or even lower, but there are a few points that will consume much resource, the first one is the graph construction of megahit, which takes from 5G to 20G, but assembly will then only takes 1-3G to be done, the second one is the nhmmer search part explicitly in findmitoscaf module, where it takes about 15G or higher for searching against all the profiles.
+The average RAM consumption of MitoFlex is usually at 5G or even lower, but there are a few points that will consume much resource, the first one is the graph construction of megahit, which takes from 5G to 20G, but assembly will then only takes 1-3G to be done, the second one is the nhmmer search part explicitly in findmitoscaf module, where it takes about 15G or higher for searching against all the profiles. The steps are not parallelly processed, so 20GB or so is enough to deal with any type of data, or even less if the sample is small.
 
-So, a machine with over 32 GB spare RAM is recommended, giving more could be better. As the workflow develops even further, some part of the module may requires even more RAM.
-
-CAUTION : I said it needs 5-30G, is because all the dataset I used in the test and production environment takes no more than 30G (at most 26G), and I'm not saying that it will never uses more than 30G, and it will certainly crash if you are not giving enough memory. If MitoFlex was abruptly terminated with stderr like `Killed`, or something that tolds you the machine is out of memory, this is just because the machine is actually out of memory, and not much I can help about this. If you really want to run this, I will suggest you to : 1. Decrease the truncation threshold of filter, trimming the assemble data input will certainly decrease the memory it used to build graph and assemble, but this will absolutely make it output worse results. 2. Run it on a better environment, at least give it enough memory to use. I have already optimized the performance everything I can do about this, if you have any suggestion about optimization, please create a pull request and I will try my best on pushing it further.
+So, a machine with over 32 GB spare RAM is recommended, giving more could be more robust to deal with samples which are quite messy. As the workflow develops even further, some part of the module may requires even more or less RAM.
 
 ## 1.4 CPU
 
 MitoFlex uses [megahit](https://github.com/voutcn/megahit) as assembler, thus requires more calculate power because multiple iteration of the graph is needed. The speed of assembly is mainly depends on how fragmentized the input reads are.
 
-A recent modification enables MitoFlex to shorten the process time by over 75%, while maintaining, or even improving the accuracy of the assembly. Using a dataset of 5Gbps ([Run browser](https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1946581)), MitoFlex took 15min to finish the whole pipeline with 8 threads of Intel 9700KF and 20GB RAM usage on my develop environment.
+A recent modification enables MitoFlex to shorten the process time by over 75%, while maintaining, or even improving the accuracy of the assembly. Using a dataset of 5Gbps ([Run browser](https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1946581)), MitoFlex took 15min to finish the whole pipeline with 8 threads of Intel 9700KF and 20GB RAM usage on my laptop for developing.
 
 ## 1.5 GPU
 
-MitoFlex does not explicitly requires GPU in the work, but a GPU will accelerate the process of sDBG building. The server I'm developing MitoFlex on has no GPU, so I can't tell much at this part.
+MitoFlex does not explicitly requires GPU in the work, but a GPU will accelerate the process of sDBG building. The server I'm testing MitoFlex on has no GPU, so I can't tell much at this part.
 
 # 2 Installation
 
-## 2.1 From Docker Image (Implementation rejected)
+## 2.1 From Docker Image (No recent implementation)
 
 ## 2.2 From git repository (Conda required)
 
-For certain conditions, like if you don't have a sudo permission or root command, you can deploy MitoFlex from git without any.
+For certain conditions, like if you don't have a sudo permission or root command, you can deploy MitoFlex from git directly.
 
 To download MitoFlex from Github, simply type:
 
@@ -46,7 +44,7 @@ To download MitoFlex from Github, simply type:
 git clone --depth=1 https://github.com/Prunoideae/MitoFlex
 ```
 
-And git will pull the MitoFlex into your current directory, downloading zip file and extract it to installation folder is also ok.
+And git will pull the MitoFlex into your current directory, downloading the repo as zip and extract it to installation folder is also ok.
 
 ### 2.2.1 Installing Conda
 
@@ -83,16 +81,7 @@ megahit blast infernal circos hmmer wise2 bwa samtools infernal
 
 You will have to solve the dependencies of required packages if not using conda. The upper 4 are python modules, and the lower ones are programs.
 
-### 2.2.4 Installing MitoFlex from Git
-
-```bash
-git clone https://github.com/Prunoideae/MitoFlex
-cd MitoFlex
-```
-
-MitoFlex will be downloaded from the remote Git. Some further configuration will need to be done to make sure the environment is really ready to go.
-
-### 2.2.5 Setting up NCBI taxanomy database
+### 2.2.4 Setting up NCBI taxanomy database
 
 Running `ncbi.py` from command line automatically updates the local database from NCBI taxanomy database.
 
@@ -102,7 +91,7 @@ Running `ncbi.py` from command line automatically updates the local database fro
 
 Updating database from network is not always stable. `ncbi.py` will fall back to the local `taxdump.tar.gz` if any error occurs in the process.
 
-### 2.2.6 Run MitoFlex
+### 2.2.5 Run MitoFlex
 
 To test if MitoFlex is installed correctly, type :
 
@@ -124,9 +113,9 @@ or you can use the `test_config.py` config file in the directory to test if the 
 
 this config assumes that the sample fastq is under the same directory as config does.
 
-The test sample is done in 3min on my computer (Intel i7-9700KF, WSL2 Ubuntu) with 8 threads. 1-2 GB of spare RAM is required to run MitoFlex.
+The test sample is done in 3min on my computer (Intel i7-9700KF, WSL2 Ubuntu) with 8 threads. 1-2 GB of spare RAM is required to run the sample.
 
-Result the same as the result in `test.tar.gz` if there's no error in your installation, otherwise you need to check the whole progress. Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
+Result will be the same as that in `test.tar.gz` if there's no error in your installation, otherwise you need to check the whole progress. Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
 
 ```bash
 echo 'export $PATH="/path/to/installation/directory:$PATH"' >> '/path/to/rc'
@@ -144,7 +133,7 @@ This helps you better understand how MitoFlex will work, and so you can tune Mit
 
 # 3 Data requirement
 
-MitoFlex depends on the quality more than the size of data, it will not throw any error if your input fastq file is too small or something, but the result may be of low quality if the raw dataset is small or unqualified.
+MitoFlex depends on the quality more than the size of data, it will not throw any error if your input fastq file is too small or something, but the result may be of low quality or nothing if the raw dataset is too small or unqualified to assemble a genome.
 
 # 4 Specifying parameters in configuration file
 
@@ -152,7 +141,7 @@ MitoFlex uses a very flexible argument catching and processing mechanism, which 
 
 ## 4.1 Configuration file structure
 
-MitoFlex's configuration file is more like a independent python file than a traditional configuration file (*.cfg or *.json or something).
+MitoFlex's configuration file is more like a independent python file than a traditional configuration file (\*.cfg or \*.json or something).
 
 ```python
 
@@ -210,7 +199,7 @@ Filter out fastq sequences of low quality, binary is written in Rust to ensure s
 
 ## 5.3 assemble
 
-Assemble the fastq file to output contigs. This method use megahit for faster and better results, but since megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 10min for a 5Gbps dataset, ranging from 1min to 40min if filtered correctly with 8 threads, will be faster if more processors specified) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also increase the fragmentation of output contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
+Assemble the fastq file to output contigs. This method use megahit for faster and better results, but since megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 20min for a 5Gbps dataset, ranging from 1min to 1.5h if filtered correctly with 8 threads, will be much more faster if more processors specified) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also may output more fragmentized contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
 
 To eliminate this problem and make the assembler stay focus on the mitogenome sequences, MitoFlex tweaked how the megahit's original pipeline works, inserted a filter method to filter out sequence of not enough depth - which is considered to be nuclear genome or contamination, since mitogenome should possess a much higher copy number in the reads. This strategy can be configured via `--depth-list` option.
 
@@ -230,7 +219,7 @@ To generate PNG and SVG file representing current mitogenome in a more direct wa
 
 ## 6.1 "Killed" or showing not enough memory, or something like that
 
-Your machine is running out of memory, please add more.
+Your machine is running out of memory, please add more. This is not a code bug or something, it's necessary for MitoFlex to use some memory, to assemble from GBs of reads, or picking up candidate from millions of contigs.
 
 ## 6.2 Mitogenome sequences not found in `findmitoscaf`, or not outputting enough sequences in assembly
 
@@ -247,7 +236,7 @@ This is because no sequences is output during the last iteration, no any of the 
 
 ## 6.4 Input file 1 and 2 have different sizes! This could cause loss on rawdata, or even crash the program
 
-Your input PE reads are not of the same size, it indicates a mismatch between two file, and it will likely stop the programs like `bwa` from starting, halting the pipeline.
+Your input PE reads are not of the same size, it indicates a mismatch between two file, and it will likely stop the programs like `bwa` from starting, halting the pipeline, or have some graph element missing.
 
 ## 6.5 Module XXX is not found! / Cannot import helper module XXX
 
@@ -256,6 +245,14 @@ You have an invalid installation, or environment setup, please check if your ins
 ## 6.6 Cannot validate folder / Folder X is already existed
 
 MitoFlex failed to create a folder, or a previous folder exists so MitoFlex can't make sure if the folder is removable or not. Please check your permission or try to investigate the files in the folder and remove it if it's save to remove.
+
+## 6.7 I'm using MitoFlex on flatworms, but the closely-related species is some strange Echinodermata thing!
+
+MitoFlex doesn't know what species you are processing, the only thing it has just a local protein database, which contains many protein records of different species.
+
+Since then, such a species-judging method is not driven by something that so accurate, MitoFlex can only check out the numbers of PCGs that certain species contains, if a species contributed the most PCGs during the annotation, then it's the closet-related progress, and if two or more species contributed the same amount, only a random *one* of them can be selected.
+
+So, the accuracy is neither guaranteed nor possible. If you want to use MitoFlex to aid your classification of species, I would suggest you to check out the `wise.csv` under the `workname/temp/annotation` folder, it contains a full list of PCGs and corresponding species that are thought to be the mitogenome's hit, you may find something more in this.
 
 # 7 Adding new profile data to MitoFlex
 
