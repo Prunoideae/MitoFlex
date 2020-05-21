@@ -84,7 +84,7 @@ def scaf2mega(i, o, overlay):
     if a_conf.show_from_soap:
         logger.log(3, "NOTICE: due to the limit of SOAPdenovo-fusion and 127mer, scaffold kmer are not correctly calculated.")
         logger.log(3, "To avoid the later process to unwisely filter out scaffolds, these sequences are always tolerated!")
-        logger.log(3, "But don't worry, if you have a correct depth filter setup, output contigs and should always be safe enough.")
+        logger.log(3, "But don't worry, if you have a correct depth filter setup, output scaffolds should always be safe enough.")
         logger.log(3, "You can disable this message in the configurations.py if you have already knew this.")
 
     for idx, s in enumerate(SeqIO.parse(i, 'fasta')):
