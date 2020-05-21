@@ -43,7 +43,7 @@ bin_dir = path.dirname(__file__)
 def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              kmer_list=None, depth_list=None, disable_local=False,
              prune_level=2, prune_depth=2, keep_temp=False,
-             threads=8, min_multi=3.0, insert_size=125):
+             threads=8, min_multi=3.0, insert_size=125, no_scaf=False):
 
     logger.log(2, 'Start assembling mitochondrial sequences.')
 
@@ -105,11 +105,14 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
     megahit.finalize(megahit.kmax)
 
-    soap = SOAP(fastq1, fastq2, megahit.final_contig,
-                libread.max_len, insert_size, base_dir, threads, work_prefix)
-    logger.log(2, "Building lib.")
-    soap.lib()
-    logger.log(2, "Calling SOAP-Wrapper.")
-    shell_call(f'cat {soap.scaf()} >> {megahit.final_contig}')
+    if not no_scaf:
+        soap = SOAP(fastq1, fastq2, megahit.final_contig,
+                    libread.max_len, insert_size, base_dir, threads, work_prefix)
+        logger.log(2, "Building lib.")
+        soap.lib()
+        logger.log(2, "Calling SOAP-Wrapper.")
+        shell_call(f'cat {soap.scaf()} >> {megahit.final_contig}')
+    else:
+        logger.log(2, "Scaffolding skipped due to disabled.")
 
     return megahit.final_contig

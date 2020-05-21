@@ -295,6 +295,11 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'help': 'disable the local assembly of MEGAHIT, will have a performance imporve but may lowers the result quality.'
     },
     {
+        'name': 'disable-scaffolding',
+        'default': False,
+        'help': 'disable the scaffolding, actually scaffolding has little effect on the pipeline.'
+    },
+    {
         'name': 'kmer-list',
         'default': '31,39,59,79,99,119,141',
         'help': 'list of kmer to use in sDBG building, all length must be odd, will be sorted when building.'
@@ -314,6 +319,11 @@ assembly_parser, assembly_group = register_group('Assembly arguments', [
         'name': 'prune-depth',
         'default': 2,
         'help': 'remove unitigs with avg kmer depth less than this value.'
+    },
+    {
+        'name': 'insert-size',
+        'default': 150,
+        'help': 'the insert size of reads, used in scaffolding.'
     }
 ], func=assembly_regulator)
 

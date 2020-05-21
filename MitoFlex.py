@@ -119,7 +119,8 @@ def assemble(args):
                                   work_prefix=args.workname, disable_local=args.disable_local,
                                   kmer_list=args.kmer_list, depth_list=args.depth_list,
                                   prune_level=args.prune_level, prune_depth=args.prune_depth,
-                                  keep_temp=args.keep_temp, threads=args.threads)
+                                  keep_temp=args.keep_temp, threads=args.threads,
+                                  insert_size=args.insert_size, no_scaf=args.disable_scaffolding)
 
     # Further processing for calling directly
     if args.__calling == 'assemble':
