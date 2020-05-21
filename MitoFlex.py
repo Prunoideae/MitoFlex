@@ -238,8 +238,8 @@ def all(args):
     # 2. plug in a SSD is much more easier than adding a CPU.
     # 3. Some method uses only plain text data, so you need an extra (de)compression
     #    but it means nothing in the process.
-    # Some further codes may only accept plain-text input, and I'm not adding
-    # support of gzip to it.
+    # 4. Some further codes may only accept plain-text input, and I'm not adding
+    #    support of gzip to it.
 
     args.cleanq1 = 'clean.1.fq'
     args.cleanq2 = 'clean.2.fq'

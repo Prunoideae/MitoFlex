@@ -32,8 +32,10 @@ try:
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
     from assemble.assemble_wrapper import MEGAHIT, EmptyGraph  # pylint: disable=import-error, no-name-in-module
+    from assemble.scaffold_wrapper import SOAP, scaf2mega
 except ImportError as err:
-    sys.exit(f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
+    sys.exit(
+        f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 bin_dir = path.dirname(__file__)
 
@@ -41,7 +43,7 @@ bin_dir = path.dirname(__file__)
 def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              kmer_list=None, depth_list=None, disable_local=False,
              prune_level=2, prune_depth=2, keep_temp=False,
-             threads=8, min_multi=3.0):
+             threads=8, min_multi=3.0, insert_size=125):
 
     logger.log(2, 'Start assembling mitochondrial sequences.')
 
@@ -103,13 +105,11 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
     megahit.finalize(megahit.kmax)
 
+    soap = SOAP(fastq1, fastq2, megahit.final_contig,
+                libread.max_len, insert_size, base_dir, threads, work_prefix)
+    logger.log(2, "Building lib.")
+    soap.lib()
+    logger.log(2, "Calling SOAP-Wrapper.")
+    shell_call(f'cat {soap.scaf()} >> {megahit.final_contig}')
+
     return megahit.final_contig
-
-
-# This is currently NOT a working function.
-# The effect of scaffolding using SOAPdenovo-fusion is still
-# under investigation, and likely to be discarded.
-def scaffolding(fastq1=None, fastq2=None):
-    soap_fusion = path.join(bin_dir, 'SOAPdenovo-fusion')
-    soap_127 = path.join(bin_dir, 'SOAPdenovo-127mer')
-    pass
