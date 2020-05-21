@@ -9,6 +9,7 @@ try:
     from misc.check_circular import check_circular
     from utility import logger
     from Bio import SeqIO
+    from configurations import assemble as a_conf
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -67,20 +68,30 @@ class SOAP():
         logger.log(2, "Scaffolding.")
         shell_call(soap_127, 'scaff', p=self.threads, g=prefix)
 
-        scaf2mega(prefix + '.scafSeq', prefix + '.fasta')
+        # Convert
+        logger.log(2, "Converting output scaffolds back.")
+        scaf2mega(prefix + '.scafSeq',
+                  prefix + '.fasta',
+                  overlay=self.read_length)
 
         return prefix + '.fasta'
 
 
-def scaf2mega(i, o):
+def scaf2mega(i, o, overlay):
     translated = []
-    results = check_circular(1000, 300, 300, i)
+    results = check_circular(1000, overlay * 2, overlay * 2, i)
+
+    if a_conf.show_from_soap:
+        logger.log(3, "NOTICE: due to the limit of SOAPdenovo-fusion and 127mer, scaffold kmer are not correctly calculated.")
+        logger.log(3, "To avoid the later process to unwisely filter out scaffolds, these sequences are always tolerated!")
+        logger.log(3, "But don't worry, if you have a correct depth filter setup, output contigs and should always be safe enough.")
+        logger.log(3, "You can disable this message in the configurations.py if you have already knew this.")
 
     for idx, s in enumerate(SeqIO.parse(i, 'fasta')):
-        multi = s.description.split()[1]
         flag = 3 if results and len(results) >= idx and \
-            results[idx][0] != -1 else 1
-        s.description = f"flag={flag} multi={multi} len={len(s)}"
+            results[idx][0] != -1 and results[idx][0][1] >= overlay else 1
+        # This is because multi is not correctly counted by SOAPdenovo-fusion
+        s.description = f"flag={flag} multi=32767 len={len(s)}"
         translated.append(s)
 
     SeqIO.write(translated, o, 'fasta')

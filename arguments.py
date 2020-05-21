@@ -70,6 +70,12 @@ def universal_regulator(args):
             f"Specified thread number not in range, using {tr} threads instead.")
         args.threads = tr
 
+    args.level = ['code', 'debug', 'info',
+                  'warn', 'error'].index(args.level)
+
+    if args.level == 0:
+        print("Using logger level 0, this could lead to a very verbose logging.")
+
     return True
 
 
@@ -122,11 +128,6 @@ def fastq_regulator(args):
     if not (os.path.isfile(args.fastq1) and (args.fastq2 is None or os.path.isfile(args.fastq2))):
         valid = False
         print("Input FASTQ file is not valid.")
-
-    args.level = ['code', 'debug', 'info', 'warn', 'error'].index(args.level)
-
-    if args.level == 0:
-        print("Using logger level 0, this could lead to a very verbose logging.")
 
     return valid
 

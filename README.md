@@ -115,7 +115,9 @@ this config assumes that the sample fastq is under the same directory as config 
 
 The test sample is done in 3min on my computer (Intel i7-9700KF, WSL2 Ubuntu) with 8 threads. 1-2 GB of spare RAM is required to run the sample.
 
-Result will be the same as that in `test.tar.gz` if there's no error in your installation, otherwise you need to check the whole progress. Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
+Result will be the similar as that in `test.tar.gz` if there's no error in your installation, sequence should be cicular, PCGs and rRNAs should all be founded, otherwise you need to check the whole progress.
+
+Exporting the directory to `PATH` environment variable is recommended for calling it more easily.
 
 ```bash
 echo 'export $PATH="/path/to/installation/directory:$PATH"' >> '/path/to/rc'

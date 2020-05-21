@@ -92,6 +92,9 @@ assemble.min_length = 200
 # The maximum length for contig to output in the iteration.
 assemble.max_length = 30000
 
+# Show warning of multi value outputted by SOAP-Wrapper?
+assemble.show_from_soap = True
+
 # Findmitoscaf
 
 # Annoation

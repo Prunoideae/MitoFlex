@@ -111,7 +111,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         logger.log(2, "Building lib.")
         soap.lib()
         logger.log(2, "Calling SOAP-Wrapper.")
-        shell_call(f'cat {soap.scaf()} >> {megahit.final_contig}')
+        return soap.scaf()
     else:
         logger.log(2, "Scaffolding skipped due to disabled.")
 
