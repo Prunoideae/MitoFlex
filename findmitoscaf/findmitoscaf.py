@@ -259,9 +259,6 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                 set([x[0] for x in gene_map])
             )
 
-            for conf in conflicts:
-                print(conf)
-
             selected_candidates[empty_pcg] = final_candidates
 
             total_length = sum([abs(candidates[index][empty_pcg][2] - candidates[index][empty_pcg][1])

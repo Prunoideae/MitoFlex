@@ -72,21 +72,18 @@ class SOAP():
         # Convert
         logger.log(2, "Converting output scaffolds back.")
         scaf2mega(prefix + '.scafSeq',
-                  prefix + '.fasta',
+                  path.join(path.dirname(self.contigs), 'scaf.fa'),
                   overlay=self.final_kmer)
-
-        return prefix + '.fasta'
+        return path.join(path.dirname(self.contigs), 'scaf.fa')
 
 
 def scaf2mega(i, o, overlay):
     translated = []
     results = check_circular(1000, overlay * 2, overlay * 2, i)
 
-    print(results)
-
     if a_conf.show_from_soap:
         logger.log(
-            3, "NOTICE: due to the limit of SOAPdenovo-fusion and 127mer, scaffold kmer are not correctly calculated.")
+            3, "NOTICE: due to the limit of SOAPdenovo-fusion and 127mer, scaffolds' depths are not correctly calculated.")
         logger.log(
             3, "To avoid the later process to unwisely filter out scaffolds, these sequences are always tolerated!")
         logger.log(
@@ -95,7 +92,6 @@ def scaf2mega(i, o, overlay):
             3, "You can disable this message in the configurations.py if you have already knew this.")
 
     for idx, s in enumerate(SeqIO.parse(i, 'fasta')):
-        print(results[idx][0], overlay)
         flag = 3 if results and len(results) >= idx and \
             results[idx][0] != -1 and results[idx][0][1] - results[idx][0][0] >= overlay else 1
         # This is because multi is not correctly counted by SOAPdenovo-fusion
