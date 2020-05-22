@@ -107,7 +107,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
     if not no_scaf:
         soap = SOAP(fastq1, fastq2, megahit.final_contig,
-                    libread.max_len, insert_size, base_dir, threads, work_prefix)
+                    libread.max_len, insert_size, base_dir, threads, work_prefix, megahit.kmax)
         logger.log(2, "Building lib.")
         soap.lib()
         logger.log(2, "Calling SOAP-Wrapper.")
