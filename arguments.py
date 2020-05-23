@@ -188,7 +188,7 @@ def filter_regulator(args):
         safe_makedirs(args.clean_dir)
     except FileExistsError:
         valid = False
-        print('Diretory exist before validating, please check and remove it to prevent data loss.')
+        print('Diretory exists before validating, please check and remove it to prevent data loss.')
     except Exception:
         valid = False
         print('Error occured when validating the directories, please check your permissions or things could be related.')

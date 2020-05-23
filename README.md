@@ -244,7 +244,7 @@ Your input PE reads are not of the same size, it indicates a mismatch between tw
 
 You have an invalid installation, or environment setup, please check if your installation is good, and you have switched to a proper conda environment.
 
-## 6.6 Cannot validate folder / Folder X is already existed
+## 6.6 Cannot validate folder / Folder X already exists
 
 MitoFlex failed to create a folder, or a previous folder exists so MitoFlex can't make sure if the folder is removable or not. Please check your permission or try to investigate the files in the folder and remove it if it's save to remove.
 
