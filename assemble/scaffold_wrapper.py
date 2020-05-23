@@ -73,7 +73,7 @@ class SOAP():
         logger.log(2, "Converting output scaffolds back.")
         scaf2mega(prefix + '.scafSeq',
                   path.join(path.dirname(self.contigs), 'scaf.fa'),
-                  overlay=self.final_kmer)
+                  overlay=kmer)
         return path.join(path.dirname(self.contigs), 'scaf.fa')
 
 
