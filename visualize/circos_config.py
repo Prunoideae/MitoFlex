@@ -182,6 +182,7 @@ with circos_conf.plots as plots:
         plot.type = 'line'
         plot.thickness = 2
         plot.max_gap = '1u'
+        plot.skip_run = 'yes'
         # Sequencing depth out file
         plot.file = None
         plot.color = 'dgreen'
