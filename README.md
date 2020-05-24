@@ -248,13 +248,21 @@ You have an invalid installation, or environment setup, please check if your ins
 
 MitoFlex failed to create a folder, or a previous folder exists so MitoFlex can't make sure if the folder is removable or not. Please check your permission or try to investigate the files in the folder and remove it if it's save to remove.
 
-## 6.7 I'm using MitoFlex on flatworms, but the closely-related species is some strange Echinodermata thing!
+## 6.7 I'm using MitoFlex on flatworms, but the closely-related species is some strange Echinodermata thing
 
 MitoFlex doesn't know what species you are processing, the only thing it has just a local protein database, which contains many protein records of different species.
 
 Since then, such a species-judging method is not driven by something that so accurate, MitoFlex can only check out the numbers of PCGs that certain species contains, if a species contributed the most PCGs during the annotation, then it's the closet-related progress, and if two or more species contributed the same amount, only a random *one* of them can be selected.
 
 So, the accuracy is neither guaranteed nor possible. If you want to use MitoFlex to aid your classification of species, I would suggest you to check out the `wise.csv` under the `workname/temp/annotation` folder, it contains a full list of PCGs and corresponding species that are thought to be the mitogenome's hit, you may find something more in this.
+
+## 6.8 Running Circos error
+
+Your genome sequences is oversized, even after some deduplication it still have over 25000 points to draw, which is too many for drawing a good and clean plot.
+
+Such a large genome should not occur commonly, if you can sure about this genome is what you want, please change your `max_points_per_track` in Circos settings to a larger number to make Circos actually draw this.
+
+Such a problem only affects visualization, no effect on previous methods.
 
 # 7 Adding new profile data to MitoFlex
 

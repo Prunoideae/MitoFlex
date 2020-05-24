@@ -180,5 +180,9 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
         cfg_f.write('<<include etc/housekeeping.conf>>')
 
     logger.log(1, 'Running Circos.')
-    check_output('circos', shell=True, cwd=basedir)
+    try:
+        check_output('circos', shell=True, cwd=basedir)
+    except Exception:
+        logger.log(4, "Running circos errored, no graph is outputted!")
+
     return path.join(basedir, 'Circos.png'), path.join(basedir, 'Circos.svg')
