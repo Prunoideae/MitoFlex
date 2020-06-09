@@ -104,6 +104,13 @@ assemble.show_from_soap = True
 
 findmitoscaf.full_ratio = 0.95
 
+# What partial do MitoFlex treat the alignment of a single sequence as a valid gene?
+# MitoFlex will think of some align in center as full if align is longer than this
+# ratio, not considering if the thing meets the full_ratio. Adding this may increase
+# the sensitivity, while lowering the accuracy.
+
+findmitoscaf.min_valid_ratio = 0.3
+
 # Annoation
 
 # Enable gene search relocation?

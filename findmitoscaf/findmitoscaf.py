@@ -172,6 +172,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     logger.log(
         2, f'{high} records of high abundance, {low} records of low abundance was classified with multi value {multi}.')
 
+    contig_map_high = {x.id: x for x in contig_data_high}
+
     # Here we pick out the last sequences by using a greedy algorithm
     # the brute is deprecated because I found myself didn't realize what
     # I'm really going to do at the time I created it.
@@ -191,11 +193,26 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         align_length = abs(align_start - align_end) + 1
         query_start = int(row.hmmfrom)
         query_to = int(row['hmm to'])
+
         complete = align_length >= cds_indexes[query] * f_conf.full_ratio
+
+        if not complete:
+            missing_length = cds_indexes[query] - align_length
+            # Check if the alignment is 'isolated', which means no possiblity to be
+            # a gene sliced at side. 
+            complete = complete or (
+                query_start > missing_length and
+                len(contig_map_high[index]) - query_to > missing_length
+            )
+
+            # If such a gene is 'isolated' and being too short to be a valid alignment,
+            # ignores it in the calculation. 
+            if complete and align_length <= cds_indexes[query] * f_conf.min_valid_ratio:
+                continue
 
         if index not in sequence_completeness:
             sequence_completeness[index] = []
-            
+
         if complete:
             sequence_completeness[index].append(query)
 
