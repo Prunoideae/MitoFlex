@@ -97,6 +97,13 @@ assemble.show_from_soap = True
 
 # Findmitoscaf
 
+# What partial do MitoFlex treat the gene of a single sequence as full gene?
+# In most circumstances, genes are just full, but in case that your clade is rare,
+# and have no precise HMM models, lower this may increase the accuracy of the contig
+# result.
+
+findmitoscaf.full_ratio = 0.95
+
 # Annoation
 
 # Enable gene search relocation?

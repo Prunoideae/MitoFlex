@@ -37,8 +37,10 @@ try:
     from utility.bio.seq import decompile
     from annotation import annotation_tookit as tk
     from utility import logger
+    from configurations import findmitoscaf as f_conf
 except ImportError as err:
-    sys.exit(f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
+    sys.exit(
+        f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
 
 ncbi = NCBITaxa()
 mitoflex_dir = path.abspath(path.join(path.dirname(__file__), '..'))
@@ -178,6 +180,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     # Collects all the related cds
     candidates = {}
+    sequence_completeness = {}
+
     for _, row in hmm_frame.iterrows():
         query = str(row.query)
         index = str(row.target)
@@ -187,7 +191,13 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         align_length = abs(align_start - align_end) + 1
         query_start = int(row.hmmfrom)
         query_to = int(row['hmm to'])
-        complete = align_length >= cds_indexes[query]
+        complete = align_length >= cds_indexes[query] * f_conf.full_ratio
+
+        if index not in sequence_completeness:
+            sequence_completeness[index] = []
+            
+        if complete:
+            sequence_completeness[index].append(query)
 
         if index not in candidates:
             candidates[index] = {}
@@ -202,6 +212,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     # Select as many as possible full pcgs
     # As my point of view, using greedy here just ok.
+    fulled_pcgs = []
     for candidate in flatten_candidates:
         index = candidate[0]
         mapping = candidate[1]
@@ -211,6 +222,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             continue
         for c in completed:
             selected_candidates[c] = index
+            fulled_pcgs.append(c)
 
     # For fragments, select non-conflict sequence as much as possible
     conflicts = []
@@ -218,6 +230,10 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         for index, mapping in candidates.items():
             # No pcg in this sequence, next sequence
             if empty_pcg not in mapping:
+                continue
+
+            # If any full pcg selected in current sequence, discard.
+            if any([x in fulled_pcgs for x in sequence_completeness[index]]):
                 continue
 
             if selected_candidates[empty_pcg] is None:
