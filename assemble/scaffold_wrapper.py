@@ -29,7 +29,7 @@ class SOAP():
         self.lib_file = None
         self.basedir = path.join(path.abspath(basedir), f"{prefix}.scaf")
         self.read_length = read_length
-        self.threads = threads
+        self.threads = min(threads, a_conf.max_thread_scaf)
         self.final_kmer = final_kmer
         os.mkdir(self.basedir)
 

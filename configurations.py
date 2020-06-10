@@ -95,6 +95,13 @@ assemble.max_length = 30000
 # Show warning of multi value outputted by SOAP-Wrapper?
 assemble.show_from_soap = True
 
+# The max number of threads when scaffolding.
+# This argument is for limiting the thread used in the scaffolding, since
+# it's not completely thread safe when mapping sequences, specifying a higher
+# number may increase the speed of mapping and scaffolding, while have a higher
+# risk to halt the progress, or output few even no scaffolds.
+assemble.max_thread_scaf = 16
+
 # Findmitoscaf
 
 # What partial do MitoFlex treat the gene of a single sequence as full gene?
