@@ -199,15 +199,17 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         if not complete:
             missing_length = cds_indexes[query] - align_length
             # Check if the alignment is 'isolated', which means no possiblity to be
-            # a gene sliced at side. 
+            # a gene sliced at side.
             complete = complete or (
                 query_start > missing_length and
                 len(contig_map_high[index]) - query_to > missing_length
             )
 
             # If such a gene is 'isolated' and being too short to be a valid alignment,
-            # ignores it in the calculation. 
+            # ignores it in the calculation.
             if complete and align_length <= cds_indexes[query] * f_conf.min_valid_ratio:
+                logger.log(
+                    3, f'Ignoring {query} on {index} since no significant length is aligned : {align_length} / {int(cds_indexes[query] * f_conf.min_valid_ratio)}')
                 continue
 
         if index not in sequence_completeness:
@@ -218,6 +220,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
         if index not in candidates:
             candidates[index] = {}
+
         candidates[index][query] = (
             score * contig_multis[index], query_start, query_to, complete
         )
@@ -233,7 +236,9 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     for candidate in flatten_candidates:
         index = candidate[0]
         mapping = candidate[1]
+
         completed = [x for x in mapping if mapping[x][3]]
+        incompleted = [x for x in mapping if not mapping[x][3]]
 
         if any([selected_candidates[c] is not None for c in completed]):
             continue
@@ -241,9 +246,15 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             selected_candidates[c] = index
             fulled_pcgs.append(c)
 
+        for c in incompleted:
+            if selected_candidates[c] == None:
+                selected_candidates[c] = [(index, *mapping[c][:-1])]
+            elif isinstance(selected_candidates[c], list):
+                selected_candidates[c].append((index, *mapping[c][:-1]))
+
     # For fragments, select non-conflict sequence as much as possible
     conflicts = []
-    for empty_pcg in [x for x in selected_candidates if selected_candidates[x] is None]:
+    for empty_pcg in [x for x in selected_candidates if selected_candidates[x] is None or isinstance(selected_candidates[x], list)]:
         for index, mapping in candidates.items():
             # No pcg in this sequence, next sequence
             if empty_pcg not in mapping:
