@@ -2,7 +2,7 @@ __pycache__/
 .vscode/
 .pytest_cache/
 taxdump.tar.gz
-findmitoscaf/brutepacking/target/
+findmitoscaf/mlc/target/
 filter/filter_bin/target/
 assemble/fastfilter_src/target/
 profile/MT_database/Animal.fa

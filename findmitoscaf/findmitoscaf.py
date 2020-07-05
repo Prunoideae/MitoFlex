@@ -26,7 +26,7 @@ import sys
 import json
 
 import pandas
-from Bio import SeqIO
+from Bio import SeqIO, SeqRecord, Seq
 from ete3 import NCBITaxa
 from os import path
 
@@ -38,6 +38,7 @@ try:
     from annotation import annotation_tookit as tk
     from utility import logger
     from configurations import findmitoscaf as f_conf
+    from utility.helper import concat_command, direct_call, shell_call
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -333,6 +334,9 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     if missing_pcgs:
         logger.log(3, f'Missing PCGs : {missing_pcgs}')
         logger.log(3, f'The missing PCGs may not actually missing, but not detected by the nhmmer search, they may be annotated by tblastn in the annotation module.')
+
+    merge_sequences(picked_fasta)
+
     return picked_fasta
 
 
@@ -388,3 +392,44 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
 def filter_external(fasta_file=None, external_fasta=None):
 
     pass
+
+
+def merge_sequences(fasta_file=None, overlapped_len=50):
+    # Compose sequences that are possibly be overlapped with each others.
+    
+    logger.log(2, "Trying to merge candidates that are possibly overlapped.")
+
+    fasta_file = path.abspath(fasta_file)
+    idx = 0
+
+    while True:
+        shell_call(f'makeblastdb -in {fasta_file} -dbtype nucl')
+        shell_call(f'blastn -outfmt 6 -db {fasta_file} -query {fasta_file} > {fasta_file}.blast')
+        blast_results = pandas.read_csv(f"{fasta_file}.blast", delimiter="\t", names=[
+                                        'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
+                                        ])
+        blast_results = blast_results[blast_results.que != blast_results.subj]
+        blast_results = blast_results[blast_results.qs - blast_results.qe < 0]
+        blast_results = blast_results[blast_results.ss - blast_results.se < 0]
+        blast_results = blast_results[(blast_results.ss == 1) | (blast_results.qs == 1)]
+        blast_results = blast_results[blast_results.alen >= overlapped_len]
+
+        if blast_results.empty:
+            break
+
+        overlapped = blast_results.iloc[0]
+        que, sub = overlapped.que, overlapped.subj
+        qs, qe, ss, se = overlapped.qs - 1, overlapped.qe, overlapped.ss - 1, overlapped.se
+        seq2 = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in [que, sub]}
+
+        logger.log(2, f"Found overlapped candidates {que} and {sub}, merging into sequence M{idx}")
+
+        if qs > ss:
+            new_seq = Seq.Seq(str(seq2[que].seq[:qe]) + str(seq2[sub].seq[se:]))
+        else:
+            new_seq = Seq.Seq(str(seq2[sub].seq[:se]) + str(seq2[que].seq[qe:]))
+
+        new_seqrec = SeqRecord.SeqRecord(new_seq, id=f"M{idx}", description=f"flag=1 multi=32767 len={len(new_seq)}")
+        idx += 1
+
+        SeqIO.write([new_seqrec] + [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id not in [que, sub]], open(fasta_file, 'w'), 'fasta')
