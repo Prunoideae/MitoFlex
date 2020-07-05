@@ -58,7 +58,7 @@ class ContigInfo():
 class MEGAHIT():
     '''
     A more dedicated wrapper to assemble mitogenome sequences with megahit.
-    
+
     Introduced a filter of depth and length, enabling a much more in-site
     changes of the original pipeline, since MEGAHIT is original designed
     for assembling metagenomes, which usually possess a ultra-low depth of
@@ -143,9 +143,9 @@ class MEGAHIT():
 
         vm = psutil.virtual_memory()
         logger.log(
-            1, f"System memory status : {', '.join([f'{k}={v/1024/1024}MB' for k,v in vm._asdict().items() if type(v) is int])}")
+            1, f"System memory status : {', '.join([f'{k}={v/(1024**2):.2f}MB' for k,v in vm._asdict().items() if type(v) is int])}")
         self.available_memory = int(vm.available * a_conf.max_mem_percent)
-        logger.log(2, f'Scheduled {self.available_memory/1024/1024}MB to use.')
+        logger.log(2, f'Scheduled {self.available_memory/(1024**2):.2f}MB to use.')
 
     def build_lib(self):
 
