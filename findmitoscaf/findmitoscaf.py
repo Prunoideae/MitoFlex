@@ -394,9 +394,9 @@ def filter_external(fasta_file=None, external_fasta=None):
     pass
 
 
-def merge_sequences(fasta_file=None, overlapped_len=50):
+def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5):
     # Compose sequences that are possibly be overlapped with each others.
-    
+
     logger.log(2, "Trying to merge candidates that are possibly overlapped.")
 
     fasta_file = path.abspath(fasta_file)
@@ -408,10 +408,15 @@ def merge_sequences(fasta_file=None, overlapped_len=50):
         blast_results = pandas.read_csv(f"{fasta_file}.blast", delimiter="\t", names=[
                                         'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
                                         ])
+        # Overlap Conditions:
+        # 1. Not aligning itself
+        # 2. Not a reverse of someone else
+        # 3. One of the sequences can be sticked into the other in a short range
+        # 4. Aligned length is long enough
         blast_results = blast_results[blast_results.que != blast_results.subj]
         blast_results = blast_results[blast_results.qs - blast_results.qe < 0]
         blast_results = blast_results[blast_results.ss - blast_results.se < 0]
-        blast_results = blast_results[(blast_results.ss == 1) | (blast_results.qs == 1)]
+        blast_results = blast_results[(blast_results.ss < search_range) | (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
 
         if blast_results.empty:
