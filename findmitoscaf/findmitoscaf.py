@@ -89,6 +89,12 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
                  contigs_file=None, relaxing=0, multi=10, merge_method=0, merge_overlapping=50):
 
+    if merge_method == -1:
+        if os.stat(contigs_file).st_size > 10000000:
+            merge_method = 1
+        else:
+            merge_method = 0
+
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
         logger.log(2, f'Merged {merge_sequences(contigs_file,overlapped_len=merge_overlapping)} sequences.')
