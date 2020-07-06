@@ -84,7 +84,7 @@ def log(level: int = 2, info: str = None):
     if not __initialized:
         print(
             "A logging function was called when the logger is not initialized!")
-        return
+        init(None)
 
     if level < __level_valve:
         return

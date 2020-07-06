@@ -91,6 +91,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     logger.log(2, 'Finding mitochondrial scaffold.')
 
+    merge_sequences(contigs_file)
+
     # Update the total profile before the process
     logger.log(1, 'Updating the general protein database.')
     lc = 0
@@ -400,7 +402,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5):
     logger.log(2, "Trying to merge candidates that are possibly overlapped.")
 
     fasta_file = path.abspath(fasta_file)
-    idx = 0
+    index = 0
 
     while True:
         shell_call(f'makeblastdb -in {fasta_file} -dbtype nucl')
@@ -410,31 +412,55 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5):
                                         ])
         # Overlap Conditions:
         # 1. Not aligning itself
-        # 2. Not a reverse of someone else
-        # 3. One of the sequences can be sticked into the other in a short range
-        # 4. Aligned length is long enough
+        # 2. One of the sequences can be sticked into the other in a short range
+        # 3. Aligned length is long enough
         blast_results = blast_results[blast_results.que != blast_results.subj]
-        blast_results = blast_results[blast_results.qs - blast_results.qe < 0]
-        blast_results = blast_results[blast_results.ss - blast_results.se < 0]
-        blast_results = blast_results[(blast_results.ss < search_range) | (blast_results.qs < search_range)]
+        blast_results = blast_results[((blast_results.ss < search_range) & (blast_results.se < search_range)) |
+                                      (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
 
         if blast_results.empty:
             break
 
-        overlapped = blast_results.iloc[0]
-        que, sub = overlapped.que, overlapped.subj
-        qs, qe, ss, se = overlapped.qs - 1, overlapped.qe, overlapped.ss - 1, overlapped.se
-        seq2 = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in [que, sub]}
+        done = []
+        seqrec = []
+        while not blast_results.empty:
+            overlapped = blast_results.iloc[0]
+            que, sub = overlapped.que, overlapped.subj
+            seq2 = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in [que, sub]}
 
-        logger.log(2, f"Found overlapped candidates {que} and {sub}, merging into sequence M{idx}")
+            qs, qe = overlapped.qs - 1, overlapped.qe
+            if overlapped.ss < overlapped.se:
+                ss, se = overlapped.ss - 1, overlapped.se
+            else:
+                ss, se = len(seq2[sub].seq) - overlapped.ss, len(seq2[sub].seq) - (overlapped.se - 1)
+                #seq2[sub].seq = seq2[sub].seq[::-1]
 
-        if qs > ss:
-            new_seq = Seq.Seq(str(seq2[que].seq[:qe]) + str(seq2[sub].seq[se:]))
-        else:
-            new_seq = Seq.Seq(str(seq2[sub].seq[:se]) + str(seq2[que].seq[qe:]))
+            if overlapped.alen >= len(seq2[que]):
+                new_seq = Seq.Seq(str(seq2[sub].seq))
+            elif overlapped.alen >= len(seq2[sub]):
+                new_seq = Seq.Seq(str(seq2[que].seq))
+            else:
+                if qs > ss:
+                    new_seq = Seq.Seq(str(seq2[que].seq[:qe]) + str(seq2[sub].seq[se:]))
+                else:
+                    new_seq = Seq.Seq(str(seq2[sub].seq[:se]) + str(seq2[que].seq[qe:]))
 
-        new_seqrec = SeqRecord.SeqRecord(new_seq, id=f"M{idx}", description=f"flag=1 multi=32767 len={len(new_seq)}")
-        idx += 1
+                if len(new_seq) < len(seq2[que]):
+                    new_seq = seq2[que].seq
+                elif len(new_seq) < len(seq2[sub]):
+                    new_seq = seq2[sub].seq
 
-        SeqIO.write([new_seqrec] + [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id not in [que, sub]], open(fasta_file, 'w'), 'fasta')
+            logger.log(
+                1, f"Overlapped: {que}:({qs},{qe},{len(seq2[que])})&{seq2[sub].id}:({ss},{se},{len(seq2[sub])}) of length {overlapped.alen}, into M{index}:{len(new_seq)}")
+            seqrec.append(SeqRecord.SeqRecord(new_seq, id=f"M{index}",
+                                              description=f"flag=1 multi=32767 len={len(new_seq)}"))
+            index += 1
+            done += [que, sub]
+
+            blast_results = blast_results[(blast_results.que != que) & (blast_results.subj != que)]
+            blast_results = blast_results[(blast_results.que != sub) & (blast_results.subj != sub)]
+
+        SeqIO.write(seqrec + [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id not in done], open(fasta_file, 'w'), 'fasta')
+
+    return index
