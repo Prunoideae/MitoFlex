@@ -384,6 +384,17 @@ search_parser, search_group = register_group('Search mitochondrial sequences arg
         'default': 0,
         'choices': list(range(7)),  # 0-6
         'help': 'a tolerance for non-target sequences.'
+    },
+    {
+        'name': 'merge-method',
+        'default': 0,
+        'choices': [0, 1, 2],
+        'help':'Merge method of sequences, 0 for global merging (slow but accurate, can process up to 10MB file efficiently), 1 for partial merging (fast but inaccurate), 2 for no merging (fastest)'
+    },
+    {
+        'name': 'merge-overlap',
+        'default': 50,
+        'help': 'Merge sequences of Xbps overlapping.'
     }
 ], func=search_regulator)
 

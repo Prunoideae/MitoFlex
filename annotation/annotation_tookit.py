@@ -99,6 +99,52 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
     return out_blast
 
 
+def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8):
+    infile = path.abspath(infile)
+    dbfile = path.abspath(dbfile)
+
+    truncated_call('makeblastdb', '-in', infile, dbtype='nucl')
+
+    tasks = []
+    results = []
+
+    nucl_data_dir = path.join(basedir, "blastn_data")
+
+    try:
+        os.mkdir(nucl_data_dir)
+    except FileExistsError:
+        raise RuntimeError("Folder is already created, please make sure the working folder is clean.")
+
+    logger.log(1, f'Making {threads} small datasets for calling tblastn.')
+    blastn_db = list(SeqIO.parse(dbfile, 'fasta'))
+
+    if len(blastn_db) > threads:
+        blastn_db = np.array_split(blastn_db, threads)
+
+    for idx, data in enumerate(blastn_db):
+        dataset_path = path.join(nucl_data_dir, f'dataset_{idx}.fasta')
+        SeqIO.write(data, dataset_path, 'fasta')
+        tasks.append(f'blastn -evalue 1e-5 -outfmt 6 -db {infile} -query {dataset_path}')
+    logger.log(1, 'Generating map for calling blastn.')
+    pool = multiprocessing.Pool(processes=threads)
+    res = pool.map_async(direct_call, tasks, callback=results.append)
+
+    logger.log(1, "Waiting for all processes to finish.")
+    res.wait()
+
+    logger.log(1, f'Merging results and cleaning generated temp files.')
+    results = list(chain.from_iterable(results))
+    out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
+    with open(out_blast, 'w') as f:
+        f.write(''.join(results))
+
+    shell_call('rm -r', nucl_data_dir)
+    os.remove(f'{infile}.nhr')
+    os.remove(f'{infile}.nin')
+    os.remove(f'{infile}.nsq')
+    return out_blast
+
+
 def blast_to_csv(blast_file, ident=30, score=25):
     blast_frame = pandas.read_csv(
         blast_file, delimiter='\t',

@@ -87,11 +87,11 @@ def get_rank(taxa_name=None):
 
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
-                 contigs_file=None, relaxing=0, multi=10):
+                 contigs_file=None, relaxing=0, multi=10, merge_method=0, merge_overlapping=50):
 
     logger.log(2, 'Finding mitochondrial scaffold.')
-
-    merge_sequences(contigs_file)
+    if merge_method == 0:
+        logger.log(2, f'Merged {merge_sequences(contigs_file,overlapped_len=merge_overlapping)} sequences.')
 
     # Update the total profile before the process
     logger.log(1, 'Updating the general protein database.')
@@ -337,7 +337,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         logger.log(3, f'Missing PCGs : {missing_pcgs}')
         logger.log(3, f'The missing PCGs may not actually missing, but not detected by the nhmmer search, they may be annotated by tblastn in the annotation module.')
 
-    merge_sequences(picked_fasta)
+    if merge_method == 1:
+        logger.log(2, f"Merged {merge_partial(fasta_file=picked_fasta, dbfile=contigs_file, overlapped_len=merge_overlapping)}")
 
     return picked_fasta
 
@@ -396,18 +397,16 @@ def filter_external(fasta_file=None, external_fasta=None):
     pass
 
 
-def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5):
+def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8):
     # Compose sequences that are possibly be overlapped with each others.
 
-    logger.log(2, "Trying to merge candidates that are possibly overlapped.")
+    logger.log(1, "Trying to merge candidates that are possibly overlapped.")
 
     fasta_file = path.abspath(fasta_file)
     index = 0
 
     while True:
-        shell_call(f'makeblastdb -in {fasta_file} -dbtype nucl')
-        shell_call(f'blastn -outfmt 6 -db {fasta_file} -query {fasta_file} > {fasta_file}.blast')
-        blast_results = pandas.read_csv(f"{fasta_file}.blast", delimiter="\t", names=[
+        blast_results = pandas.read_csv(tk.blastn_multi(fasta_file, fasta_file, path.dirname(fasta_file), 'merge', threads=threads), delimiter="\t", names=[
                                         'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
                                         ])
         # Overlap Conditions:
@@ -464,3 +463,73 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5):
         SeqIO.write(seqrec + [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id not in done], open(fasta_file, 'w'), 'fasta')
 
     return index
+
+
+def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=5, threads=8):
+    logger.log(1, 'Trying to merge partial sequences that are possibly overlapped.')
+
+    fasta_file = path.abspath(fasta_file)
+    dbfile = path.abspath(dbfile)
+
+    index = 0
+
+    while True:
+        # Profile a merging for itself first
+        modified = merge_sequences(fasta_file, overlapped_len, search_range, threads=threads)
+
+        blast_results = pandas.read_csv(tk.blastn_multi(fasta_file, dbfile, path.dirname(fasta_file), 'merge_partial', threads=threads), delimiter="\t", names=[
+                                        'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
+                                        ])
+
+        blast_results = blast_results[blast_results.que != blast_results.subj]
+        blast_results = blast_results[((blast_results.ss < search_range) & (blast_results.se < search_range)) |
+                                      (blast_results.qs < search_range)]
+        blast_results = blast_results[blast_results.alen >= overlapped_len]
+
+        done = []
+        seqrec = []
+
+        while not blast_results.empty:
+            overlapped = blast_results.iloc[0]
+            que, sub = overlapped.que, overlapped.subj
+            seq2 = {sub: [x for x in SeqIO.parse(dbfile, 'fasta') if x.id == sub][0],
+                    que: [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id == que][0]
+                    }
+
+            qs, qe = overlapped.qs - 1, overlapped.qe - 1
+            if overlapped.ss < overlapped.se:
+                ss, se = overlapped.ss - 1, overlapped.se
+            else:
+                ss, se = len(seq2[sub].seq) - overlapped.ss, len(seq2[sub].seq) - (overlapped.se - 1)
+
+            if overlapped.alen >= len(seq2[que]):
+                new_seq = Seq.Seq(str(seq2[sub].seq))
+            elif overlapped.alen >= len(seq2[sub]):
+                new_seq = Seq.Seq(str(seq2[que].seq))
+            else:
+                if qs > ss:
+                    new_seq = Seq.Seq(str(seq2[que].seq[:qe]) + str(seq2[sub].seq[se:]))
+                else:
+                    new_seq = Seq.Seq(str(seq2[sub].seq[:se]) + str(seq2[que].seq[qe:]))
+
+                if len(new_seq) < len(seq2[que]):
+                    new_seq = seq2[que].seq
+                elif len(new_seq) < len(seq2[sub]):
+                    new_seq = seq2[sub].seq
+
+            logger.log(
+                1, f"Overlapped: {que}:({qs},{qe},{len(seq2[que])})&{seq2[sub].id}:({ss},{se},{len(seq2[sub])}) of length {overlapped.alen}, into M{index}:{len(new_seq)}")
+            seqrec.append(SeqRecord.SeqRecord(new_seq, id=f"M{index}",
+                                              description=f"flag=1 multi=32767 len={len(new_seq)}"))
+            index += 1
+            modified += 1
+            done += [que, sub]
+
+            blast_results = blast_results[(blast_results.que != que) & (blast_results.subj != que)]
+            blast_results = blast_results[(blast_results.que != sub) & (blast_results.subj != sub)]
+
+        if modified == 0:
+            break
+
+        SeqIO.write(seqrec + [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id not in done], open(fasta_file, 'w'), 'fasta')
+        SeqIO.write([x for x in SeqIO.parse(dbfile, 'fasta') if x.id not in done], open(dbfile, 'w'), 'fasta')

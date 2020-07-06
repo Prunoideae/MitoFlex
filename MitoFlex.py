@@ -138,7 +138,8 @@ def findmitoscaf(args):
     picked_fa = _findmitoscaf(
         thread_number=args.threads, clade=args.clade, relaxing=args.taxa_tolerance, gene_code=args.genetic_code,
         multi=args.min_abundance, taxa=args.required_taxa if not args.disable_taxa else None,
-        prefix=args.workname, basedir=args.findmitoscaf_dir, contigs_file=args.fastafile)
+        prefix=args.workname, basedir=args.findmitoscaf_dir, contigs_file=args.fastafile,
+        merge_method=args.merge_method, merge_overlapping=args.merge_overlap)
 
     # Further processing for calling directly
     if args.__calling == 'findmitoscaf':
