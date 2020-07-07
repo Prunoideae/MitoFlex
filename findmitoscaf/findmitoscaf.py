@@ -97,6 +97,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
+        logger.log(2, f'Merging sequences with global method.')
         logger.log(2, f'Merged {merge_sequences(contigs_file,overlapped_len=merge_overlapping)} sequences.')
 
     # Update the total profile before the process
@@ -344,8 +345,14 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
         logger.log(3, f'The missing PCGs may not actually missing, but not detected by the nhmmer search, they may be annotated by tblastn in the annotation module.')
 
     if merge_method == 1:
+        logger.log(2, f"Merging sequences with partial method.")
         logger.log(2, f"Merged {merge_partial(fasta_file=picked_fasta, dbfile=contigs_file, overlapped_len=merge_overlapping)}")
-
+        logger.log(2, f'Launching another findmitoscaf run to filter out non-target sequences.')
+        picked_fasta = findmitoscaf(thread_number=thread_number, clade=clade, prefix=prefix,
+                                    basedir=basedir, gene_code=gene_code, taxa=taxa,
+                                    max_contig_len=max_contig_len, contigs_file=picked_fasta,
+                                    relaxing=relaxing, multi=multi, merge_method=2,
+                                    merge_overlapping=merge_overlapping)
     return picked_fasta
 
 
