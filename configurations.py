@@ -118,6 +118,14 @@ findmitoscaf.full_ratio = 0.95
 
 findmitoscaf.min_valid_ratio = 0.3
 
+# Should another findmitoscaf run to be launched after the merging.
+# Since some sequences will be conflicted, or resulted to be have no gene at all after
+# the merge method, an additional check can improve the result quality, though at some
+# cost of losing already found genes. If you are feeling like the risk of potentially
+# overlapping is not that bad, and losing gene is quite unbearable, please turn this off.
+
+findmitoscaf.additional_check = True
+
 # Annoation
 
 # Enable gene search relocation?

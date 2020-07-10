@@ -342,12 +342,18 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     if merge_method == 1:
         logger.log(2, f"Merging sequences with partial method.")
         logger.log(2, f"Merged {merge_partial(fasta_file=picked_fasta, dbfile=contigs_file, overlapped_len=merge_overlapping)}")
-        logger.log(2, f'Launching another findmitoscaf run to filter out non-target sequences.')
-        picked_fasta = findmitoscaf(thread_number=thread_number, clade=clade, prefix=prefix,
-                                    basedir=basedir, gene_code=gene_code, taxa=taxa,
-                                    max_contig_len=max_contig_len, contigs_file=picked_fasta,
-                                    relaxing=relaxing, multi=multi, merge_method=2,
-                                    merge_overlapping=merge_overlapping)
+
+        if f_conf.addtional_check:
+            logger.log(2, f'Launching another findmitoscaf run to filter out non-target sequences.')
+            picked_fasta = findmitoscaf(thread_number=thread_number, clade=clade, prefix=prefix,
+                                        basedir=basedir, gene_code=gene_code, taxa=taxa,
+                                        max_contig_len=max_contig_len, contigs_file=picked_fasta,
+                                        relaxing=relaxing, multi=multi, merge_method=2,
+                                        merge_overlapping=merge_overlapping)
+            logger.log(2, "Some of the merged contigs are thought to be conflicted with selected sequences, so they are not picked in the result.")
+            logger.log(2, "But they may also contain some gene, if so, please check at the [workname].abundance.high.fa at findmitoscaf temp folder.")
+            logger.log(2, "They are mainly not merged because blastn failed to recognize their overlapped region, if so happened visualization is")
+            logger.log(2, "not recommended, since they have redundant bases, and will be misleading if such a graph is presented.")
 
     # Added a circular checker for scaffolds and meta-scaffolds.
     remark_circular(picked_fasta)
