@@ -171,9 +171,10 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
 
 # Filter out the most important sequences
-def wash_blast_results(blast_frame: pandas.DataFrame = None):
+def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
     cutoff = configurations.annotation.overlap_ratio
-    blast_frame['plus'] = blast_frame.send - blast_frame.sstart > 0
+    if mut_plus:
+        blast_frame['plus'] = (blast_frame.send - blast_frame.sstart) > 0
     blast_frame['sstart'], blast_frame['send'] = np.where(
         blast_frame['sstart'] > blast_frame['send'],
         [blast_frame['send'], blast_frame['sstart']],

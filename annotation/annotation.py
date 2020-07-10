@@ -91,7 +91,8 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     # Add an extra washing here, since Pandas will have some
     # strange behaviour processing data this large...
-    wise_frame = tk.wash_blast_results(wise_frame)
+    # Also prevent some mutation of ['plus']
+    wise_frame = tk.wash_blast_results(wise_frame, mut_plus=False)
 
     taxa_data = {}
     for _, row in wise_frame.iterrows():

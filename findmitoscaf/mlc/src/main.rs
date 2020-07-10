@@ -71,10 +71,6 @@ fn main() {
         for ((ii, i), (ij, j)) in (&records).iter().enumerate().tuple_combinations() {
             matched = longest_common_substring(i.seq(), j.seq(), AlgoSpec::HashMatch(10));
             if matched.length >= length && (matched.first_pos == 0 || matched.second_pos == 0) {
-                println!(
-                    "{} {} {} {} {}",
-                    ii, ij, matched.first_pos, matched.second_pos, matched.length
-                );
                 index_i = ii;
                 index_j = ij;
                 found = true;
