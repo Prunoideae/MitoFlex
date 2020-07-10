@@ -88,13 +88,7 @@ def get_rank(taxa_name=None):
 
 def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
-                 contigs_file=None, relaxing=0, multi=10, merge_method=0, merge_overlapping=50):
-
-    if merge_method == -1:
-        if os.stat(contigs_file).st_size > 10000000:
-            merge_method = 1
-        else:
-            merge_method = 0
+                 contigs_file=None, relaxing=0, multi=10, merge_method=1, merge_overlapping=50):
 
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
@@ -415,13 +409,12 @@ def filter_external(fasta_file=None, external_fasta=None):
     pass
 
 
-def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8):
+def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8, index=0):
     # Compose sequences that are possibly be overlapped with each others.
 
     logger.log(1, "Trying to merge candidates that are possibly overlapped.")
 
     fasta_file = path.abspath(fasta_file)
-    index = 0
 
     while True:
         blast_results = pandas.read_csv(tk.blastn_multi(fasta_file, fasta_file, path.dirname(fasta_file), 'merge', threads=threads), delimiter="\t", names=[
@@ -493,7 +486,9 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
 
     while True:
         # Profile a merging for itself first
-        modified = merge_sequences(fasta_file, overlapped_len, search_range, threads=threads)
+        index_merged = merge_sequences(fasta_file, overlapped_len, search_range, threads=threads, index=index)
+        modified = index_merged - index > 0
+        index = index_merged
 
         blast_results = pandas.read_csv(tk.blastn_multi(fasta_file, dbfile, path.dirname(fasta_file), 'merge_partial', threads=threads), delimiter="\t", names=[
                                         'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
@@ -540,17 +535,20 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
             seqrec.append(SeqRecord.SeqRecord(new_seq, id=f"M{index}",
                                               description=f"flag=1 multi=32767 len={len(new_seq)}"))
             index += 1
-            modified += 1
+            modified = True
+
             done += [que, sub]
 
             blast_results = blast_results[(blast_results.que != que) & (blast_results.subj != que)]
             blast_results = blast_results[(blast_results.que != sub) & (blast_results.subj != sub)]
 
-        if modified == 0:
+        if not modified:
             break
 
         SeqIO.write(seqrec + [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id not in done], open(fasta_file, 'w'), 'fasta')
         SeqIO.write([x for x in SeqIO.parse(dbfile, 'fasta') if x.id not in done], open(dbfile, 'w'), 'fasta')
+
+    return index
 
 
 def remark_circular(fasta_file=None, overlapped_length=50):

@@ -387,9 +387,9 @@ search_parser, search_group = register_group('Search mitochondrial sequences arg
     },
     {
         'name': 'merge-method',
-        'default': -1,
-        'choices': [-1, 0, 1, 2],
-        'help':'Merge method of sequences, 0 for global merging (slow but complete, can process up to 10MB file efficiently, sometimes will output overgrown sequences), 1 for partial merging (fast and accurate, but sometimes incomplete), 2 for no merging (fastest), -1 for auto detection'
+        'default': 1,
+        'choices': [0, 1, 2],
+        'help':'Merge method of sequences, 0 for global merging (slow, inaccurate but complete), 1 for partial merging (fast and accurate, but sometimes incomplete, recommended), 2 for no merging (fastest).'
     },
     {
         'name': 'merge-overlap',
