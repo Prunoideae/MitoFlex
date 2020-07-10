@@ -34,11 +34,12 @@ from os import path
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.bio.seq import decompile
+    from utility.bio.seq import decompile, compile_seq
     from annotation import annotation_tookit as tk
     from utility import logger
     from configurations import findmitoscaf as f_conf
     from utility.helper import concat_command, direct_call, shell_call
+    from misc.check_circular import check_circular
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -353,6 +354,10 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                                     max_contig_len=max_contig_len, contigs_file=picked_fasta,
                                     relaxing=relaxing, multi=multi, merge_method=2,
                                     merge_overlapping=merge_overlapping)
+
+    # Added a circular checker for scaffolds and meta-scaffolds.
+    remark_circular(picked_fasta)
+
     return picked_fasta
 
 
@@ -546,3 +551,16 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
 
         SeqIO.write(seqrec + [x for x in SeqIO.parse(fasta_file, 'fasta') if x.id not in done], open(fasta_file, 'w'), 'fasta')
         SeqIO.write([x for x in SeqIO.parse(dbfile, 'fasta') if x.id not in done], open(dbfile, 'w'), 'fasta')
+
+
+def remark_circular(fasta_file=None, overlapped_length=50):
+    sequences = [x for x in SeqIO.parse(fasta_file, 'fasta')]
+    if len(sequences) > 1:
+        return
+    overlapping, overlapped, sequence = check_circular(final_fasta=fasta_file)[0]
+
+    if overlapping != -1 and overlapping[0] == 0 and overlapping[1] >= overlapped_length:
+        traits = decompile(input_seq=sequence.description, sep=None)
+        traits['flag'] = 3
+        sequence.description = compile_seq(traits=traits, sep=' ')
+        SeqIO.write([sequence], fasta_file, 'fasta')
