@@ -115,7 +115,7 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
     except FileExistsError:
         raise RuntimeError("Folder is already created, please make sure the working folder is clean.")
 
-    logger.log(1, f'Making {threads} small datasets for calling tblastn.')
+    logger.log(1, f'Making {threads} small datasets for calling blastn.')
     blastn_db = list(SeqIO.parse(dbfile, 'fasta'))
 
     if len(blastn_db) > threads:

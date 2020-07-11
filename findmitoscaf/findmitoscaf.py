@@ -333,7 +333,9 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     missing_pcgs = [x for x in cds_indexes if x not in found_pcgs]
 
     picked_fasta = path.join(basedir, f'{prefix}.picked.fa')
+
     SeqIO.write(picked_seq, picked_fasta, 'fasta')
+
     logger.log(2, f'PCGs found : {found_pcgs}')
     if missing_pcgs:
         logger.log(3, f'Missing PCGs : {missing_pcgs}')
@@ -430,10 +432,36 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
         # 1. Not aligning itself
         # 2. One of the sequences can be sticked into the other in a short range
         # 3. Aligned length is long enough
+        # 4. After merging, they will be longer and no too much sequences are discarded.
         blast_results = blast_results[blast_results.que != blast_results.subj]
         blast_results = blast_results[((blast_results.ss < search_range) & (blast_results.se < search_range)) |
                                       (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
+
+        seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])}
+
+        def calculate_merged(row):
+            que, sub = seqs[row.que], seqs[row.subj]
+            if row.alen >= len(que) or row.alen >= len(sub):
+                return True
+
+            qs, qe = row.qs - 1, row.qe - 1
+
+            if row.ss < row.se:
+                ss, se = row.ss - 1, row.se - 1
+            else:
+                ss, se = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
+
+            if qs > ss:
+                l = qe + len(sub) - se
+            else:
+                l = se + len(que) - qe
+            if '559' in sub.id or '559' in que.id:
+                if '789' in sub.id or '789' in que.id:
+                    print(l, l > len(sub) and l > len(que))
+            return l > len(sub) and l > len(que)
+
+        blast_results = blast_results[blast_results.apply(calculate_merged, axis=1)]
 
         if blast_results.empty:
             break
@@ -461,11 +489,6 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
                     new_seq = Seq.Seq(str(seq2[que].seq[:qe]) + str(seq2[sub].seq[se:]))
                 else:
                     new_seq = Seq.Seq(str(seq2[sub].seq[:se]) + str(seq2[que].seq[qe:]))
-
-                if len(new_seq) < len(seq2[que]):
-                    new_seq = seq2[que].seq
-                elif len(new_seq) < len(seq2[sub]):
-                    new_seq = seq2[sub].seq
 
             logger.log(
                 1, f"Overlapped: {que}:({qs},{qe},{len(seq2[que])})&{seq2[sub].id}:({ss},{se},{len(seq2[sub])}) of length {overlapped.alen}, into M{index}:{len(new_seq)}")
