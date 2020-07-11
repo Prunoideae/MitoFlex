@@ -456,9 +456,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
                 l = qe + len(sub) - se
             else:
                 l = se + len(que) - qe
-            if '559' in sub.id or '559' in que.id:
-                if '789' in sub.id or '789' in que.id:
-                    print(l, l > len(sub) and l > len(que))
+
             return l > len(sub) and l > len(que)
 
         blast_results = blast_results[blast_results.apply(calculate_merged, axis=1)]
