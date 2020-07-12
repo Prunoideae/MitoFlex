@@ -526,6 +526,27 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
                                       (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
 
+        def calculate_merged(row):
+            que, sub = seqs[row.que], seqs[row.subj]
+            if row.alen >= len(que) or row.alen >= len(sub):
+                return True
+
+            qs, qe = row.qs - 1, row.qe - 1
+
+            if row.ss < row.se:
+                ss, se = row.ss - 1, row.se - 1
+            else:
+                ss, se = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
+
+            if qs > ss:
+                l = qe + len(sub) - se
+            else:
+                l = se + len(que) - qe
+
+            return l > len(sub) and l > len(que)
+
+        blast_results = blast_results[blast_results.apply(calculate_merged, axis=1)]
+
         done = []
         seqrec = []
 
@@ -551,11 +572,6 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
                     new_seq = Seq.Seq(str(seq2[que].seq[:qe]) + str(seq2[sub].seq[se:]))
                 else:
                     new_seq = Seq.Seq(str(seq2[sub].seq[:se]) + str(seq2[que].seq[qe:]))
-
-                if len(new_seq) < len(seq2[que]):
-                    new_seq = seq2[que].seq
-                elif len(new_seq) < len(seq2[sub]):
-                    new_seq = seq2[sub].seq
 
             logger.log(
                 1, f"Overlapped: {que}:({qs},{qe},{len(seq2[que])})&{seq2[sub].id}:({ss},{se},{len(seq2[sub])}) of length {overlapped.alen}, into M{index}:{len(new_seq)}")
