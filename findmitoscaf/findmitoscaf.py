@@ -525,6 +525,7 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
         blast_results = blast_results[((blast_results.ss < search_range) & (blast_results.se < search_range)) |
                                       (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
+        seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])}
 
         def calculate_merged(row):
             que, sub = seqs[row.que], seqs[row.subj]
