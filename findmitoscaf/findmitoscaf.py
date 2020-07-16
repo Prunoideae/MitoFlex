@@ -441,7 +441,11 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
         seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])}
 
         def calculate_merged(row):
-            que, sub = seqs[row.que], seqs[row.subj]
+            try:
+                que, sub = seqs[row.que], seqs[row.subj]
+            except Exception:
+                return False
+
             if row.alen >= len(que) or row.alen >= len(sub):
                 return True
 
