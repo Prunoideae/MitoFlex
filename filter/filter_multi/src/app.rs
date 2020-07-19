@@ -187,13 +187,20 @@ pub fn get_app() -> ArgMatches<'static> {
             Arg::with_name("deduplication")
                 .short("d")
                 .long("deduplication")
-                .help("Filter out duplicated sequences")
-                .requires("fastq2"),
+                .help("Filter out duplicated sequences"),
         )
         .arg(
             Arg::with_name("truncate")
                 .long("truncate_only")
                 .help("Only truncates the file, no filtering."),
+        )
+        .arg(
+            Arg::with_name("threads")
+                .long("threads")
+                .help("Threadpool size for processing.")
+                .default_value("8")
+                .takes_value(true)
+                .validator(|x| ranged_validator(x, 1..)),
         )
         .get_matches()
 }
