@@ -1,7 +1,8 @@
 use super::helper;
 
+use futures::Future;
+use futures_cpupool::CpuPool;
 use itertools::Itertools;
-use rayon::ThreadPool;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
@@ -15,7 +16,7 @@ pub struct FQRead(String, String, String, String);
 pub fn se_reader_worker(
     fastq: String,
     trim: usize,
-    cpupool: ThreadPool,
+    cpupool: CpuPool,
     sender: Arc<SyncSender<Vec<FQRead>>>,
     ns: usize,
     qv: u8,
@@ -25,6 +26,7 @@ pub fn se_reader_worker(
 ) {
     let mut count = 0;
     let mut chunked = Vec::with_capacity(10000);
+    let mut handles = Vec::new();
 
     for fq in helper::read_file(fastq.as_str())
         .lines()
@@ -34,15 +36,27 @@ pub fn se_reader_worker(
         chunked.push(FQRead(fq.0, fq.1, fq.2, fq.3));
         if chunked.len() >= 10000 {
             let sender_child = sender.clone();
-            cpupool.spawn(move || {
-                se_calculate_unit(chunked, &sender_child, ns, qv, limit, start, end)
-            });
+            handles.push(cpupool.spawn_fn(move || {
+                Ok::<_, ()>(se_calculate_unit(
+                    chunked,
+                    &sender_child,
+                    ns,
+                    qv,
+                    limit,
+                    start,
+                    end,
+                ))
+            }));
             chunked = Vec::with_capacity(10000);
         }
         count += 1;
         if count > trim {
             break;
         }
+    }
+
+    for i in handles {
+        i.wait().unwrap();
     }
 }
 

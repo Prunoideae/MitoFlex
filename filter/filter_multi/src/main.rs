@@ -8,9 +8,8 @@ mod helper;
 mod pe;
 mod se;
 
+use futures_cpupool::CpuPool;
 use rayon::join;
-use rayon::prelude::*;
-use rayon::ThreadPoolBuilder;
 use std::sync::mpsc::sync_channel;
 use std::sync::Arc;
 
@@ -65,10 +64,7 @@ fn filter_se(
     }
     let fastq1 = String::from(fastq1);
     let cleanq1 = String::from(cleanq1);
-    let pool = ThreadPoolBuilder::new()
-        .num_threads(threads)
-        .build()
-        .unwrap();
+    let pool = CpuPool::new(threads);
     let (send, recv) = sync_channel::<Vec<se::FQRead>>(10000);
     let send = Arc::new(send);
     join(
