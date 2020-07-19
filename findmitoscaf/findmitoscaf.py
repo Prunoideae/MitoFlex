@@ -343,7 +343,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     if merge_method == 1:
         logger.log(2, f"Merging sequences with partial method.")
-        logger.log(2, f"Merged {merge_partial(fasta_file=picked_fasta, dbfile=contigs_file, overlapped_len=merge_overlapping)}")
+        logger.log(2, f"Merged {merge_partial(fasta_file=picked_fasta, dbfile=contigs_file, overlapped_len=merge_overlapping)} sequences.")
 
         if f_conf.addtional_check:
             logger.log(2, f'Launching another findmitoscaf run to filter out non-target sequences.')
@@ -418,7 +418,7 @@ def filter_external(fasta_file=None, external_fasta=None):
 
 
 def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8, index=0):
-    # Compose sequences that are possibly be overlapped with each others.
+    # Merge sequences that are possibly be overlapped with each others.
 
     logger.log(1, "Trying to merge candidates that are possibly overlapped.")
 
@@ -508,6 +508,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
 
 
 def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=5, threads=8):
+    # Merges a picked set of contigs/scaffolds for themselves, and against a larger set of sequences.
     logger.log(1, 'Trying to merge partial sequences that are possibly overlapped.')
 
     fasta_file = path.abspath(fasta_file)
