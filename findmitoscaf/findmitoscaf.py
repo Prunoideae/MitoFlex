@@ -424,7 +424,7 @@ def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, thr
 
     logger.log(2, "Calculating average depth for each sequence.")
     gene_depth_file = path.join(basedir, f'{prefix}.dep')
-    avgdep_bin = path.join(path.abspath(path.dirname(__file__)), 'avgdep')
+    avgdep_bin = path.join(path.abspath(path.dirname(__file__)), 'avgdep_bin')
     check_output(
         f'samtools -a depth {bam_sorted_file} |{avgdep_bin} -o {gene_depth_file}', shell=True)
 

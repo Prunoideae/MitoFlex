@@ -63,6 +63,7 @@ fn main() {
             Arg::with_name("input")
                 .short("i")
                 .long("input")
+                .takes_value(true)
                 .help("Input data from, leave out to stdin."),
         )
         .arg(
