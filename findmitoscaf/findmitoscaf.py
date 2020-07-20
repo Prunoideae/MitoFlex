@@ -409,11 +409,12 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     return filtered_frame
 
 
-def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, insert_size=None, threads=8):
+def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, threads=8):
 
     # Remap sequence back to the fastq file
     # This can be a non-trival task, so a partial of threads are
     # given to samtools view and samtools sort.
+    logger.log(2, "Mapping fastq reads back onto fasta file.")
     shell_call('bwa index', fasta_file)
     bam_file = path.join(basedir, f'{prefix}.bam')
     check_output(
@@ -421,10 +422,25 @@ def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, ins
     bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')
     check_output(f'samtools sort -@ {threads} -o {bam_sorted_file} {bam_file}', shell=True)
 
+    logger.log(2, "Calculating average depth for each sequence.")
     gene_depth_file = path.join(basedir, f'{prefix}.dep')
     avgdep_bin = path.join(path.abspath(path.dirname(__file__)), 'avgdep')
     check_output(
-        f'samtools depth -aa {bam_sorted_file} |{avgdep_bin} -o {gene_depth_file}', shell=True)
+        f'samtools -a depth {bam_sorted_file} |{avgdep_bin} -o {gene_depth_file}', shell=True)
+
+    mapping = {}
+    for l in open(gene_depth_file):
+        k, v = l.split()
+        mapping[k] = v
+
+    logger.log(2, "Retagging sequences for latter processing.")
+    sequences = []
+    for seq in SeqIO.parse(fasta_file, 'fasta'):
+        seq.description = f"flag=1 multi={mapping[seq.id]}"
+        sequences.append(seq)
+    SeqIO.write(sequences, path.join(basedir, path.basename(fasta_file)))
+
+    return fasta_file
 
 
 def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8, index=0):

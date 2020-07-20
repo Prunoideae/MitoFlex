@@ -30,7 +30,7 @@ fn get_output(output: Option<&str>) -> Box<dyn Write> {
             let path = Path::new(n);
             Box::new(BufWriter::with_capacity(
                 1024 * 128,
-                match File::open(&path) {
+                match File::create(&path) {
                     Err(_) => panic!("Cannot open file {}!", path.display()),
                     Ok(n) => n,
                 },
