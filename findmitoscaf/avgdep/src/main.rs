@@ -69,7 +69,7 @@ fn main() {
             Arg::with_name("output")
                 .short("o")
                 .long("output")
-                .required(true)
+                .takes_value(true)
                 .help("Output data to, leave out to stdout."),
         )
         .get_matches();
