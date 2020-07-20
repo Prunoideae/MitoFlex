@@ -409,12 +409,22 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     return filtered_frame
 
 
-# Accepts a bunch of external sequences, and treat hit sequences as a valid mitogenome candidate.
-# You must be sure that the sequences you provided is firmly oringinated from mitogenome, otherwise
-# it could make the result worse.
-def filter_external(fasta_file=None, external_fasta=None):
+def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, insert_size=None, threads=8):
 
-    pass
+    # Remap sequence back to the fastq file
+    # This can be a non-trival task, so a partial of threads are
+    # given to samtools view and samtools sort.
+    shell_call('bwa index', fasta_file)
+    bam_file = path.join(basedir, f'{prefix}.bam')
+    check_output(
+        f'bwa mem -t {min(1, int(threads*0.75))} {fasta_file} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -q 30 -h -@ {min(1, int(threads*0.25))} -o {bam_file} -', shell=True)
+    bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')
+    check_output(f'samtools sort -@ {threads} -o {bam_sorted_file} {bam_file}', shell=True)
+
+    gene_depth_file = path.join(basedir, f'{prefix}.dep')
+    avgdep_bin = path.join(path.abspath(path.dirname(__file__)), 'avgdep')
+    check_output(
+        f'samtools depth -aa {bam_sorted_file} |{avgdep_bin} -o {gene_depth_file}', shell=True)
 
 
 def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8, index=0):

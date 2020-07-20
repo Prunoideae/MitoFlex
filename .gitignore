@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 taxdump.tar.gz
 findmitoscaf/mlc/target/
+findmitoscaf/avgdep/target/
 filter/filter_bin/target/
 filter/filter_multi/target/
 assemble/fastfilter_src/target/

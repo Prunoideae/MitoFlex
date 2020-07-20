@@ -131,8 +131,20 @@ def assemble(args):
 
 
 @parse_func(func_help='search for the most possible mitochondrial sequences from assembled data',
-            parents=[universal_parser, fasta_parser, search_parser, saa_parser])
+            parents=[universal_parser, fasta_parser, search_parser, saa_parser, fastq_parser])
+@arg_prop(dest='from_megahit', help='on if the result is from megahit, so remapping will be skipped.', default=False)
+@arg_prop(dest='insert_size', help='used to determine the average depth if result is not from MEGAHIT.')
 def findmitoscaf(args):
+
+    if args.__calling == 'findmitoscaf' and not args.from_megahit:
+        fq1, fq2 = args.fastq1, args.fastq2
+        if not (fq1 or fq2):
+            raise RuntimeError("At least one fastq file should be specified!")
+        if not fq1:
+            fq1, fq2 = fq2, fq1
+        # Remapping to calculate average depth.
+        from findmitoscaf.findmitoscaf import remap_sequences
+        remap_sequences(args.findmitoscaf_dir, args.fastafile, args.fastq1, args.fastq2, args.insert_size, args.threads)
 
     from findmitoscaf.findmitoscaf import findmitoscaf as _findmitoscaf
     picked_fa = _findmitoscaf(

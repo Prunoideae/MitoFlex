@@ -105,7 +105,7 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     # is quite like a pseudo-paraprocessing, which may increase the
     # thread competition if threads are set too many.
     check_output(
-        f'bwa mem -t {min(threads, 24)} {fa_copy} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -q 30 -h -o {bam_file} -', shell=True)
+        f'bwa mem -t {threads} {fa_copy} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -q 30 -h -o {bam_file} -', shell=True)
     bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')
     check_output(f'samtools sort -o {bam_sorted_file} {bam_file}', shell=True)
     gene_depth_file = path.join(basedir, f'{prefix}.dep')
