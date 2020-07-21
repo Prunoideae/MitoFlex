@@ -35,6 +35,7 @@ if sys.version_info[0] < 3:
 try:
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility import logger
+    from utility.helper import shell_call
     from arguments import *  # pylint: disable=unused-wildcard-import
     import configurations
 except ModuleNotFoundError as identifier:
@@ -136,6 +137,12 @@ def assemble(args):
 def findmitoscaf(args):
 
     if args.__calling == 'findmitoscaf':
+        fastfilter_bin = path.abspath(path.join(path.dirname(__file__), 'assemble', 'fastfilter'))
+        filtered_fasta = path.join(basedir, f'{prefix}.filtered.fa')
+        shell_call(fastfilter_bin, input=args.fastafile, output=filtered_fasta,
+                   length=f"{configurations.assemble.min_length},{configurations.assemble.max_length}",
+                   depth=0)
+
         if not args.from_megahit:
             fq1, fq2 = args.fastq1, args.fastq2
             if not (fq1 or fq2):
@@ -144,7 +151,7 @@ def findmitoscaf(args):
                 fq1, fq2 = fq2, fq1
             # Remapping to calculate average depth.
             from findmitoscaf.findmitoscaf import remap_sequence
-            args.fastafile = remap_sequence(args.workname, args.findmitoscaf_dir, args.fastafile, args.fastq1, args.fastq2, args.threads)
+            args.fastafile = remap_sequence(args.workname, args.findmitoscaf_dir, filtered_fasta, args.fastq1, args.fastq2, args.threads)
         else:
             logger.log(2, "Remapping skipped since from-megahit is specified, no tagging needed.")
 
