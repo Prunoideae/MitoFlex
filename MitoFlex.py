@@ -143,8 +143,8 @@ def findmitoscaf(args):
             if not fq1:
                 fq1, fq2 = fq2, fq1
             # Remapping to calculate average depth.
-            from findmitoscaf.findmitoscaf import remap_sequences
-            args.fastafile = remap_sequences(args.findmitoscaf_dir, args.fastafile, args.fastq1, args.fastq2, args.threads)
+            from findmitoscaf.findmitoscaf import remap_sequence
+            args.fastafile = remap_sequence(args.workname, args.findmitoscaf_dir, args.fastafile, args.fastq1, args.fastq2, args.threads)
         else:
             logger.log(2, "Remapping skipped since from-megahit is specified, no tagging needed.")
 

@@ -39,6 +39,7 @@ try:
     from utility import logger
     from configurations import findmitoscaf as f_conf
     from utility.helper import concat_command, direct_call, shell_call
+    from subprocess import check_output
     from misc.check_circular import check_circular
 except ImportError as err:
     sys.exit(
@@ -409,7 +410,7 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     return filtered_frame
 
 
-def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, threads=8):
+def remap_sequence(prefix=None, basedir=None, fasta_file=None, fastq1=None, fastq2=None, threads=8):
 
     # Remap sequence back to the fastq file
     # This can be a non-trival task, so a partial of threads are
@@ -418,7 +419,7 @@ def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, thr
     shell_call('bwa index', fasta_file)
     bam_file = path.join(basedir, f'{prefix}.bam')
     check_output(
-        f'bwa mem -t {min(1, int(threads*0.75))} {fasta_file} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -q 30 -h -@ {min(1, int(threads*0.25))} -o {bam_file} -', shell=True)
+        f'bwa mem -t {max(1, int(threads*0.75))} {fasta_file} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -q 30 -h -@ {max(1, int(threads*0.25))} -o {bam_file} -', shell=True)
     bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')
     check_output(f'samtools sort -@ {threads} -o {bam_sorted_file} {bam_file}', shell=True)
 
@@ -426,7 +427,7 @@ def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, thr
     gene_depth_file = path.join(basedir, f'{prefix}.dep')
     avgdep_bin = path.join(path.abspath(path.dirname(__file__)), 'avgdep_bin')
     check_output(
-        f'samtools -a depth {bam_sorted_file} |{avgdep_bin} -o {gene_depth_file}', shell=True)
+        f'samtools depth -aa {bam_sorted_file} |{avgdep_bin} -o {gene_depth_file}', shell=True)
 
     mapping = {}
     for l in open(gene_depth_file):
@@ -438,7 +439,7 @@ def remap_sequences(basedir=None, fasta_file=None, fastq1=None, fastq2=None, thr
     for seq in SeqIO.parse(fasta_file, 'fasta'):
         seq.description = f"flag=1 multi={mapping[seq.id]}"
         sequences.append(seq)
-    SeqIO.write(sequences, path.join(basedir, path.basename(fasta_file)))
+    SeqIO.write(sequences, path.join(basedir, path.basename(fasta_file)), 'fasta')
 
     return fasta_file
 
@@ -559,10 +560,11 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
         seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])}
 
         def calculate_merged(row):
+            if row.que not in seqs or row.subj not in seqs:
+                return False
             que, sub = seqs[row.que], seqs[row.subj]
             if row.alen >= len(que) or row.alen >= len(sub):
                 return True
-
             qs, qe = row.qs - 1, row.qe - 1
 
             if row.ss < row.se:
