@@ -137,13 +137,14 @@ def assemble(args):
 def findmitoscaf(args):
 
     if args.__calling == 'findmitoscaf':
-        fastfilter_bin = path.abspath(path.join(path.dirname(__file__), 'assemble', 'fastfilter'))
-        filtered_fasta = path.join(basedir, f'{prefix}.filtered.fa')
-        shell_call(fastfilter_bin, input=args.fastafile, output=filtered_fasta,
-                   length=f"{configurations.assemble.min_length},{configurations.assemble.max_length}",
-                   depth=0)
+        
 
         if not args.from_megahit:
+            fastfilter_bin = path.abspath(path.join(path.dirname(__file__), 'assemble', 'fastfilter'))
+            filtered_fasta = path.join(args.findmitoscaf_dir, f'{args.workname}.filtered.fa')
+            shell_call(fastfilter_bin, i=args.fastafile, o=filtered_fasta,
+                   l=f"{configurations.assemble.min_length},{configurations.assemble.max_length}",
+                   d=0)
             fq1, fq2 = args.fastq1, args.fastq2
             if not (fq1 or fq2):
                 raise RuntimeError("At least one fastq file should be specified!")

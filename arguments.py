@@ -251,7 +251,7 @@ filter_parser, filter_group = register_group('Filter arguments', [
     {
         'name': 'trimming',
         'default': 5,
-        'help': 'only filter out x Gbps of the given dataset.'
+        'help': 'only filter out x Gbps of the given dataset, 0 means full dataset will be counted.'
     }
 ], func=filter_regulator)
 
