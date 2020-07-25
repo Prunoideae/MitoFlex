@@ -506,8 +506,8 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
             if overlapped.ss < overlapped.se:
                 ss, se = overlapped.ss - 1, overlapped.se
             else:
-                ss, se = len(seq2[sub].seq) - overlapped.ss, len(seq2[sub].seq) - (overlapped.se - 1)
-                #seq2[sub].seq = seq2[sub].seq[::-1]
+                se, ss = len(seq2[sub].seq) - overlapped.ss, len(seq2[sub].seq) - (overlapped.se - 1)
+                seq2[sub].seq = seq2[sub].seq.reverse_complement()
 
             if overlapped.alen >= len(seq2[que]):
                 new_seq = Seq.Seq(str(seq2[sub].seq))
@@ -571,7 +571,7 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
                 ss, se = row.ss - 1, row.se - 1
             else:
                 ss, se = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
-
+                
             if qs > ss:
                 l = qe + len(sub) - se
             else:
@@ -595,7 +595,8 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
             if overlapped.ss < overlapped.se:
                 ss, se = overlapped.ss - 1, overlapped.se
             else:
-                ss, se = len(seq2[sub].seq) - overlapped.ss, len(seq2[sub].seq) - (overlapped.se - 1)
+                se, ss = len(seq2[sub].seq) - overlapped.ss, len(seq2[sub].seq) - (overlapped.se - 1)
+                seq2[sub].seq = seq2[sub].seq.reverse_complement()
 
             if overlapped.alen >= len(seq2[que]):
                 new_seq = Seq.Seq(str(seq2[sub].seq))
