@@ -364,6 +364,10 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
             logger.log(2, "They are mainly not merged because blastn failed to recognize their overlapped region, if so happened visualization is")
             logger.log(2, "not recommended, since they have redundant bases, and will be misleading if such a graph is presented.")
 
+    if merge_method == 2:
+        logger.log(2, f"Merging sequences with global method.")
+        logger.log(2, f"Merged {merge_sequences(fasta_file=picked_fasta,overlapped_len=merge_overlapping)} sequences.")
+
     # Added a circular checker for scaffolds and meta-scaffolds.
     remark_circular(picked_fasta)
 
