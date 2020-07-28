@@ -92,6 +92,11 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
                  contigs_file=None, relaxing=0, multi=10, merge_method=1, merge_overlapping=50):
 
+    if path.getsize(contigs_file) > 10_000_000:
+        logger.log(2, f"Merging method is temporary disabled since returned contigs file is oversized.")
+        logger.log(2, 'For such a big contig file, merging will always lead to some unhappy results.')
+        merge_method = 2
+
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
         logger.log(2, f'Merging sequences with global method.')
