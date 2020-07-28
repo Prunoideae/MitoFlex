@@ -468,10 +468,8 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
         seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])}
 
         def calculate_merged(row):
-            try:
-                que, sub = seqs[row.que], seqs[row.subj]
-            except Exception:
-                return False
+
+            que, sub = seqs[row.que], seqs[row.subj]
 
             if row.alen >= len(que) or row.alen >= len(sub):
                 return True
@@ -481,7 +479,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
             if row.ss < row.se:
                 ss, se = row.ss - 1, row.se - 1
             else:
-                ss, se = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
+                se, ss = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
 
             if qs > ss:
                 l = qe + len(sub) - se
@@ -557,11 +555,13 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
         blast_results = blast_results[((blast_results.ss < search_range) & (blast_results.se < search_range)) |
                                       (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
-        seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])}
+        seqs = {x.id: x
+                for x in list(SeqIO.parse(fasta_file, 'fasta')) + list(SeqIO.parse(dbfile, 'fasta'))
+                if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])
+                }
 
         def calculate_merged(row):
-            if row.que not in seqs or row.subj not in seqs:
-                return False
+
             que, sub = seqs[row.que], seqs[row.subj]
             if row.alen >= len(que) or row.alen >= len(sub):
                 return True
@@ -570,8 +570,8 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
             if row.ss < row.se:
                 ss, se = row.ss - 1, row.se - 1
             else:
-                ss, se = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
-                
+                se, ss = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
+
             if qs > ss:
                 l = qe + len(sub) - se
             else:
