@@ -38,6 +38,7 @@ try:
     from annotation import annotation_tookit as tk
     from utility import logger
     from configurations import findmitoscaf as f_conf
+    from configurations import assemble as a_conf
     from utility.helper import concat_command, direct_call, shell_call
     from subprocess import check_output
     from misc.check_circular import check_circular
@@ -486,6 +487,9 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
             else:
                 l = se + len(que) - qe
 
+            if l > a_conf.max_length:
+                return False
+
             return l > len(sub) and l > len(que)
 
         blast_results = blast_results[blast_results.apply(calculate_merged, axis=1)]
@@ -557,7 +561,7 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
         blast_results = blast_results[blast_results.alen >= overlapped_len]
         seqs = {x.id: x
                 for x in list(SeqIO.parse(fasta_file, 'fasta')) + list(SeqIO.parse(dbfile, 'fasta'))
-                if x.id in set([x for p in zip(blast_results.que, blast_results.subj) for x in p])
+                if x.id in set(list(blast_results.que) + list(blast_results.subj))
                 }
 
         def calculate_merged(row):
@@ -576,6 +580,9 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
                 l = qe + len(sub) - se
             else:
                 l = se + len(que) - qe
+
+            if l > a_conf.max_length:
+                return False
 
             return l > len(sub) and l > len(que)
 

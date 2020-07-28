@@ -70,7 +70,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
     if libread.max_len + 20 < kmer_list[-1]:
         logger.log(
             3, f'Input max read length {libread.max_len} < max k-mer length {kmer_list[-1]}, resizing.')
-        kmer_list = [*[x for x in kmer_list if x < libread.max_len + 20]]
+        kmer_list = [x for x in kmer_list if x < libread.max_len + 20]
         if libread.max_len % 2 != 0:
             kmer_list.append(libread.max_len + 20)
         logger.log(3, f'K-mers after resized : {kmer_list}')
