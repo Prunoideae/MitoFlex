@@ -75,9 +75,9 @@ def filter(args):
     if not hasattr(args, 'disable_filter'):
         args.disable_filter = False
 
-    if not hasattr(args, 'cleanq1') or not args.cleanq1:
+    if not args.cleanq1:
         args.cleanq1 = 'clean.1.fq'
-    if hasattr(args, 'fastq2') and (not hasattr(args, 'cleanq2') or not args.cleanq1):
+    if args.fastq2 and not args.cleanq2:
         args.cleanq2 = 'clean.2.fq'
 
     args.cleanq1 = path.abspath(path.join(args.clean_dir, args.cleanq1))
@@ -137,14 +137,13 @@ def assemble(args):
 def findmitoscaf(args):
 
     if args.__calling == 'findmitoscaf':
-        
 
         if not args.from_megahit:
             fastfilter_bin = path.abspath(path.join(path.dirname(__file__), 'assemble', 'fastfilter'))
             filtered_fasta = path.join(args.findmitoscaf_dir, f'{args.workname}.filtered.fa')
             shell_call(fastfilter_bin, i=args.fastafile, o=filtered_fasta,
-                   l=f"{configurations.assemble.min_length},{configurations.assemble.max_length}",
-                   d=0)
+                       l=f"{configurations.assemble.min_length},{configurations.assemble.max_length}",
+                       d=0)
             fq1, fq2 = args.fastq1, args.fastq2
             if not (fq1 or fq2):
                 raise RuntimeError("At least one fastq file should be specified!")

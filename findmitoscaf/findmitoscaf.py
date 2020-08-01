@@ -596,6 +596,8 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
             return l > len(sub) and l > len(que)
 
         blast_results = blast_results[blast_results.apply(calculate_merged, axis=1)]
+        # Merge most similar sequences first
+        blast_results.sort_values(['score'], ascending=False)
 
         done = []
         seqrec = []
