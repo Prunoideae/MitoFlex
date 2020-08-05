@@ -33,6 +33,7 @@ if sys.version_info[0] < 3:
 
 try:
     from ete3 import NCBITaxa
+    import shutil
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoFlex installation!')
@@ -41,6 +42,15 @@ except ImportError as identifier:
     print(
         f'Error occured when importing module {identifier.name}! Please check your system, python or package installation!')
     sys.exit()
+
+tot, used, free = shutil.disk_usage('/')
+print("Filesystem status:",
+      f"Total: {tot//(2**30):.2f} GB",
+      f"Free: {free//(2**30):.2f} GB",
+      "",
+      "If the free disk space is too low (<1G), database updating can be failed!",
+      sep='\n')
+
 
 dump_file = path.join(path.dirname(__file__), 'taxdump.tar.gz')
 dump_file = path.abspath(dump_file)
@@ -55,6 +65,14 @@ try:
     ncbi.update_taxonomy_database()
     if os.path.isfile(dump_file_old):
         os.remove(dump_file_old)
+
+    print("Testing database...")
+    result = ncbi.get_name_translator(["Platyhelminthes"])
+    if not result:
+        print("Cannot retrieve taxid of Platyhelminthes, this may indicate a failure of database updating!")
+    else:
+        print("Successfully updated NCBI taxonomy database.")
+
 except Exception:
     print("Errors occured when fetching data from NCBI database, falling back to the last fetched database.")
     if path.isfile(dump_file_old):
