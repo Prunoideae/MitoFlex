@@ -67,7 +67,7 @@ try:
         os.remove(dump_file_old)
 
     print("Testing database...")
-    result = ncbi.get_name_translator(["Platyhelminthes"])
+    result = ncbi.get_name_translator(["Platyhelminthes"])  # May change to whatever needed
     if not result:
         print("Cannot retrieve taxid of Platyhelminthes, this may indicate a failure of database updating!")
     else:
