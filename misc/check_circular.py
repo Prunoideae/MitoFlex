@@ -34,7 +34,7 @@ from Bio import SeqIO
 import subprocess
 
 
-def check_circular(mininum_length=10000, start_length=300, end_length=300, final_fasta=None):
+def check_circular(mininum_length=10000, start_length=500, end_length=500, final_fasta=None):
     try:
         records = list(SeqIO.parse(final_fasta, "fasta"))
     except Exception:

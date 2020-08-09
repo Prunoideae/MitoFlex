@@ -654,7 +654,7 @@ def remark_circular(fasta_file=None, overlapped_length=50):
     if len(sequences) > 1 or sequences[0] < 2 * 500:
         return
 
-    overlapping, overlapped, sequence = check_circular(final_fasta=fasta_file, start_length=500, end_length=500)[0]
+    overlapping, overlapped, sequence = check_circular(final_fasta=fasta_file)[0]
 
     if overlapping != -1 and overlapping[0] == 0 and overlapping[1] >= overlapped_length:
         traits = decompile(input_seq=sequence.description, sep=None)
