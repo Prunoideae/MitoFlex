@@ -507,7 +507,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
             break
 
         blast_results = blast_results.sort_values(['s'], ascending=False)
-        
+
         done = []
         seqrec = []
         while not blast_results.empty:
@@ -651,9 +651,10 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
 
 def remark_circular(fasta_file=None, overlapped_length=50):
     sequences = [x for x in SeqIO.parse(fasta_file, 'fasta')]
-    if len(sequences) > 1:
+    if len(sequences) > 1 or sequences[0] < 2 * 500:
         return
-    overlapping, overlapped, sequence = check_circular(final_fasta=fasta_file)[0]
+
+    overlapping, overlapped, sequence = check_circular(final_fasta=fasta_file, start_length=500, end_length=500)[0]
 
     if overlapping != -1 and overlapping[0] == 0 and overlapping[1] >= overlapped_length:
         traits = decompile(input_seq=sequence.description, sep=None)
