@@ -87,7 +87,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     if configurations.annotation.redirection:
         logger.log(2, 'Checking genome directions.')
-        if tk.redirect_genome(fasta_file=fastafile, blast_frame=blast_frame, base_prefix=path.join(basedir, prefix)):
+        if tk.redirect_genome(fasta_file=fastafile, blast_frame=blast_frame):
             # Not fixing frame directly because I'm lazy, since later I'll need to fix tRNA and rRNA frames if so...
             logger.log(2, "Genome is reversed, launching a second annotation to fix gene locations.")
             blast_file = tk.tblastn_multi(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
