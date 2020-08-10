@@ -358,7 +358,9 @@ def redirect_genome(fasta_file=None, blast_frame: pandas.DataFrame = None):
     reblast = False
 
     def redirection(seq: SeqRecord):
+        nonlocal reblast
         partial_frame = blast_frame[blast_frame.qseq == seq.id]
+
         negative = len(partial_frame[partial_frame.sstart > partial_frame.send]) >= len(partial_frame) / 2
         if negative:
             reblast = True
