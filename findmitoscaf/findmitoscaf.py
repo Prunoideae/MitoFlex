@@ -648,7 +648,7 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
 
 def remark_circular(fasta_file=None, overlapped_length=50):
     sequences = [x for x in SeqIO.parse(fasta_file, 'fasta')]
-    if len(sequences) > 1 or len(sequences[0] < 2 * 500):
+    if len(sequences) > 1 or len(sequences[0]) < 2 * 500:
         return
 
     overlapping, overlapped, sequence = check_circular(final_fasta=fasta_file)[0]
