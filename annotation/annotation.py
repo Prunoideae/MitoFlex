@@ -79,11 +79,21 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     tbn_profile = path.join(
         profile_dir_tbn, f'{clade if not wildcard_profile else "Animal"}.fa')
+
     blast_file = tk.tblastn_multi(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
                                   basedir=basedir, prefix=prefix, threads=thread_number)
-
     blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
     washed_frame = tk.wash_blast_results(blast_frame)
+
+    if configurations.annotation.redirection:
+        logger.log(2, 'Checking genome directions.')
+        if tk.redirect_genome(fasta_file=fastafile, blast_frame=blast_frame, base_prefix=path.join(basedir, prefix)):
+            # Not fixing frame directly because I'm lazy, since later I'll need to fix tRNA and rRNA frames if so...
+            logger.log(2, "Genome is reversed, launching a second annotation to fix gene locations.")
+            blast_file = tk.tblastn_multi(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
+                                          basedir=basedir, prefix=prefix, threads=thread_number)
+            blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
+            washed_frame = tk.wash_blast_results(blast_frame)
 
     wise_frame, _, _ = tk.genewise(
         basedir=basedir, prefix=prefix, wises=washed_frame,

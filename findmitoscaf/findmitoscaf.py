@@ -439,10 +439,7 @@ def remap_sequence(prefix=None, basedir=None, fasta_file=None, fastq1=None, fast
     check_output(
         f'samtools depth -aa {bam_sorted_file} |{avgdep_bin} -o {gene_depth_file}', shell=True)
 
-    mapping = {}
-    for l in open(gene_depth_file):
-        k, v = l.split()
-        mapping[k] = v
+    mapping = {k: v for k, v in map(str.split, open(gene_depth_file))}
 
     logger.log(2, "Retagging sequences for latter processing.")
     sequences = []

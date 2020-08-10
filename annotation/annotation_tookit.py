@@ -38,6 +38,7 @@ try:
     import numpy as np
     from Bio import SeqIO
     from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
     from Bio.Data import CodonTable
     import configurations
 except ImportError as err:
@@ -351,6 +352,21 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
             start_real, end_real) if wise.plus else (end_real, start_real)
 
     return wises
+
+
+def redirect_genome(fasta_file=None, blast_frame: pandas.DataFrame = None):
+    reblast = False
+
+    def rediretion(seq: SeqRecord):
+        partial_frame = blast_frame[blast_frame.qseq == seq.id]
+        negative = len(partial_frame[partial_frame.sstart > partial_frame.send]) >= len(partial_frame) / 2
+        if negative:
+            reblast = True
+        return seq.reverse_complement(id=True, name=True, description=True) if negative else seq
+
+    SeqIO.write(map(rediretion, SeqIO.parse(fasta_file, 'fasta')), fasta_file, 'fasta')
+
+    return reblast
 
 
 def trna_search(fasta_file=None, profile_dir=None, basedir=None, prefix=None, gene_code=9, e_value=0.001, overlap_cutoff=40):

@@ -138,6 +138,11 @@ annotation.reloc_genes = False
 # circular genome sequences, where the output will always be linear.
 annotation.trim_circular = True
 
+# Enable genome redirecting if many of the PCGs are found in another strand
+# This will check if the genome is have more than 50% of the gene in positive
+# strand, and will reverse it before annotation if not.
+annotation.redirection = False
+
 # The ratio of two 'valid' overlapping gene
 # MitoFlex will remove overlapped tblastn results if the overlapped region is
 # longer than the ratio*min(seq1, seq2). Increasing this will have more results
