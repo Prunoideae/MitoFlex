@@ -357,14 +357,14 @@ def reloc_genes(fasta_file=None, wises: pandas.DataFrame = None, code=9):
 def redirect_genome(fasta_file=None, blast_frame: pandas.DataFrame = None):
     reblast = False
 
-    def rediretion(seq: SeqRecord):
+    def redirection(seq: SeqRecord):
         partial_frame = blast_frame[blast_frame.qseq == seq.id]
         negative = len(partial_frame[partial_frame.sstart > partial_frame.send]) >= len(partial_frame) / 2
         if negative:
             reblast = True
         return seq.reverse_complement(id=True, name=True, description=True) if negative else seq
 
-    SeqIO.write(map(rediretion, SeqIO.parse(fasta_file, 'fasta')), fasta_file, 'fasta')
+    SeqIO.write([x for x in map(redirection, SeqIO.parse(fasta_file, 'fasta'))], fasta_file, 'fasta')
 
     return reblast
 

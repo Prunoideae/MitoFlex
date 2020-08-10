@@ -100,7 +100,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
         logger.log(2, f'Merging sequences with global method.')
-        logger.log(2, f'Merged {merge_sequences(contigs_file,overlapped_len=merge_overlapping)} sequences.')
+        logger.log(2, f'Merged {merge_sequences(contigs_file,overlapped_len=merge_overlapping,threads=thread_number)} sequences.')
 
     # Update the total profile before the process
     logger.log(1, 'Updating the general protein database.')
