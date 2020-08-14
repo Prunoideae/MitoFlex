@@ -234,6 +234,9 @@ class MEGAHIT():
 
         shell_call(self.MEGAHIT_CORE, 'seq2sdbg', **options)
 
+        if file_size != 0 and current_kmer != 0 and self.keep_temp:
+            os.system(f"rm -r {path.join(self.temp_dir, f'k{current_kmer}')}")
+
     def assemble(self, kmer) -> (ContigInfo, ContigInfo):
         min_standalone = max(
             min(self.kmax * 3 - 1, int(self.min_length * 1.5)),
