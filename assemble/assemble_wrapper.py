@@ -32,6 +32,7 @@ try:
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
     import psutil
+    import uuid
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -134,8 +135,19 @@ class MEGAHIT():
 
         self.result_dir = safe_makedirs(
             path.join(self.basedir, f'{self.prefix}.result'), False)
-        self.temp_dir = safe_makedirs(
-            path.join(self.basedir, f'{self.prefix}.temp'), False)
+
+        if not path.isdir(str(a_conf.external_directory)):
+            self.temp_dir = safe_makedirs(
+                path.join(self.basedir, f'{self.prefix}.temp'), False)
+        else:
+            self.temp_dir = safe_makedirs(
+                path.join(
+                    a_conf.external_temp,
+                    uuid.uuid4(),
+                    f'{self.prefix}.temp'
+                ),
+                False
+            )
 
         self.read_lib = path.join(self.temp_dir, 'reads.lib')
         self.contig_dir = safe_makedirs(
@@ -304,4 +316,9 @@ class MEGAHIT():
                    '>', self.final_contig)
 
         if not self.keep_temp:
-            os.system(f'rm -r {self.temp_dir}')
+            to_remove = self.temp_dir
+            if path.isdir(str(a_conf.external_directory)):
+                to_remove = path.join(to_remove, "..")
+            to_remove = path.abspath(to_remove)
+
+            os.system(f'rm -r {to_remove}')

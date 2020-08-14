@@ -102,6 +102,12 @@ assemble.show_from_soap = True
 # risk to halt the progress, or output few even no scaffolds.
 assemble.max_thread_scaf = 16
 
+# If use external (and fixed) temp directory and where.
+# None means do not use, and if a valid directory is specified, assembler will use
+# that instead. This is for somewhere like tmpfs can then be utilized, to speed
+# up the IO.
+assemble.external_temp = None
+
 # Findmitoscaf
 
 # What partial do MitoFlex treat the gene of a single sequence as full gene?
