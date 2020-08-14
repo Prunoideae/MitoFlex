@@ -27,6 +27,7 @@ import os
 try:
     from utility.parser import register_group
     from utility.helper import safe_makedirs
+    from configurations import findmitoscaf as f_conf
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoFlex installation!')
@@ -485,7 +486,7 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
     },
     {
         'name': 'clade',
-        'default': 'Arthropoda',
+        'default': f_conf.default_clade,
         'choices': [os.path.splitext(profile_name)[0]
                     for profile_name in os.listdir(profile_dir_tbn)
                     if os.path.splitext(profile_name)[0] in profiles_hmm],

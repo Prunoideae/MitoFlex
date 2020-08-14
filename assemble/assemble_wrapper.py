@@ -136,7 +136,7 @@ class MEGAHIT():
         self.result_dir = safe_makedirs(
             path.join(self.basedir, f'{self.prefix}.result'), False)
 
-        if not path.isdir(str(a_conf.external_directory)):
+        if not path.isdir(str(a_conf.external_temp)):
             self.temp_dir = safe_makedirs(
                 path.join(self.basedir, f'{self.prefix}.temp'), False)
         else:
@@ -320,7 +320,7 @@ class MEGAHIT():
 
         if not self.keep_temp:
             to_remove = self.temp_dir
-            if path.isdir(str(a_conf.external_directory)):
+            if path.isdir(str(a_conf.external_temp)):
                 to_remove = path.join(to_remove, "..")
             to_remove = path.abspath(to_remove)
 
