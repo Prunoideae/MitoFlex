@@ -256,8 +256,8 @@ def genewise(basedir=None, prefix=None, codon_table=None,
     env_var = dict(os.environ)
     env_var["WISECONFIGDIR"] = wise_cfg_dir
 
-    wise_dict = {}
-    wises.assign(wise_cover=np.nan)
+    wises = wises.assign(wise_cover=np.nan, wise_shift=np.nan,
+                         wise_min_start=np.nan, wise_max_end=np.nan)
 
     for index, wise in wises.iterrows():
         query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
@@ -301,9 +301,6 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         wise['wise_shift'][index] = wise_shift
         wise['wise_min_start'][index] = wise_start
         wise['wise_max_end'][index] = wise_end
-
-        wise_dict[(wise.qseq, wise.sseq)] = (
-            wise_cover, wise_shift, wise_start, wise_end)
 
     wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'), index=False)
     return wises, queries, dbparsed

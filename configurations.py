@@ -47,6 +47,13 @@ visualize = Circos()
 # on the process time (5min -> 30min, even 1h)
 filter_rawdata.compress_output_in_all = False
 
+# Use built in flate2 decoder or gzip?
+# On some old version gzip file, flate2 library may be failed to process.
+# So maybe you will need to decompress manually, otherwise enable this
+# to use system gzip for decoding.
+filter_rawdata.use_system_gzip = False
+
+
 # Assemble
 
 # Setting the max memory percent for MEGAHIT to use .

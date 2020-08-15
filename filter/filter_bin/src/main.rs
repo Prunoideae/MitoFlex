@@ -284,9 +284,9 @@ fn filter_se(
     let len = end - start;
     let mut times = 0;
     for (l1, l2, _, l4) in fastq_file.lines().tuples() {
-        let head: String = l1.ok().unwrap().trim().to_string();
-        let mut bps: String = l2.ok().unwrap().trim().to_string();
-        let mut quas: String = l4.ok().unwrap().trim().to_string();
+        let head: String = l1.unwrap().to_string();
+        let mut bps: String = l2.unwrap().to_string();
+        let mut quas: String = l4.unwrap().to_string();
 
         if start != 0 {
             bps = bps.get(start..).unwrap().to_string();

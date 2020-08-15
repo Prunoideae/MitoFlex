@@ -234,7 +234,7 @@ class MEGAHIT():
 
         shell_call(self.MEGAHIT_CORE, 'seq2sdbg', **options)
 
-        if file_size != 0 and current_kmer != 0 and self.keep_temp:
+        if file_size != 0 and current_kmer != 0 and not self.keep_temp:
             os.system(f"rm -r {path.join(self.temp_dir, f'k{current_kmer}')}")
 
     def assemble(self, kmer) -> (ContigInfo, ContigInfo):
