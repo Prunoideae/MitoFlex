@@ -297,10 +297,11 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         wise_start = min(int(x[3]) for x in wise_result)
         wise_end = max(int(x[4]) for x in wise_result)
 
-        wise['wise_cover'][index] = wise_cover
-        wise['wise_shift'][index] = wise_shift
-        wise['wise_min_start'][index] = wise_start
-        wise['wise_max_end'][index] = wise_end
+        pandas.set_option('mode.chanined_assignment', None)
+        wises['wise_cover'][index] = wise_cover
+        wises['wise_shift'][index] = wise_shift
+        wises['wise_min_start'][index] = wise_start
+        wises['wise_max_end'][index] = wise_end
 
     wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'), index=False)
     return wises, queries, dbparsed
