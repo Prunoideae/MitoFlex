@@ -297,7 +297,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         wise_start = min(int(x[3]) for x in wise_result)
         wise_end = max(int(x[4]) for x in wise_result)
 
-        pandas.set_option('mode.chanined_assignment', None)
+        pandas.set_option('mode.chained_assignment', None)
         wises['wise_cover'][index] = wise_cover
         wises['wise_shift'][index] = wise_shift
         wises['wise_min_start'][index] = wise_start
