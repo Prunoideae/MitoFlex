@@ -143,7 +143,7 @@ class MEGAHIT():
             self.temp_dir = safe_makedirs(
                 path.join(
                     a_conf.external_temp,
-                    uuid.uuid4(),
+                    str(uuid.uuid4()),
                     f'{self.prefix}.temp'
                 ),
                 False

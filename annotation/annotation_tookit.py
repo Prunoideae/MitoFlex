@@ -239,7 +239,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         os.makedirs(dbdir, exist_ok=True)
         os.makedirs(query_dir, exist_ok=True)
     except Exception:
-        raise RuntimeError(4, 'Cannot validate folders for genewise, exiting.')
+        raise RuntimeError('Cannot validate folders for genewise, exiting.')
 
     queries = {record.id: record
                for record in SeqIO.parse(infile, 'fasta')
@@ -257,9 +257,14 @@ def genewise(basedir=None, prefix=None, codon_table=None,
     env_var["WISECONFIGDIR"] = wise_cfg_dir
 
     wise_dict = {}
-    for _, wise in wises.iterrows():
+    wises.assign(wise_cover=np.nan)
+
+    for index, wise in wises.iterrows():
         query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
         query_file = path.join(query_dir, f'{query_prefix}.fa')
+
+        seq = queries[wise.sseq]
+        seq.id = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
 
         SeqIO.write(queries[wise.sseq]
                     [wise.sstart - 1:wise.send], query_file, 'fasta')
@@ -272,6 +277,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                            ).replace("--", '-'), env=env_var, shell=True).decode('utf-8')
         with open(path.join(basedir, 'genewise.txt'), 'a') as fgw:
             print(result, file=fgw)
+
         # Parse the results
         splited = result.split('//\n')
         info = splited[0].split('\n')[1].split()
@@ -290,19 +296,14 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         wise_shift = sum(x[2] == 'match' for x in wise_result) - 1
         wise_start = min(int(x[3]) for x in wise_result)
         wise_end = max(int(x[4]) for x in wise_result)
+
+        wise['wise_cover'][index] = wise_cover
+        wise['wise_shift'][index] = wise_shift
+        wise['wise_min_start'][index] = wise_start
+        wise['wise_max_end'][index] = wise_end
+
         wise_dict[(wise.qseq, wise.sseq)] = (
             wise_cover, wise_shift, wise_start, wise_end)
-
-    wises.assign(wise_cover=np.nan)
-    for (qseq, sseq), (cover, shift, start, end) in wise_dict.items():
-        wises.loc[(wises.qseq == qseq) & (
-            wises.sseq == sseq), 'wise_cover'] = cover
-        wises.loc[(wises.qseq == qseq) & (
-            wises.sseq == sseq), 'wise_shift'] = int(shift)
-        wises.loc[(wises.qseq == qseq) & (wises.sseq == sseq),
-                  'wise_min_start'] = int(start)
-        wises.loc[(wises.qseq == qseq) & (
-            wises.sseq == sseq), 'wise_max_end'] = int(end)
 
     wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'), index=False)
     return wises, queries, dbparsed
