@@ -47,13 +47,6 @@ visualize = Circos()
 # on the process time (5min -> 30min, even 1h)
 filter_rawdata.compress_output_in_all = False
 
-# Use built in flate2 decoder or gzip?
-# On some old version gzip file, flate2 library may be failed to process.
-# So maybe you will need to decompress manually, otherwise enable this
-# to use system gzip for decoding.
-filter_rawdata.use_system_gzip = False
-
-
 # Assemble
 
 # Setting the max memory percent for MEGAHIT to use .
@@ -113,6 +106,11 @@ assemble.max_thread_scaf = 16
 # None means do not use, and if a valid directory is specified, assembler will use
 # that instead. This is for somewhere like tmpfs can then be utilized, to speed
 # up the IO.
+# The external buffer needs about 20G or more space to store the temporal data.
+# And IO rate may have little improvement if :
+# 1. You are assembling a very large genome.
+# 2. Comparing to your disk speed, your memcpy speed is relatively slow.
+#    This can occur if you have a RAID or SSD but a outdated RAM, like DDR3. 
 assemble.external_temp = None
 
 # Findmitoscaf

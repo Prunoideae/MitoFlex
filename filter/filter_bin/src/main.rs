@@ -22,7 +22,7 @@ fn main() {
                 .long("fastq1")
                 .value_name("FASTQ1")
                 .help("Input raw data fastq file 1")
-                .required(true)
+                .required(false)
                 .takes_value(true),
         )
         .arg(
@@ -119,10 +119,10 @@ fn main() {
         )
         .get_matches();
 
-    let fastq1 = matches.value_of("fastq1").unwrap();
-    let fastq2 = matches.value_of("fastq2").unwrap_or("");
-    let cleanq1 = matches.value_of("cleanq1").unwrap();
-    let cleanq2 = matches.value_of("cleanq2").unwrap_or("");
+    let fastq1 = matches.value_of("fastq1");
+    let fastq2 = matches.value_of("fastq2");
+    let cleanq1 = matches.value_of("cleanq1");
+    let cleanq2 = matches.value_of("cleanq2");
 
     let start: usize = matches
         .value_of("start")
@@ -175,7 +175,8 @@ fn main() {
     let dedup: bool = matches.is_present("deduplication");
     let trunc: bool = matches.is_present("truncate");
 
-    if fastq2.is_empty() {
+    // At anytime, missing a fastq2 indicates a se data, you can't split one stdin to two fastq don't you?
+    if !matches.is_present("fastq2") {
         filter_se(fastq1, cleanq1, start, end, ns, quality, limit, trim, trunc);
     } else {
         filter_pe(
@@ -185,10 +186,10 @@ fn main() {
 }
 
 fn filter_pe(
-    fastq1: &str,
-    fastq2: &str,
-    cleanq1: &str,
-    cleanq2: &str,
+    fastq1: Option<&str>,
+    fastq2: Option<&str>,
+    cleanq1: Option<&str>,
+    cleanq2: Option<&str>,
     start: usize,
     end: usize,
     ns: usize,
@@ -211,24 +212,24 @@ fn filter_pe(
     let mut counts = 0;
 
     for ((a1, b1), (a2, b2), _, (a4, b4)) in fq1.lines().zip(fq2.lines()).tuples() {
-        let head1: String = a1.ok().unwrap().trim().to_string();
-        let head2: String = b1.ok().unwrap().trim().to_string();
-        let mut seq1: String = a2.ok().unwrap().trim().to_string();
-        let mut seq2: String = b2.ok().unwrap().trim().to_string();
-        let mut qua1: String = a4.ok().unwrap().trim().to_string();
-        let mut qua2: String = b4.ok().unwrap().trim().to_string();
+        let head1: String = a1.unwrap();
+        let head2: String = b1.unwrap();
+        let mut seq1: String = a2.unwrap();
+        let mut seq2: String = b2.unwrap();
+        let mut qua1: String = a4.unwrap();
+        let mut qua2: String = b4.unwrap();
 
         if start != 0 {
-            seq1 = seq1.get(start..).unwrap().to_string();
-            seq2 = seq2.get(start..).unwrap().to_string();
-            qua1 = qua1.get(start..).unwrap().to_string();
-            qua2 = qua2.get(start..).unwrap().to_string();
+            seq1.drain(..start);
+            seq2.drain(..start);
+            qua1.drain(..start);
+            qua2.drain(..start);
         }
         if end != 0 {
-            seq1 = seq1.get(..len).unwrap().to_string();
-            seq2 = seq2.get(..len).unwrap().to_string();
-            qua1 = qua1.get(..len).unwrap().to_string();
-            qua2 = qua2.get(..len).unwrap().to_string();
+            seq1.truncate(len);
+            seq2.truncate(len);
+            qua1.truncate(len);
+            qua2.truncate(len);
         }
 
         if !trunc {
@@ -269,8 +270,8 @@ fn filter_pe(
 }
 
 fn filter_se(
-    fastq1: &str,
-    cleanq1: &str,
+    fastq1: Option<&str>,
+    cleanq1: Option<&str>,
     start: usize,
     end: usize,
     ns: usize,
@@ -284,17 +285,17 @@ fn filter_se(
     let len = end - start;
     let mut times = 0;
     for (l1, l2, _, l4) in fastq_file.lines().tuples() {
-        let head: String = l1.unwrap().to_string();
-        let mut bps: String = l2.unwrap().to_string();
-        let mut quas: String = l4.unwrap().to_string();
+        let head: String = l1.unwrap();
+        let mut bps: String = l2.unwrap();
+        let mut quas: String = l4.unwrap();
 
         if start != 0 {
-            bps = bps.get(start..).unwrap().to_string();
-            quas = quas.get(start..).unwrap().to_string();
+            bps.drain(..start);
+            quas.drain(..start);
         }
         if end != 0 {
-            bps = bps.get(..len).unwrap().to_string();
-            quas = quas.get(..len).unwrap().to_string();
+            bps.truncate(len);
+            quas.truncate(len);
         }
 
         if !trunc {
