@@ -33,6 +33,7 @@ try:
     from configurations import assemble as a_conf  # Prevent naming confliction
     import psutil
     import uuid
+    import subprocess
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -163,15 +164,36 @@ class MEGAHIT():
 
         # Write reads info
         with open(self.read_lib, 'w') as l:
+            fifos = []
+
             if self.fq1 and self.fq2:
                 print(self.fq1, self.fq2, sep=',', file=l)
-                print('pe', self.fq1, self.fq2, file=l)
+                fq1, fq2 = (
+                    self.fq1 if not self.fq1.endswith('gz') else path.join(self.temp_dir, 'pipe.pe1'),
+                    self.fq2 if not self.fq2.endswith('gz') else path.join(self.temp_dir, 'pipe.pe2')
+                )
+
+                if self.fq1.endswith('gz'):
+                    fifo1 = path.join(self.temp_dir, 'pipe.pe1')
+                    os.mkfifo(fifo1)
+                    fifos.append(subprocess.Popen(f'gzip -dc {self.fq1} > {fifo1}', shell=True, preexec_fn=os.setsid))
+
+                if self.fq2.endswith('gz'):
+                    fifo2 = path.join(self.temp_dir, 'pipe.pe2')
+                    os.mkfifo(fifo2)
+                    fifos.append(subprocess.Popen(f'gzip -dc {self.fq2} > {fifo2}', shell=True, preexec_fn=os.setsid))
+
+                print('pe', fq1, fq2, file=l)
             else:
                 print(self.fq1, file=l)
-                print('se', self.fq1, file=l)
+                fq1 = self.fq1 if not self.fq1.endswith('gz') else path.join(self.temp_dir, 'pipe.se')
+                print('se', fq1, file=l)
 
         logger.log(1, "Converting reads to binary library.")
         shell_call(self.MEGAHIT_CORE, 'buildlib', self.read_lib, self.read_lib)
+
+        if False in (x.wait() == 0 for x in fifos):
+            raise RuntimeError("Error occured in reading input fifos")
 
         with open(self.read_lib + '.lib_info') as ri:
             info = [x.split(' ') for x in ri.readlines()]
