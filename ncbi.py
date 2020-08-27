@@ -57,27 +57,35 @@ dump_file = path.abspath(dump_file)
 dump_dir = path.dirname(dump_file)
 dump_file_old = path.join(dump_dir, 'old.taxdump.tar.gz')
 
-if os.path.isfile(dump_file):
-    os.rename(dump_file, dump_file_old)
+use_old = ""
+while use_old.upper() != "Y" and use_old.upper() != "N":
+    use_old = input("Do you want to download database from NCBI, or use already-downloaded old taxonomy data? [y/n]:").strip()
 
-try:
-    ncbi = NCBITaxa()
-    ncbi.update_taxonomy_database()
-    if os.path.isfile(dump_file_old):
-        os.remove(dump_file_old)
+if use_old.upper == "Y":
+    if os.path.isfile(dump_file):
+        os.rename(dump_file, dump_file_old)
 
-    print("Testing database...")
-    result = ncbi.get_name_translator(["Platyhelminthes"])  # May change to whatever needed
-    if not result:
-        print("Cannot retrieve taxid of Platyhelminthes, this may indicate a failure of database updating!")
-    else:
-        print("Successfully updated NCBI taxonomy database.")
+    try:
+        ncbi = NCBITaxa()
+        ncbi.update_taxonomy_database()
+        if os.path.isfile(dump_file_old):
+            os.remove(dump_file_old)
 
-except Exception:
-    print("Errors occured when fetching data from NCBI database, falling back to the last fetched database.")
-    if path.isfile(dump_file_old):
-        os.rename(dump_file_old, dump_file)
-        ncbi = NCBITaxa(taxdump_file=os.path.abspath(dump_file))
-    else:
-        print("A taxdump file is not found under installation directory, cannot build NCBI taxanomy database.")
-        print("Please manually download it from http://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz , and move it to the installation directory.")
+        print("Testing database...")
+        result = ncbi.get_name_translator(["Platyhelminthes"])  # May change to whatever needed
+        if not result:
+            print("Cannot retrieve taxid of Platyhelminthes, this may indicate a failure of database updating!")
+        else:
+            print("Successfully updated NCBI taxonomy database.")
+
+    except Exception:
+        print("Errors occured when fetching data from NCBI database, falling back to the last fetched database.")
+        if path.isfile(dump_file_old):
+            os.rename(dump_file_old, dump_file)
+            ncbi = NCBITaxa(taxdump_file=os.path.abspath(dump_file))
+        else:
+            print("A taxdump file is not found under installation directory, cannot build NCBI taxanomy database.")
+            print("Please manually download it from http://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz , and move it to the installation directory.")
+else:
+    print("Using old taxonomy database, some new taxanomy entires may be missing.")
+    ncbi = NCBITaxa(taxdump_file=os.path.abspath(dump_file))
