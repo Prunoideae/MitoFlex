@@ -260,14 +260,18 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                          wise_min_start=np.nan, wise_max_end=np.nan)
 
     for index, wise in wises.iterrows():
-        query_prefix = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
+        #Extending search region for more sensitive finding
+        extended_sstart = wise.sstart - 30 if wise.sstart > 30 else 0
+        extended_send = wise.send + 30
+
+        query_prefix = f'{wise.qseq}_{wise.sseq}_{extended_sstart}_{extended_send}'
         query_file = path.join(query_dir, f'{query_prefix}.fa')
 
         seq = queries[wise.sseq]
-        seq.id = f'{wise.qseq}_{wise.sseq}_{wise.sstart}_{wise.send}'
+        seq.id = f'{wise.qseq}_{wise.sseq}_{extended_send}_{extended_send}'
 
         SeqIO.write(queries[wise.sseq]
-                    [wise.sstart - 1:wise.send], query_file, 'fasta')
+                    [extended_send - 1:extended_send], query_file, 'fasta')
 
         result = subprocess.check_output(
             concat_command('genewise', codon=codon_table,
@@ -290,8 +294,8 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                        if x.split('\t')[2] == 'cds']
         for x in wise_result:
             # Fix the actual position of seq
-            x[3] = str(int(x[3]) + wise.sstart - 1)
-            x[4] = str(int(x[4]) + wise.sstart - 1)
+            x[3] = str(int(x[3]) + extended_send - 1)
+            x[4] = str(int(x[4]) + extended_send - 1)
         wise_result.sort(key=lambda x: int(x[3]))
         wise_shift = sum(x[2] == 'match' for x in wise_result) - 1
         wise_start = min(int(x[3]) for x in wise_result)
