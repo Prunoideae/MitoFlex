@@ -48,7 +48,7 @@ except ImportError as identifier:
     sys.exit()
 
 # Constants
-VERSION = '0.2.7'
+VERSION = '0.2.8'
 
 # Static variables
 start_time = time.time()
@@ -56,15 +56,15 @@ start_time = time.time()
 # Command processing
 desc = f"""
 Description
-
-    MitoFlex - A rewritten toolkit of its ancestor MitoZ for faster and better
-    mitochondrial assembly, annotation and visualization with high expandability.
+    An almost all-in-one pipeline for Mitogenome analysis from de novo NGS data
+    aiming at result quality, speed and flexibility.
 
 Version
     {VERSION}
 
 Citation
-    MitoFlex - a mitogenome toolkit inspired from MitoZ for imporving result quality and performance
+    MitoFlex: an efficient, high-performance toolkit for mitogenome assembly, 
+    annotation, and visualization. (Not yet published)
 
 """
 
