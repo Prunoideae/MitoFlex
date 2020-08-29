@@ -33,6 +33,31 @@ if sys.version_info[0] < 3:
 
 try:
     from ete3 import NCBITaxa
+    try:
+        import ast
+        import inspect
+        print("Patching NCBITaxa's base methods. For reason, see #2.\n")
+        code_to_patch = """db.execute("INSERT INTO synonym (taxid, spname) VALUES (?, ?);", (taxid, spname))"""
+        patched_code = """db.execute("INSERT OR REPLACE INTO synonym (taxid, spname) VALUES (?, ?);", (taxid, spname))"""
+
+        ncbiquery = sys.modules[NCBITaxa.__module__]
+        lines_code = [x.replace(code_to_patch, patched_code)
+                      for x in inspect.getsourcelines(ncbiquery.upload_data)[0]]
+        lines_code.insert(1, "    print('\\nIf this message shown, then the patch is successful!')\n")
+        lines_code.insert(1, "    import os, sqlite3, sys\n")
+        lines_code.insert(1, "    DB_VERSION = 2\n")
+        lines_code = "".join(lines_code)
+
+        ast_tree = ast.parse(lines_code)
+        patched_function = compile(ast_tree, "<string>", mode="exec")
+        mod_dummy = {}
+        exec(patched_function, mod_dummy)
+        ncbiquery.upload_data = mod_dummy["upload_data"]
+    except Exception:
+        print("Patching failed, current taxonomy data downloaded from FTP may be failed to parse with ETE3!")
+    finally:
+        print("Patch finished.")
+
     import shutil
 except ModuleNotFoundError as identifier:
     print(
@@ -61,7 +86,7 @@ use_old = ""
 while use_old.upper() != "Y" and use_old.upper() != "N":
     use_old = input("Do you want to download database from NCBI, or use already-downloaded old taxonomy data? [y/n]:").strip()
 
-if use_old.upper == "Y":
+if use_old.upper() == "Y":
     if os.path.isfile(dump_file):
         os.rename(dump_file, dump_file_old)
 
