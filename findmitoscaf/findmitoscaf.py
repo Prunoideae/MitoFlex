@@ -88,7 +88,7 @@ def get_rank(taxa_name=None):
     return [(tax_class, tax_id) for tax_class, tax_id in rank_dict.items()]
 
 
-def findmitoscaf(thread_number=8, clade=None, prefix=None,
+def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.split_two,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
                  contigs_file=None, relaxing=0, multi=10, merge_method=1, merge_overlapping=50):
 
@@ -358,7 +358,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
                                         basedir=basedir, gene_code=gene_code, taxa=taxa,
                                         max_contig_len=max_contig_len, contigs_file=picked_fasta,
                                         relaxing=relaxing, multi=multi, merge_method=2,
-                                        merge_overlapping=merge_overlapping)
+                                        merge_overlapping=merge_overlapping, split_two=False)
             logger.log(2, "Some of the merged contigs are thought to be conflicted with selected sequences, so they are not picked in the result.")
             logger.log(2, "But they may also contain some gene, if so, please check at the [workname].abundance.high.fa at findmitoscaf temp folder.")
             logger.log(2, "They are mainly not merged because blastn failed to recognize their overlapped region, if so happened visualization is")
@@ -370,6 +370,14 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None,
 
     # Added a circular checker for scaffolds and meta-scaffolds.
     remark_circular(picked_fasta)
+
+    sequence_final = list(SeqIO.parse(picked_fasta, 'fasta'))
+    if split_two and len(sequence_final) == 1 and decompile(sequence_final[0].desciption)['flag'] == '3':
+        # 2000 should be long enough to annotate anything, and I don't think there's a need to change it.
+        seq_addi = sequence_final[0][-1000:] + sequence_final[0][:1000]
+        seq_addi = sequence_final[0].id + "_addi"
+        sequence_final.append(seq_addi)
+        SeqIO.write(sequence_final, picked_fasta, 'fasta')
 
     return picked_fasta
 

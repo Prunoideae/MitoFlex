@@ -110,7 +110,7 @@ assemble.max_thread_scaf = 16
 # And IO rate may have little improvement if :
 # 1. You are assembling a very large genome.
 # 2. Comparing to your disk speed, your memcpy speed is relatively slow.
-#    This can occur if you have a RAID or SSD but a outdated RAM, like DDR3. 
+#    This can occur if you have a RAID or SSD but a outdated RAM, like DDR3.
 assemble.external_temp = None
 
 # Findmitoscaf
@@ -141,6 +141,15 @@ findmitoscaf.min_valid_ratio = 0.3
 # overlapping is not that bad, and losing gene is quite unbearable, please turn this off.
 
 findmitoscaf.additional_check = True
+
+# Should findmitoscaf sequence be merged broke into two parts?
+# It's specialized for annotating genes that are happened to be splited at the start,
+# or the end of the linear mitogenome.
+# Adding this will make MitoFlex to add an additional sequence that merges the start
+# and the end of the sequence, if the picked mitoscaf is only 1 sequence and circular.
+# Extra sequence will be marked to be disposed at the end of annotation, so there will
+# be no chance in to result.
+findmitoscaf.split_two = False
 
 # Annoation
 
