@@ -468,7 +468,6 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
         blast_results = pandas.read_csv(tk.blastn_multi(fasta_file, fasta_file, path.dirname(fasta_file), 'merge', threads=threads), delimiter="\t", names=[
                                         'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
                                         ])
-        seq_dict = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta')}
 
         # Overlap Conditions:
         # 1. Not aligning itself
@@ -480,7 +479,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
                                       (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
 
-        seqs = {x: seq_dict[x] for x in set([x for p in zip(blast_results.que, blast_results.subj)]) if x in seq_dict}
+        seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set(list(blast_results.que) + list(blast_results.subj))}
 
         def calculate_merged(row):
 
@@ -519,8 +518,8 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
             overlapped = blast_results.iloc[0]
             que, sub = overlapped.que, overlapped.subj
             seq2 = {
-                que: seq_dict[que],
-                sub: seq_dict[sub]
+                que: seqs[que],
+                sub: seqs[sub]
             }
 
             qs, qe = overlapped.qs - 1, overlapped.qe
@@ -550,7 +549,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
             blast_results = blast_results[(blast_results.que != que) & (blast_results.subj != que)]
             blast_results = blast_results[(blast_results.que != sub) & (blast_results.subj != sub)]
 
-        SeqIO.write(seqrec + [v for k, v in seq_dict.items() if k not in done], open(fasta_file, 'w'), 'fasta')
+        SeqIO.write(seqrec + [v for k, v in seqs.items() if k not in done], open(fasta_file, 'w'), 'fasta')
 
     return index
 

@@ -106,7 +106,6 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
 
     truncated_call('makeblastdb', '-in', infile, dbtype='nucl')
 
-    tasks = []
     results = []
 
     nucl_data_dir = path.join(basedir, "blastn_data")
@@ -117,32 +116,34 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
         raise RuntimeError("Folder is already created, please make sure the working folder is clean.")
 
     logger.log(1, f'Making {threads} small datasets for calling blastn.')
-    blastn_db = list(SeqIO.parse(dbfile, 'fasta'))
 
-    if len(blastn_db) > threads:
-        blastn_db = np.array_split(blastn_db, threads)
+    file_names = [path.join(nucl_data_dir, f'dataset_{x}.fasta') for x in range(threads)]
+    file_handles = [open(x, 'w') for x in file_names]
+    tasks = [f'blastn -evalue 1e-5 -outfmt 6 -db {infile} -query {dataset_path}' for dataset_path in file_names]
 
-    for idx, data in enumerate(blastn_db):
-        dataset_path = path.join(nucl_data_dir, f'dataset_{idx}.fasta')
-        SeqIO.write(data, dataset_path, 'fasta')
-        tasks.append(f'blastn -evalue 1e-5 -outfmt 6 -db {infile} -query {dataset_path}')
+    for i, seq in enumerate(SeqIO.parse(dbfile, 'fasta')):
+        SeqIO.write(seq, file_handles[i % threads], 'fasta')
+
+    for h in file_handles:
+        h.close()
+
+    out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
+    blast_handle = open(out_blast, 'w')
+
     logger.log(1, 'Generating map for calling blastn.')
     pool = multiprocessing.Pool(processes=threads)
-    res = pool.map_async(direct_call, tasks, callback=results.append)
+    res = pool.map_async(direct_call, tasks, callback=lambda x: blast_handle.write("".join(x)))
 
     logger.log(1, "Waiting for all processes to finish.")
     res.wait()
 
-    logger.log(1, f'Merging results and cleaning generated temp files.')
-    results = list(chain.from_iterable(results))
-    out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
-    with open(out_blast, 'w') as f:
-        f.write(''.join(results))
+    logger.log(1, f'Cleaning generated temp files.')
 
     shell_call('rm -r', nucl_data_dir)
     os.remove(f'{infile}.nhr')
     os.remove(f'{infile}.nin')
     os.remove(f'{infile}.nsq')
+    blast_handle.close()
     return out_blast
 
 
