@@ -21,6 +21,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+from time import time
 import os
 import sys
 import json
@@ -42,6 +43,7 @@ try:
     from utility.helper import concat_command, direct_call, shell_call
     from subprocess import check_output
     from misc.check_circular import check_circular
+    from findmitoscaf import libfastmathcal
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -457,6 +459,20 @@ def remap_sequence(prefix=None, basedir=None, fasta_file=None, fastq1=None, fast
     return fasta_file
 
 
+class Time():
+    def __init__(self):
+        self.__time__ = time()
+
+    def call(self):
+        overlapped = time() - self.__time__
+        self.__time__ = time()
+        return overlapped
+
+
+def elapsed(message, inner=Time()):
+    print(f"{message} Elapsed : {inner.call():.2f}s")
+
+
 def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8, index=0):
     # Merge sequences that are possibly be overlapped with each others.
 
@@ -479,34 +495,13 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
                                       (blast_results.qs < search_range)]
         blast_results = blast_results[blast_results.alen >= overlapped_len]
 
-        seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in set(list(blast_results.que) + list(blast_results.subj))}
+        required_set = set(list(blast_results.que) + list(blast_results.subj))
+        seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in required_set}
 
-        def calculate_merged(row):
+        def fastmath_merged(row):
+            return libfastmathcal.merge_calculation(len(seqs[row.que]), len(seqs[row.subj]), row.alen, row.qs, row.qe, row.ss, row.se, a_conf.max_length)
 
-            que, sub = seqs[row.que], seqs[row.subj]
-
-            if row.alen >= len(que) or row.alen >= len(sub):
-                return True
-
-            qs, qe = row.qs - 1, row.qe - 1
-
-            if row.ss < row.se:
-                ss, se = row.ss - 1, row.se - 1
-            else:
-                se, ss = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
-
-            if qs > ss:
-                l = qe + len(sub) - se
-            else:
-                l = se + len(que) - qe
-
-            if l > a_conf.max_length:
-                return False
-
-            return l > len(sub) and l > len(que)
-
-        blast_results = blast_results[blast_results.apply(calculate_merged, axis=1)]
-
+        blast_results = blast_results[blast_results.apply(fastmath_merged, axis=1)]
         if blast_results.empty:
             break
 
@@ -582,29 +577,10 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
                 if x.id in set(list(blast_results.que) + list(blast_results.subj))
                 }
 
-        def calculate_merged(row):
+        def fastmath_merged(row):
+            return libfastmathcal.merge_calculation(len(seqs[row.que]), len(seqs[row.subj]), row.alen, row.qs, row.qe, row.ss, row.se, a_conf.max_length)
 
-            que, sub = seqs[row.que], seqs[row.subj]
-            if row.alen >= len(que) or row.alen >= len(sub):
-                return True
-            qs, qe = row.qs - 1, row.qe - 1
-
-            if row.ss < row.se:
-                ss, se = row.ss - 1, row.se - 1
-            else:
-                se, ss = len(sub) - (row.ss - 1), len(sub) - (row.se - 1)
-
-            if qs > ss:
-                l = qe + len(sub) - se
-            else:
-                l = se + len(que) - qe
-
-            if l > a_conf.max_length:
-                return False
-
-            return l > len(sub) and l > len(que)
-
-        blast_results = blast_results[blast_results.apply(calculate_merged, axis=1)]
+        blast_results = blast_results[blast_results.apply(fastmath_merged, axis=1)]
         # Merge most similar sequences first
         blast_results = blast_results.sort_values(['s'], ascending=False)
 
