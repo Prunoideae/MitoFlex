@@ -335,8 +335,8 @@ def pre(args):
         2, f'MitoFlex {VERSION}, run {args.workname if hasattr(args, "workname") else "1"}')
 
     arg_dict = vars(args)
-    logger.log(0, f'Arguments after parsed : ')
-    logger.log(0, f'{[f"{key}={value}" for key, value in arg_dict.items()]}')
+    logger.log(2, f'Arguments after parsed : ')
+    logger.log(2, f'{[f"{key}={value}" for key, value in arg_dict.items()]}')
 
     if hasattr(args, 'disable_filter') and args.disable_filter:
         logger.log(3, 'Filtering is not enabled, files will only be truncated.')

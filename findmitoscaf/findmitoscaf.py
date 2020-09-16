@@ -93,9 +93,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
                  contigs_file=None, relaxing=0, multi=10, merge_method=1, merge_overlapping=50):
 
     if path.getsize(contigs_file) > 10_000_000:
-        logger.log(2, f"Merging method is temporary disabled since returned contigs file is oversized.")
-        logger.log(2, 'For such a big contig file, merging will always lead to some unhappy results.')
-        merge_method = 2
+        logger.log(3, 'For such a big contig file, merging will probabl lead to some unhappy results.')
 
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
@@ -372,7 +370,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
     remark_circular(picked_fasta)
 
     sequence_final = list(SeqIO.parse(picked_fasta, 'fasta'))
-    if split_two and len(sequence_final) == 1 and decompile(sequence_final[0].desciption)['flag'] == '3':
+    if split_two and len(sequence_final) == 1 and decompile(sequence_final[0].description)['flag'] == '3':
         # 2000 should be long enough to annotate anything, and I don't think there's a need to change it.
         seq_addi = sequence_final[0][-1000:] + sequence_final[0][:1000]
         seq_addi = sequence_final[0].id + "_addi"
