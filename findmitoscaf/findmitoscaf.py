@@ -463,13 +463,13 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
     logger.log(1, "Trying to merge candidates that are possibly overlapped.")
 
     fasta_file = path.abspath(fasta_file)
-    seq_ori = list(SeqIO.parse(fasta_file, 'fasta'))
-    seq_dict = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta')}
 
     while True:
         blast_results = pandas.read_csv(tk.blastn_multi(fasta_file, fasta_file, path.dirname(fasta_file), 'merge', threads=threads), delimiter="\t", names=[
                                         'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
                                         ])
+        seq_dict = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta')}
+
         # Overlap Conditions:
         # 1. Not aligning itself
         # 2. One of the sequences can be sticked into the other in a short range
