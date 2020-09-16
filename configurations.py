@@ -82,6 +82,11 @@ assemble.disable_acc = False
 # mitogenome sequences.
 assemble.no_filter = False
 
+# The minimum contigs to keep when assembling contigs.
+# Set 0 to always filter, if output contigs is less than this number, filter will no
+# be applied.
+assemble.filter_keep = 20000
+
 # What contig matching the conditions will be retained in assembly?
 # Use to specify how you want to control your contig output, more strict
 # values will lead to more accurate but less results, and vise versa.

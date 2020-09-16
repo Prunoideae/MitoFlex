@@ -93,7 +93,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
                  contigs_file=None, relaxing=0, multi=10, merge_method=1, merge_overlapping=50):
 
     if path.getsize(contigs_file) > 10_000_000:
-        logger.log(3, 'For such a big contig file, merging will probabl lead to some unhappy results.')
+        logger.log(3, 'For such a big contig file, merging will probably lead to some unhappy results.')
 
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
