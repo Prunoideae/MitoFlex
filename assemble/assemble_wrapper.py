@@ -310,7 +310,7 @@ class MEGAHIT():
                    r=self.read_lib + '.bin',
                    k=current_kmer)
 
-    def filter(self, kmer=None, min_depth=3, min_length=0, max_length=20000, force_filter=False):
+    def filter(self, kmer=None, min_depth=3, min_length=0, max_length=20000, force_filter=False, deny_number=a_conf.filter_keep):
         logger.log(2, f'Filtering output contig files of k = {kmer}')
 
         results = [0, 0, 0]
@@ -324,8 +324,12 @@ class MEGAHIT():
                                        kmer) + '.filtered' + suffix,
                                    l=f"{min_length},{max_length}",
                                    d=min_depth))
-                    shell_call('mv', self._contig_prefix(kmer) + '.filtered' + suffix,
-                               self._contig_prefix(kmer) + suffix)
+                    if results[idx] > deny_number or idx != 0:
+                        shell_call('mv', self._contig_prefix(kmer) + '.filtered' + suffix,
+                                   self._contig_prefix(kmer) + suffix)
+                    else:
+                        shell_call("rm", self._contig_prefix(kmer) + '.filtered' + suffix)
+                        results[idx] = -1
 
         return tuple(results)
 
