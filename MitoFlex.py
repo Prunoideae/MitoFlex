@@ -48,7 +48,7 @@ except ImportError as identifier:
     sys.exit()
 
 # Constants
-VERSION = '0.2.8'
+VERSION = '0.2.9'
 
 # Static variables
 start_time = time.time()

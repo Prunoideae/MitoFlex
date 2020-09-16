@@ -499,7 +499,12 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
         seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in required_set}
 
         def fastmath_merged(row):
-            return libfastmathcal.merge_calculation(len(seqs[row.que]), len(seqs[row.subj]), row.alen, row.qs, row.qe, row.ss, row.se, a_conf.max_length)
+            return libfastmathcal.merge_calculation(
+                len(seqs[row.que]), len(seqs[row.subj]),
+                row.alen,
+                row.qs, row.qe, row.ss, row.se,
+                a_conf.max_length
+            )
 
         blast_results = blast_results[blast_results.apply(fastmath_merged, axis=1)]
         if blast_results.empty:

@@ -95,7 +95,7 @@ assemble.filter_keep = 20000
 assemble.min_length = 200
 
 # The maximum length for contig to output in the iteration.
-assemble.max_length = 20000
+assemble.max_length = 5000
 
 # Show warning of multi value outputted by SOAP-Wrapper?
 assemble.show_from_soap = True
