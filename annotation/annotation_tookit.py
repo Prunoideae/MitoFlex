@@ -260,7 +260,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                          wise_min_start=np.nan, wise_max_end=np.nan)
 
     for index, wise in wises.iterrows():
-        #Extending search region for more sensitive finding
+        # Extending search region for more sensitive finding
         extended_sstart = wise.sstart - 30 if wise.sstart > 30 else 0
         extended_send = wise.send + 30
 
@@ -271,7 +271,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
         seq.id = f'{wise.qseq}_{wise.sseq}_{extended_send}_{extended_send}'
 
         SeqIO.write(queries[wise.sseq]
-                    [extended_send - 1:extended_send], query_file, 'fasta')
+                    [extended_sstart:extended_send], query_file, 'fasta')
 
         result = subprocess.check_output(
             concat_command('genewise', codon=codon_table,

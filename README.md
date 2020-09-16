@@ -203,7 +203,7 @@ Filter out fastq sequences of low quality, binary is written in Rust to ensure s
 
 Assemble the fastq file to output contigs. This method use megahit for faster and better results, but since megahit itself implemented a multi-kmer strategy to assemble data, it might take long (average 20min for a 5Gbps dataset, ranging from 1min to 1.5h if filtered correctly with 8 threads, will be much more faster if more processors specified) to assemble. Reducing kmer steps, or disabling local assembly could shorten the time, but it's not recommended since it also may output more fragmentized contigs. Also, assemble process depends much more on data quality than the size of dataset, because it will take much more resources to process more contigs in each iteration, if final sequence itself is fragmentized.
 
-To eliminate this problem and make the assembler stay focus on the mitogenome sequences, MitoFlex tweaked how the megahit's original pipeline works, inserted a filter method to filter out sequence of not enough depth - which is considered to be nuclear genome or contamination, since mitogenome should possess a much higher copy number in the reads. This strategy can be configured via `--depth-list` option.
+To eliminate this problem and make the assembler stay focus on the mitogenome sequences, MitoFlex tweaked how the megahit's original pipeline works, inserted a filter method to filter out sequence of not enough depth - which is considered to be nuclear genome or contamination, since mitogenome should possess a much higher copy number in the reads. This strategy can be configured via `--depth-list` option. If you need to disable the option to find out some sequence, like NUMTs, please check out `configurations.py`.
 
 ## 5.4 findmitoscaf
 
@@ -238,7 +238,7 @@ This is because no sequences is output during the last iteration, no any of the 
 
 ## 6.4 Input file 1 and 2 have different sizes! This could cause loss on rawdata, or even crash the program
 
-Your input PE reads are not of the same size, it indicates a mismatch between two file, and it will likely stop the programs like `bwa` from starting, halting the pipeline, or have some graph element missing.
+Your input PE reads are not of the same size, it indicates a mismatch between two file, and it will likely stop the programs like `bwa` from starting, halting the pipeline, or have some graph element missing. In most of time maybe this will work fine, but there maybe times that later program refuse to startup.
 
 ## 6.5 Module XXX is not found! / Cannot import helper module XXX
 
@@ -246,9 +246,9 @@ You have an invalid installation, or environment setup, please check if your ins
 
 ## 6.6 Cannot validate folder / Folder X already exists
 
-MitoFlex failed to create a folder, or a previous folder exists so MitoFlex can't make sure if the folder is removable or not. Please check your permission or try to investigate the files in the folder and remove it if it's save to remove.
+MitoFlex failed to create a folder, or a previous folder exists so MitoFlex can't make sure if the folder is removable or not. Please check your permission or try to investigate the files in the folder and remove it if it's safe to remove.
 
-## 6.7 I'm using MitoFlex on flatworms, but the closely-related species is some strange Echinodermata thing
+## 6.7 I'm using MitoFlex on flatworms, but the closely-related species is in Echinodermata
 
 MitoFlex doesn't know what species you are processing, the only thing it has just a local protein database, which contains many protein records of different species.
 
@@ -263,6 +263,12 @@ Your genome sequences is oversized, even after some deduplication it still have 
 Such a large genome should not occur commonly, if you can sure about this genome is what you want, please change your `max_points_per_track` in Circos settings to a larger number to make Circos actually draw this.
 
 Such a problem only affects visualization, no effect on previous methods.
+
+## 6.9 Processing species not included in database
+
+If there's enough support data, you can refer to chapter 7 to add data to build a taxonomy database for the species. Any pull requests to add new taxonomy clade is gracefully welcomed.
+
+Or, you can just use a clade close to the species you have. In this way, filtering, assembling and mitogenome scaffolding merging and finding will not be influenced much, while annotation could have problem since it depends heavily on the local database. External usage of annotation tools, like `MITOS` or others is then recommended in this situation.
 
 # 7 Adding new profile data to MitoFlex
 
