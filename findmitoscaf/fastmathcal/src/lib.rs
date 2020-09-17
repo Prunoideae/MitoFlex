@@ -168,7 +168,7 @@ fn merge_overlaps(
         let que = overlapped.get(0).unwrap();
         let subj = overlapped.get(1).unwrap();
         let sque = seqs.remove(&que.to_string()).unwrap();
-        let ssub = seqs.remove(&subj.to_string()).unwrap();
+        let mut ssub = seqs.remove(&subj.to_string()).unwrap();
         let alen = overlapped.get(3).unwrap().parse::<usize>().unwrap();
         let qs: u32 = overlapped.get(6).unwrap().parse::<u32>().unwrap() - 1;
         let qe: u32 = overlapped.get(7).unwrap().parse().unwrap();
@@ -180,6 +180,7 @@ fn merge_overlaps(
             let tmp: u32 = ssub.seq().len() as u32 - ss;
             ss = ssub.seq().len() as u32 - (se - 1);
             se = tmp;
+            ssub = fasta::Record::with_attrs(ssub.id(), ssub.desc(), &dna::revcomp(ssub.seq())[..]);
             ssub.seq().clone_from(&&dna::revcomp(ssub.seq())[..]);
         }
 
