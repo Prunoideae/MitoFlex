@@ -370,6 +370,14 @@ def pre(args):
                 logger.__log(traceback.format_tb(tb=tb))
                 with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
                     traceback.print_tb(tb, file=f)
+
+                logger.log(4, "Logging additional information")
+                import psutil
+                curp = psutil.Process()
+                logger.log(4, curp.open_files())
+                logger.log(4, curp.environ())
+                logger.log(4, curp.memory_full_info())
+
             else:
                 logger.log(2, "This run was terminated manually.")
             logger.finalize()
