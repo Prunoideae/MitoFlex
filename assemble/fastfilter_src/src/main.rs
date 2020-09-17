@@ -122,7 +122,7 @@ fn main() {
                 .parse::<f32>()
                 .unwrap();
         });
-        seqs.take(max_count).for_each(|(t, s)| {
+        seqs.into_iter().take(max_count).for_each(|(t, s)| {
             count += 1;
             writeln!(outfile, "{}", t).unwrap();
             writeln!(outfile, "{}", s).unwrap();
