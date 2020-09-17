@@ -324,12 +324,16 @@ class MEGAHIT():
                                        kmer) + '.filtered' + suffix,
                                    l=f"{min_length},{max_length}",
                                    d=min_depth))
-                    if results[idx] > deny_number or idx != 0:
-                        shell_call('mv', self._contig_prefix(kmer) + '.filtered' + suffix,
-                                   self._contig_prefix(kmer) + suffix)
-                    else:
-                        shell_call("rm", self._contig_prefix(kmer) + '.filtered' + suffix)
-                        results[idx] = -1
+
+                    if results[idx] <= deny_number and idx == 0:
+                        results[idx] = int(shell_call(self.FAST_FILTER,
+                                                      i=self._contig_prefix(kmer) + suffix,
+                                                      o=self._contig_prefix(kmer) + '.filtered' + suffix,
+                                                      l=f"{min_length},{max_length}",
+                                                      m=deny_number))
+
+                    shell_call('mv', self._contig_prefix(kmer) + '.filtered' + suffix,
+                               self._contig_prefix(kmer) + suffix)
 
         return tuple(results)
 

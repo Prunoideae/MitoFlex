@@ -12,3 +12,8 @@ crate-type = ["cdylib"]
 [dependencies.pyo3]
 version = "0.12.0"
 features = ["extension-module"]
+
+[dependencies]
+bio = "0.32.0"
+ndarray = "0.13.1"
+csv = "1.1"

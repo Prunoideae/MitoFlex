@@ -484,75 +484,27 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
     fasta_file = path.abspath(fasta_file)
 
     while True:
-        blast_results = pandas.read_csv(tk.blastn_multi(fasta_file, fasta_file, path.dirname(fasta_file), 'merge', threads=threads), delimiter="\t", names=[
-                                        'que', 'subj', 'ide', 'alen', 'mis', 'gap', 'qs', 'qe', 'ss', 'se', 'ev', 's'
-                                        ])
+        blast_results = tk.blastn_multi(fasta_file, fasta_file, path.dirname(fasta_file), 'merge', threads=threads)
 
         # Overlap Conditions:
         # 1. Not aligning itself
         # 2. One of the sequences can be sticked into the other in a short range
         # 3. Aligned length is long enough
         # 4. After merging, they will be longer and no too much sequences are discarded.
-        blast_results = blast_results[blast_results.que != blast_results.subj]
-        blast_results = blast_results[((blast_results.ss < search_range) & (blast_results.se < search_range)) |
-                                      (blast_results.qs < search_range)]
-        blast_results = blast_results[blast_results.alen >= overlapped_len]
+        logger.log(1, "Washing blast results.")
+        libfastmathcal.wash_merge_blast(blast_results, fasta_file, search_range, overlapped_len, a_conf.max_length)
 
-        required_set = set(list(blast_results.que) + list(blast_results.subj))
-        seqs = {x.id: x for x in SeqIO.parse(fasta_file, 'fasta') if x.id in required_set}
+        logger.log(1, "Sorting outputs.")
+        shell_call('sort', n=True, k=12, appending=[blast_results + ".filtered", ">", blast_results])
 
-        def fastmath_merged(row):
-            return libfastmathcal.merge_calculation(
-                len(seqs[row.que]), len(seqs[row.subj]),
-                row.alen,
-                row.qs, row.qe, row.ss, row.se,
-                a_conf.max_length
-            )
+        logger.log(1, "Merging sequences.")
+        new_index = libfastmathcal.merge_overlaps(blast_results, fasta_file, fasta_file + '.merged', index)
+        os.rename(fasta_file + '.merged', fasta_file)
 
-        blast_results = blast_results[blast_results.apply(fastmath_merged, axis=1)]
-        if blast_results.empty:
+        logger.log(1, f"Merged {new_index - index} sequences")
+        if index == new_index:
             break
-
-        blast_results = blast_results.sort_values(['s'], ascending=False)
-
-        done = []
-        seqrec = []
-        while not blast_results.empty:
-            overlapped = blast_results.iloc[0]
-            que, sub = overlapped.que, overlapped.subj
-            seq2 = {
-                que: seqs[que],
-                sub: seqs[sub]
-            }
-
-            qs, qe = overlapped.qs - 1, overlapped.qe
-            if overlapped.ss < overlapped.se:
-                ss, se = overlapped.ss - 1, overlapped.se
-            else:
-                se, ss = len(seq2[sub].seq) - overlapped.ss, len(seq2[sub].seq) - (overlapped.se - 1)
-                seq2[sub].seq = seq2[sub].seq.reverse_complement()
-
-            if overlapped.alen >= len(seq2[que]):
-                new_seq = Seq.Seq(str(seq2[sub].seq))
-            elif overlapped.alen >= len(seq2[sub]):
-                new_seq = Seq.Seq(str(seq2[que].seq))
-            else:
-                if qs > ss:
-                    new_seq = Seq.Seq(str(seq2[que].seq[:qe]) + str(seq2[sub].seq[se:]))
-                else:
-                    new_seq = Seq.Seq(str(seq2[sub].seq[:se]) + str(seq2[que].seq[qe:]))
-
-            logger.log(
-                1, f"Overlapped: {que}:({qs},{qe},{len(seq2[que])})&{seq2[sub].id}:({ss},{se},{len(seq2[sub])}) of length {overlapped.alen}, into M{index}:{len(new_seq)}")
-            seqrec.append(SeqRecord.SeqRecord(new_seq, id=f"M{index}",
-                                              description=f"flag=1 multi=32767 len={len(new_seq)}"))
-            index += 1
-            done += [que, sub]
-
-            blast_results = blast_results[(blast_results.que != que) & (blast_results.subj != que)]
-            blast_results = blast_results[(blast_results.que != sub) & (blast_results.subj != sub)]
-
-        SeqIO.write(seqrec + [v for k, v in seqs.items() if k not in done], open(fasta_file, 'w'), 'fasta')
+        index = new_index
 
     return index
 

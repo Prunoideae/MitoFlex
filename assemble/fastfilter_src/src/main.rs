@@ -23,7 +23,6 @@ fn main() {
         .arg(
             Arg::with_name("depth")
                 .short("d")
-                .default_value("0")
                 //.required(true)
                 .takes_value(true)
                 .help("min depth")
@@ -45,6 +44,14 @@ fn main() {
                 .help("Output file path")
                 .value_name("PATH"),
         )
+        .arg(
+            Arg::with_name("deny_number")
+                .short("m")
+                .takes_value(true)
+                .help("Use it to take only x sequence with highest depth.")
+                .value_name("INT")
+                .conflicts_with("depth"),
+        )
         .get_matches();
 
     let lengths = app
@@ -65,34 +72,61 @@ fn main() {
 
     let mut count = 0;
 
-    for (l1, l2) in infile.lines().tuples() {
-        let title = l1.ok().unwrap();
-        let seq = l2.ok().unwrap();
+    if !app.is_present("deny_number") {
+        for (l1, l2) in infile.lines().tuples() {
+            let title = l1.unwrap();
+            let seq = l2.unwrap();
 
-        if !title.starts_with(">") {
-            continue;
-        }
-
-        if depth != 0 {
-            let seq_depth = title.split_whitespace().collect::<Vec<&str>>()[2]
-                .to_string()
-                .split('=')
-                .collect::<Vec<&str>>()[1]
-                .parse::<f32>()
-                .unwrap();
-
-            if depth as f32 > seq_depth {
+            if !title.starts_with(">") {
                 continue;
             }
-        }
 
-        let length = seq.len() - 1;
-        if length < min || length > max {
-            continue;
+            if depth != 0 {
+                let seq_depth = title.split_whitespace().collect::<Vec<&str>>()[2]
+                    .to_string()
+                    .split('=')
+                    .collect::<Vec<&str>>()[1]
+                    .parse::<f32>()
+                    .unwrap();
+
+                if depth as f32 > seq_depth {
+                    continue;
+                }
+            }
+
+            let length = seq.len() - 1;
+            if length < min || length > max {
+                continue;
+            }
+            writeln!(outfile, "{}", title).unwrap();
+            writeln!(outfile, "{}", seq).unwrap();
+            count += 1;
         }
-        writeln!(outfile, "{}", title).unwrap();
-        writeln!(outfile, "{}", seq).unwrap();
-        count += 1;
+    } else {
+        let max_count = app
+            .value_of("deny_number")
+            .unwrap()
+            .parse::<usize>()
+            .unwrap();
+
+        let seqs = infile
+            .lines()
+            .map(|x| x.unwrap())
+            .tuples::<(_, _)>()
+            .filter(|(_, b)| b.len() <= max && b.len() >= min)
+            .collect::<Vec<_>>();
+        seqs.sort_by_cached_key(|(a, _)| {
+            a.split_whitespace().collect::<Vec<_>>()[2]
+                .split('=')
+                .collect::<Vec<_>>()[1]
+                .parse::<f32>()
+                .unwrap();
+        });
+        seqs.take(max_count).for_each(|(t, s)| {
+            count += 1;
+            writeln!(outfile, "{}", t).unwrap();
+            writeln!(outfile, "{}", s).unwrap();
+        });
     }
 
     println!("{}", count);

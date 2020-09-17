@@ -95,7 +95,8 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
         contig_info, _ = megahit.assemble(c)
         contig_filtered, *_ = megahit.filter(c, min_depth=depth_list[i], force_filter=c == megahit.kmax,
-                                             min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.max_length)
+                                             min_length=0 if n != -1 else a_conf.min_length, max_length=a_conf.max_length,
+                                             deny_number=a_conf.filter_keep if n != -1 else 0)
         if contig_filtered != -1:
             logger.log(
                 1, f'Contig for kmer = {c} : {contig_filtered}/{contig_info.count}')
