@@ -109,7 +109,7 @@ fn main() {
             .parse::<usize>()
             .unwrap();
 
-        let seqs = infile
+        let mut seqs = infile
             .lines()
             .map(|x| x.unwrap())
             .tuples::<(_, _)>()
