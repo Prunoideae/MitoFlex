@@ -495,7 +495,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
         libfastmathcal.wash_merge_blast(blast_results, fasta_file, search_range, overlapped_len, a_conf.max_length)
 
         logger.log(1, "Sorting outputs.")
-        shell_call('sort', n=True, k=12, appending=[blast_results + ".filtered", ">", blast_results])
+        shell_call('sort -n -k12,12 -k3,3', appending=[blast_results + ".filtered", ">", blast_results])
 
         logger.log(1, "Merging sequences.")
         new_index = libfastmathcal.merge_overlaps(blast_results, fasta_file, fasta_file + '.merged', index)
@@ -505,6 +505,8 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
         if index == new_index:
             break
         index = new_index
+    os.remove(blast_results)
+    os.remove(blast_results + ".filtered")
 
     return index
 

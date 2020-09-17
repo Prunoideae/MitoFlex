@@ -118,14 +118,15 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
     logger.log(1, f'Making {threads} small datasets for calling blastn.')
 
     file_names = [path.join(nucl_data_dir, f'dataset_{x}.fasta') for x in range(threads)]
-    file_handles = [open(x, 'w') for x in file_names]
+
     tasks = [f'blastn -evalue 1e-5 -outfmt 6 -db {infile} -query {dataset_path}' for dataset_path in file_names]
+    seqs = [[] for i in range(threads)]
 
     for i, seq in enumerate(SeqIO.parse(dbfile, 'fasta')):
-        SeqIO.write(seq, file_handles[i % threads], 'fasta')
+        seqs[i % threads].append(seq)
 
-    for h in file_handles:
-        h.close()
+    for i in range(threads):
+        SeqIO.write(seqs[i], file_names[i], 'fasta')
 
     out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
     blast_handle = open(out_blast, 'w')
