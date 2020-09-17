@@ -68,11 +68,12 @@ fn main() {
 
     let infile = helper::read_file(app.value_of("input").unwrap());
     let mut outfile = helper::write_file(app.value_of("output").unwrap());
-    let depth: i32 = app.value_of("depth").unwrap().parse().unwrap();
 
     let mut count = 0;
 
     if !app.is_present("deny_number") {
+        let depth: i32 = app.value_of("depth").unwrap().parse().unwrap();
+
         for (l1, l2) in infile.lines().tuples() {
             let title = l1.unwrap();
             let seq = l2.unwrap();
