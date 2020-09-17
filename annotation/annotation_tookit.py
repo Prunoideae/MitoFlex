@@ -265,7 +265,7 @@ def genewise(basedir=None, prefix=None, codon_table=None,
     for index, wise in wises.iterrows():
         # Extending search region for more sensitive finding
         extended_sstart = wise.sstart - 30 if wise.sstart > 30 else 0
-        extended_send = wise.send + 30
+        extended_send = min(wise.send + 30, len(queries[wise.sseq]))
 
         query_prefix = f'{wise.qseq}_{wise.sseq}_{extended_sstart}_{extended_send}'
         query_file = path.join(query_dir, f'{query_prefix}.fa')
@@ -297,8 +297,8 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                        if x.split('\t')[2] == 'cds']
         for x in wise_result:
             # Fix the actual position of seq
-            x[3] = str(int(x[3]) + extended_send - 1)
-            x[4] = str(int(x[4]) + extended_send - 1)
+            x[3] = str(int(x[3]) + extended_sstart - 1)
+            x[4] = str(int(x[4]) + extended_sstart - 1)
         wise_result.sort(key=lambda x: int(x[3]))
         wise_shift = sum(x[2] == 'match' for x in wise_result) - 1
         wise_start = min(int(x[3]) for x in wise_result)
