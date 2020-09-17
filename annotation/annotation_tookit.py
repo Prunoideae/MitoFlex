@@ -145,6 +145,7 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
     os.remove(f'{infile}.nin')
     os.remove(f'{infile}.nsq')
     blast_handle.close()
+    pool.close()
     return out_blast
 
 
