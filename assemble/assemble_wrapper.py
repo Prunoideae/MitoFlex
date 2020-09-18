@@ -34,6 +34,7 @@ try:
     import psutil
     import uuid
     import subprocess
+    from typing import Tuple
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -259,7 +260,7 @@ class MEGAHIT():
         if file_size != 0 and current_kmer != 0 and not self.keep_temp:
             os.system(f"rm -r {path.join(self.temp_dir, f'k{current_kmer}')}")
 
-    def assemble(self, kmer) -> (ContigInfo, ContigInfo):
+    def assemble(self, kmer) -> Tuple[ContigInfo, ContigInfo]:
         min_standalone = max(
             min(self.kmax * 3 - 1, int(self.min_length * 1.5)),
             self.min_length)

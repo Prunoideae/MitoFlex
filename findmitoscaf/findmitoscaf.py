@@ -92,7 +92,8 @@ def get_rank(taxa_name=None):
 
 def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.split_two,
                  basedir=None, gene_code=9, taxa=None, max_contig_len=20000,
-                 contigs_file=None, relaxing=0, multi=10, merge_method=1, merge_overlapping=50):
+                 contigs_file=None, relaxing=0, multi=10, merge_method=1, merge_overlapping=50,
+                 merge_search=50):
 
     if path.getsize(contigs_file) > 10_000_000:
         logger.log(3, 'For such a big contig file, merging will probably lead to some unhappy results.')
@@ -100,7 +101,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
     logger.log(2, 'Finding mitochondrial scaffold.')
     if merge_method == 0:
         logger.log(2, f'Merging sequences with global method.')
-        logger.log(2, f'Merged {merge_sequences(contigs_file,overlapped_len=merge_overlapping,threads=thread_number)} sequences.')
+        logger.log(2, f'Merged {merge_sequences(contigs_file,overlapped_len=merge_overlapping,threads=thread_number,search_range=merge_search)} sequences.')
 
     # Update the total profile before the process
     logger.log(1, 'Updating the general protein database.')
@@ -350,7 +351,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
 
     if merge_method == 1:
         logger.log(2, f"Merging sequences with partial method.")
-        logger.log(2, f"Merged {merge_partial(fasta_file=picked_fasta, dbfile=contigs_file, overlapped_len=merge_overlapping)} sequences.")
+        logger.log(
+            2, f"Merged {merge_partial(fasta_file=picked_fasta, dbfile=contigs_file, overlapped_len=merge_overlapping, search_range=merge_search)} sequences.")
 
         if f_conf.addtional_check:
             logger.log(2, f'Launching another findmitoscaf run to filter out non-target sequences.')
@@ -366,7 +368,7 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
 
     if merge_method == 2:
         logger.log(2, f"Merging sequences with global method.")
-        logger.log(2, f"Merged {merge_sequences(fasta_file=picked_fasta,overlapped_len=merge_overlapping)} sequences.")
+        logger.log(2, f"Merged {merge_sequences(fasta_file=picked_fasta,overlapped_len=merge_overlapping,search_range=merge_search)} sequences.")
 
     # Added a circular checker for scaffolds and meta-scaffolds.
     remark_circular(picked_fasta)

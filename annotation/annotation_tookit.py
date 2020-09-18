@@ -94,6 +94,8 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
         f.write(''.join(results))
 
     shell_call('rm -r', protein_data_dir)
+    pool.close()
+
     os.remove(f'{infile}.nhr')
     os.remove(f'{infile}.nin')
     os.remove(f'{infile}.nsq')
@@ -105,8 +107,6 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
     dbfile = path.abspath(dbfile)
 
     truncated_call('makeblastdb', '-in', infile, dbtype='nucl')
-
-    results = []
 
     nucl_data_dir = path.join(basedir, "blastn_data")
 

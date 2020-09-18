@@ -396,6 +396,11 @@ search_parser, search_group = register_group('Search mitochondrial sequences arg
         'name': 'merge-overlap',
         'default': 50,
         'help': 'Merge sequences of Xbps overlapping.'
+    },
+    {
+        'name': 'merge-start',
+        'default': 50,
+        'help': 'Only merges overlaps occur within Xbp from the terminal of sequences.'
     }
 ], func=search_regulator)
 

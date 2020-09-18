@@ -63,7 +63,7 @@ fn merge_calculation(
 fn wash_merge_blast(
     blast_file: &str,
     contigs_file: &str,
-    search_range: usize,
+    search_range: i32,
     overlapped_len: usize,
     max_length: usize,
 ) -> PyResult<()> {
@@ -114,7 +114,7 @@ fn wash_merge_blast(
             continue;
         }
 
-        if alen < que && alen < sub {
+        if alen < que && alen < sub && search_range >= 0 {
             if (ss > search_range && sub - se > search_range)
                 || (qs > search_range && que - qe > search_range)
             {
