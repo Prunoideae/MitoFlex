@@ -208,7 +208,7 @@ fn merge_overlaps(
 
             fasta::Record::with_attrs(
                 &format!("M{}", sindex),
-                Some(&format!("flag=1 depth=32767 len={}", l)),
+                Some(&format!("flag=1 multi=32767 len={}", l)),
                 sec_conc,
             )
         };
