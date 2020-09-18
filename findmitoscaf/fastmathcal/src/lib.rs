@@ -63,7 +63,7 @@ fn merge_calculation(
 fn wash_merge_blast(
     blast_file: &str,
     contigs_file: &str,
-    search_range: i32,
+    search_range: isize,
     overlapped_len: usize,
     max_length: usize,
 ) -> PyResult<()> {
@@ -115,8 +115,8 @@ fn wash_merge_blast(
         }
 
         if alen < que && alen < sub && search_range >= 0 {
-            if (ss > search_range && sub - se > search_range)
-                || (qs > search_range && que - qe > search_range)
+            if (ss > search_range as usize && sub - se > search_range as usize)
+                || (qs > search_range as usize && que - qe > search_range as usize)
             {
                 continue;
             }
@@ -176,7 +176,7 @@ fn merge_overlaps(
         let mut ss: u32 = overlapped.get(8).unwrap().parse::<u32>().unwrap() - 1;
         let mut se: u32 = overlapped.get(9).unwrap().parse().unwrap();
 
-        if ss < se {
+        if ss > se {
             let tmp: u32 = ssub.seq().len() as u32 - ss;
             ss = ssub.seq().len() as u32 - (se - 1);
             se = tmp;
