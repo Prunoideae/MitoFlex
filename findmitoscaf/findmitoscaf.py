@@ -214,8 +214,8 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
             # Check if the alignment is 'isolated', which means no possiblity to be
             # a gene sliced at side.
             complete = complete or (
-                query_start > missing_length and
-                len(contig_map_high[index]) - query_to > missing_length
+                align_start > missing_length and
+                len(contig_map_high[index]) - align_end > missing_length
             )
 
             # If such a gene is 'isolated' and being too short to be a valid alignment,
