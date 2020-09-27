@@ -3,6 +3,7 @@ extern crate pyo3;
 
 use bio::alphabets::dna;
 use bio::io::fasta;
+use ndarray::prelude::*;
 use pyo3::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
@@ -228,11 +229,39 @@ fn merge_overlaps(
     Ok(sindex)
 }
 
+#[pyfunction]
+fn seq_overlap(seq1: &str, seq2: &str) -> PyResult<(usize, usize)> {
+    let n = seq1.len();
+    let m = seq2.len();
+    let seq1 = seq1.as_bytes();
+    let seq2 = seq2.as_bytes();
+
+    let mut dp = Array2::<usize>::zeros((n, m));
+    let mut maxi = 0;
+    let mut maxv = 0;
+
+    for i in 0..n {
+        for j in 0..m {
+            let curr_val = if seq1.get(i) == seq2.get(j) {
+                dp.get((i - 1, j - 1)).unwrap_or(&0) + 1
+            } else {
+                0
+            };
+            *dp.get_mut((i, j)).unwrap() = curr_val;
+            if curr_val > maxv {
+                maxi = i;
+                maxv = curr_val;
+            }
+        }
+    }
+    Ok((maxi - maxv, maxv))
+}
+
 #[pymodule]
 fn libfastmathcal(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(wash_merge_blast, m)?)?;
     m.add_function(wrap_pyfunction!(merge_overlaps, m)?)?;
     m.add_function(wrap_pyfunction!(merge_calculation, m)?)?;
-
+    m.add_function(wrap_pyfunction!(seq_overlap, m)?)?;
     Ok(())
 }
