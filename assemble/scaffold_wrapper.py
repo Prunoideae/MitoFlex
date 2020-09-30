@@ -78,9 +78,6 @@ class SOAP():
 
 
 def scaf2mega(i, o, overlay):
-    translated = []
-    results = check_circular(1000, overlay * 2, overlay * 2, i)
-
     if a_conf.show_from_soap:
         logger.log(
             3, "NOTICE: due to the limit of SOAPdenovo-fusion and 127mer, scaffolds' depths are not correctly calculated.")
@@ -91,11 +88,8 @@ def scaf2mega(i, o, overlay):
         logger.log(
             3, "You can disable this message in the configurations.py if you have already knew this.")
 
-    for idx, s in enumerate(SeqIO.parse(i, 'fasta')):
-        flag = 3 if results and len(results) >= idx and \
-            results[idx][0] != -1 and results[idx][0][1] - results[idx][0][0] >= overlay else 1
-        # This is because multi is not correctly counted by SOAPdenovo-fusion
-        s.description = f"flag={flag} multi=32767 len={len(s)}"
-        translated.append(s)
-
-    SeqIO.write(translated, o, 'fasta')
+    with open(o, 'w') as f:
+        for info, seq in check_circular(1000, overlay * 4, overlay * 4, overlaps=overlay, final_seqs=SeqIO.parse(i, 'fasta')):
+            flag = 1 if info is None else 3
+            seq.description = f'flag={flag} multi=32767 len={len(seq)}'
+            SeqIO.write(seq, f, 'fasta')

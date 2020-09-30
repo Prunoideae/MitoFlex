@@ -23,44 +23,37 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import os
+from typing import List, Tuple
+
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.parser import parse_func, parse_then_call, freeze_main, arg_prop
+    from misc import libfastmathcal
+    from Bio.SeqRecord import SeqRecord
+    from Bio import SeqIO
+
 except ImportError as err:
     sys.exit(f"Unable to import helper module {err}, is the installation of MitoFlex valid?")
 
-from Bio import SeqIO
-import subprocess
 
+def check_circular(mininum_length=10000, start_length=500, end_length=500, overlaps=50, final_seqs: List[SeqRecord] = None):
+    if final_seqs is None:
+        return
 
-def check_circular(mininum_length=10000, start_length=500, end_length=500, final_fasta=None):
-    try:
-        records = list(SeqIO.parse(final_fasta, "fasta"))
-    except Exception:
-        print("Error when loading Fasta file.")
-        return None
-
-    dp = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), 'dp_circle_check'))
-
-    finals = []
-    for record in records:
+    for record in final_seqs:
         seq = str(record.seq)
         if len(seq) < mininum_length:
-            finals.append([-1, record])
+            yield (None, record)
             continue
         f = seq[:start_length]
         r = seq[-end_length:]
-        p = subprocess.Popen(dp,
-                             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-        result = p.communicate((f + ' ' + r).encode('utf-8')
-                               )[0].decode('utf-8').split('\n')[:-1]
-        result[0] = [int(x) for x in result[0].split(' ')]
-        result.append(record)
-        finals.append(result)
-
-    return finals
+        f_start, f_end, ali_length = libfastmathcal.seq_overlap(f, r)
+        print(f_start, f_end, ali_length)
+        if ali_length < overlaps:
+            yield (None, record)
+        else:
+            yield ((f_start, f_end, ali_length), record)
 
 
 @parse_func
@@ -69,57 +62,12 @@ def check_circular(mininum_length=10000, start_length=500, end_length=500, final
 @arg_prop(dest='fasta', required=True, default=None, help='input fasta file for sequences being checked')
 @arg_prop(dest='start', default=300, help='how many bps will be read at the start of sequence')
 @arg_prop(dest='end', default=300, help='how many bps will be read at the end of sequence')
-@arg_prop(dest='format', default='std', choices=['std', 'json', 'text'], help='how the script will output the results')
 @arg_prop(dest='output', default=None, help='where to write results if there needs one')
 def main(args):
-    results = check_circular(mininum_length=args.length, start_length=args.start,
-                             end_length=args.end, final_fasta=args.fasta)
-    if results is None:
-        sys.exit(1)
-
-    if args.format == 'std':
-        for result in results:
-            if result[0] == -1:
-                continue
-            else:
-                if result[0][1] > args.overlay:
-                    print(
-                        f'Sequence {result[2].name} hit at the position {result[0][0]} with a length of {result[0][1]}.')
-                else:
-                    print(
-                        f'Sequence {result[2].name}\'s overlay is too short and was thought to be linear.')
-    else:
-        try:
-            f = open(args.output, 'w')
-        except Exception:
-            sys.exit('Errors occured when opening output file.')
-
-        if args.format == 'json':
-            # Abusing the generator is fun
-            generated = {
-                result[2].name: {
-                    'start': result[0][0],
-                    'length': result[0][1],
-                    'overlay': result[1]
-                }
-                for result in results
-                if result[0] != -1 and result[0][1] > args.overlay
-            }
-
-            print(generated)
-
-            import json
-            json.dump(generated, fp=f)
-
-        elif args.format == 'text':
-            # Abusing the generator is really fun...
-            [result[0] != -1 and
-             result[0][1] > args.overlay and
-             print(
-                 f'{result[2].name} START: {result[0][0]} LENGTH: {result[0][1]}\nOVERLAY:\n{result[1]}', file=f)
-             for result in results]
-
-        f.close()
+    results = {x[1].id: x[0] for x in check_circular(args.length, args.start, args.end, args.length, SeqIO.parse(args.fasta, 'fasta'))}
+    with open(args.output, 'w') as f:
+        import json
+        json.dump(results, f)
 
 
 desc = '''

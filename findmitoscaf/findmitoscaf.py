@@ -43,7 +43,7 @@ try:
     from utility.helper import concat_command, direct_call, shell_call
     from subprocess import check_output
     from misc.check_circular import check_circular
-    from findmitoscaf import libfastmathcal
+    from misc import libfastmathcal
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -598,17 +598,11 @@ def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=
 
 def remark_circular(fasta_file=None, overlapped_length=50):
     sequences = [x for x in SeqIO.parse(fasta_file, 'fasta')]
-    if len(sequences) > 1 or len(sequences[0]) < 2 * 500:
+    if len(sequences) > 1:
         return
-
-    circular_result = check_circular(final_fasta=fasta_file)[0]
-    if len(circular_result) != 3:
-        overlapping, overlapped = -1, [None, None]
-    else:
-        overlapping, overlapped, sequence = circular_result
-
-    if overlapping != -1 and overlapping[0] == 0 and overlapping[1] >= overlapped_length:
-        traits = decompile(input_seq=sequence.description, sep=None)
+    info, _ = [x for x in check_circular(overlaps=overlapped_length, final_seqs=sequences)][0]
+    if info is not None:
+        traits = decompile(sequences[0].description, sep=None)
         traits['flag'] = 3
-        sequence.description = compile_seq(traits=traits, sep=' ')
-        SeqIO.write([sequence], fasta_file, 'fasta')
+        sequences[0].description = compile_seq(traits, sep=' ')
+        SeqIO.write(sequences, fasta_file, 'fasta')

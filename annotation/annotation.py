@@ -255,24 +255,15 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
 
 def fix_circular(fa_file: str):
+
     genome = [x for x in SeqIO.parse(fa_file, 'fasta')]
-    circular = False
-    # Only one sequence
-    if len(genome) == 1:
-        traits = seq.decompile(genome[0].description, sep=' ')
-        # The sequence is circular
-        if 'flag' in traits and traits['flag'] == '3':
-            results = check_circular(final_fasta=fa_file)
-            # The overlapped region is determined
-            if results:
-                result = results[0]
-                if result[0] != -1:
-                    # Trim the genome and returns
-                    circular = True
-                    logger.log(
-                        2, f'An overlapped region was found starting at {result[0][0]} with length {result[0][1]}. Trimming it.')
-                    end = genome[0].seq.rfind(result[1])
-                    genome[0] = genome[0][result[0][0]:end]
-                    with open(fa_file, 'w') as f:
-                        SeqIO.write(genome, f, 'fasta')
-    return circular
+    if len(genome) != 1:
+        return False
+    info, seq = list(check_circular(final_seqs=genome))[0]
+    if info is not None:
+        logger.log(2, f'An overlapped region was found starting at {info[0]} with length {info[2]}. Trimming it.')
+        seq = seq[info[0]:len(seq) - 500 + info[1]]
+        SeqIO.write([seq], fa_file, 'fasta')
+        return True
+
+    return False

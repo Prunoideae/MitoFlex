@@ -230,7 +230,7 @@ fn merge_overlaps(
 }
 
 #[pyfunction]
-fn seq_overlap(seq1: &str, seq2: &str) -> PyResult<(usize, usize)> {
+fn seq_overlap(seq1: &str, seq2: &str) -> PyResult<(usize, usize, usize)> {
     let n = seq1.len();
     let m = seq2.len();
     let seq1 = seq1.as_bytes();
@@ -238,6 +238,7 @@ fn seq_overlap(seq1: &str, seq2: &str) -> PyResult<(usize, usize)> {
 
     let mut dp = Array2::<usize>::zeros((n, m));
     let mut maxi = 0;
+    let mut maxj = 0;
     let mut maxv = 0;
 
     for i in 0..n {
@@ -250,11 +251,13 @@ fn seq_overlap(seq1: &str, seq2: &str) -> PyResult<(usize, usize)> {
             *dp.get_mut((i, j)).unwrap() = curr_val;
             if curr_val > maxv {
                 maxi = i;
+                maxj = j;
                 maxv = curr_val;
             }
         }
     }
-    Ok((maxi - maxv, maxv))
+
+    Ok((maxi + 1 - maxv, maxj + 1 - maxv, maxv))
 }
 
 #[pymodule]
