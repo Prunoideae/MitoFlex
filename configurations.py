@@ -85,7 +85,7 @@ assemble.no_filter = False
 # The minimum contigs to keep when assembling contigs.
 # Set 0 to always filter, if output contigs is less than this number, filter will no
 # be applied.
-assemble.filter_keep = 20000
+assemble.filter_keep = 5000
 
 # What contig matching the conditions will be retained in assembly?
 # Use to specify how you want to control your contig output, more strict
@@ -95,7 +95,7 @@ assemble.filter_keep = 20000
 assemble.min_length = 200
 
 # The maximum length for contig to output in the iteration.
-assemble.max_length = 5000
+assemble.max_length = 20000
 
 # Show warning of multi value outputted by SOAP-Wrapper?
 assemble.show_from_soap = True
