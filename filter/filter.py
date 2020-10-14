@@ -85,6 +85,6 @@ def filter_pe(fq1=None, fq2=None, o1=None, o2=None,
 
     fsot1 = path.getsize(o1)
     logger.log(level=0, info=f'Output file has {fsot1} bytes.')
-    logger.log(level=0,
-               info=f'Filtered {fsin1 - fsot1} bytes, ratio {fsot1/fsin1}.')
+    logger.log(level=1,
+               info=f'Filtered {fsin1 - fsot1} bytes, ratio {fsot1/fsin1:.2f}%.')
     return o1, o2

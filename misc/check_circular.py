@@ -23,7 +23,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import os
-from typing import List, Tuple
+from typing import List
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -49,7 +49,6 @@ def check_circular(mininum_length=10000, start_length=500, end_length=500, overl
         f = seq[:start_length]
         r = seq[-end_length:]
         f_start, f_end, ali_length = libfastmathcal.seq_overlap(f, r)
-        print(f_start, f_end, ali_length)
         if ali_length < overlaps:
             yield (None, record)
         else:

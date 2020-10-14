@@ -30,7 +30,7 @@ import traceback
 import time
 
 if sys.version_info[0] < 3:
-    sys.exit('Python 3 must be installed in current environment! Please check if any of your environment setup(like conda environment) is deactivated or wrong!')
+    sys.exit('Python 3 must be installed in current environment! Please check if any of your environment setup (like conda environment) is deactivated or wrong!')
 
 try:
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
@@ -139,6 +139,7 @@ def findmitoscaf(args):
     if args.__calling == 'findmitoscaf':
 
         if not args.from_megahit:
+            logger.log(2, 'Remapping reads to contigs since contigs are not assembled from pipeline.')
             fastfilter_bin = path.abspath(path.join(path.dirname(__file__), 'assemble', 'fastfilter'))
             filtered_fasta = path.join(args.findmitoscaf_dir, f'{args.workname}.filtered.fa')
             shell_call(fastfilter_bin, i=args.fastafile, o=filtered_fasta,

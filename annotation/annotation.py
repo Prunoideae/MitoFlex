@@ -35,7 +35,6 @@ try:
     from Bio import SeqIO
     from Bio import BiopythonWarning
     from utility import logger
-    from utility.bio import seq
     from misc.check_circular import check_circular
     import configurations
 except ImportError as identifier:
@@ -115,7 +114,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
             taxa_data[PCG] = (taxa_name, taxa_score)
 
     score_data = {}
-    for k, (taxa_name, taxa_score) in taxa_data.items():
+    for _, (taxa_name, taxa_score) in taxa_data.items():
         score_data[taxa_name] = score_data[taxa_name] + \
             1 if taxa_name in score_data else 0
 
