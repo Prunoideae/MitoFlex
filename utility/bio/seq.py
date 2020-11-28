@@ -24,12 +24,6 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 # Helper class to make code struct clean
 
 
-class seq_traits():
-    def __init__(self, init):
-        for k, v in init.items():
-            setattr(self, k, v)
-
-
 # compile a dict to a description
 def compile_seq(traits: dict, equ='=', sep='\t'):
     return sep.join(equ.join((key, str(value))) for key, value in traits.items())

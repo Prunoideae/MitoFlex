@@ -83,9 +83,12 @@ assemble.disable_acc = False
 assemble.no_filter = False
 
 # The minimum contigs to keep when assembling contigs.
-# Set 0 to always filter, if output contigs is less than this number, filter will no
-# be applied.
-assemble.filter_keep = 5000
+# Set 0 to always filter, if output contigs is less than this number, only this number
+# of contigs will be selected.
+# Applicable when your data quality is too low to go on with a depth filter, but notice
+# that it may introduce some reads which is previously filtered out, causing the result
+# quality to drop sharply.
+assemble.filter_keep = 0
 
 # What contig matching the conditions will be retained in assembly?
 # Use to specify how you want to control your contig output, more strict
@@ -129,14 +132,12 @@ findmitoscaf.default_clade = "Platyhelminthes"
 # In most circumstances, genes are just full, but in case that your clade is rare,
 # and have no precise HMM models, lower this may increase the accuracy of the contig
 # result.
-
 findmitoscaf.full_ratio = 0.95
 
 # What partial do MitoFlex treat the alignment of a single sequence as a valid gene?
 # MitoFlex will think of some align in center as full if align is longer than this
 # ratio, not considering if the thing meets the full_ratio. Adding this may increase
 # the sensitivity, while lowering the accuracy.
-
 findmitoscaf.min_valid_ratio = 0.3
 
 # Should another findmitoscaf run to be launched after the merging.
@@ -144,7 +145,6 @@ findmitoscaf.min_valid_ratio = 0.3
 # the merge method, an additional check can improve the result quality, though at some
 # cost of losing already found genes. If you are feeling like the risk of potentially
 # overlapping is not that bad, and losing gene is quite unbearable, please turn this off.
-
 findmitoscaf.additional_check = True
 
 # Should findmitoscaf sequence be merged broke into two parts?

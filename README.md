@@ -14,9 +14,9 @@ Installing MitoFlex requires about 1GB of space (Including dependency packages).
 
 ## 1.3 Memory
 
-It takes about 5-30G to assemble the genome from a 5Gbps pair-end rawdata sample with thread number set to 80 (`--thread_number 80`). The memory consumption is highly varied, mainly depends on the fragmentation of the quality of rawdata, a dataset with more focus reads on mitogenome will absolutely takes much lesser memory since the contigs are limited. It takes much lower memory space in comparison to MitoZ, as MitoFlex uses the succinct de Brujin Graph (sDBG), a succinct representation of de Brujin Graph. Improving the data quality could reduce the memory usage.
+It takes about 5-30G to assemble the genome from a 5Gbps pair-end rawdata sample with thread number set to 80 (`--thread_number 80`). The memory consumption is highly varied, mainly depends on the fragmentation and the quality of rawdata, a dataset with more focused reads on mitogenome will absolutely takes much lesser memory since the contigs are limited. It takes much lower memory space in comparison to MitoZ, as MitoFlex uses the succinct de Brujin Graph (sDBG), a succinct representation of de Brujin Graph. Improving the data quality could reduce the memory usage. Also, more threads requires more memory in steps, since the data being processed is larger in the same time.
 
-The average RAM consumption of MitoFlex is usually at 5G or even lower, but there are a few points that will consume much resource, the first one is the graph construction of megahit, which takes from 5G to 20G, but assembly will then only takes 1-3G to be done, the second one is the nhmmer search part explicitly in findmitoscaf module, where it takes about 15G or higher for searching against all the profiles. The steps are not parallelly processed, so 20GB or so is enough to deal with any type of data, or even less if the sample is small.
+The average RAM consumption of MitoFlex is usually at 5G or even lower at 8 threads or 80 threads, but there are a few points that will consume much resource, the first one is the graph construction of megahit, which takes from 5G to 20G, but assembly will then only takes 1-3G to be done, the second one is the nhmmer search part explicitly in findmitoscaf module, where it takes about 15G or higher for searching against all the profiles. The steps are not parallelly processed, so 20GB or so is enough to deal with any type of data, or even less if the sample is small.
 
 So, a machine with over 32 GB spare RAM is recommended, giving more could be more robust to deal with samples which are quite messy. As the workflow develops even further, some part of the module may requires even more or less RAM.
 
@@ -24,7 +24,7 @@ So, a machine with over 32 GB spare RAM is recommended, giving more could be mor
 
 MitoFlex uses [megahit](https://github.com/voutcn/megahit) as assembler, thus requires more calculate power because multiple iteration of the graph is needed. The speed of assembly is mainly depends on how fragmentized the input reads are.
 
-A recent modification enables MitoFlex to shorten the process time by over 75%, while maintaining, or even improving the accuracy of the assembly. Using a dataset of 5Gbps ([Run browser](https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1946581)), MitoFlex took 15min to finish the whole pipeline with 8 threads of Intel 9700KF and 20GB RAM usage on my laptop for developing.
+A recent modification enables MitoFlex to shorten the process time by over 75%, and improved the accuracy and sensitivity of the assembly. Using a dataset of 5Gbps ([Run browser](https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=SRR1946581)), MitoFlex took 15min to finish the whole pipeline with 8 threads of Intel 9700KF and 20GB RAM usage on my laptop for developing.
 
 ## 1.5 GPU
 
@@ -64,7 +64,7 @@ As the network situation varies, mirror channels, or other alternative channels 
 
 ### 2.2.3 Creating environment for MitoFlex
 
-Though you actually can setup the environment from the ground, using conda for creating virtual environment, as there may be other tools requiring different environment, and even requirements that are conflict to MitoFlex's, is actually a better choice.
+Though you actually can setup the environment from the ground, using conda for creating virtual environment is recommended, as there may be other tools requiring different environment, and even requirements that are conflict to MitoFlex's, is actually a better choice.
 
 MitoFlex requires a bunch of packages to run, you can install them in one line like:
 
@@ -197,7 +197,7 @@ Run the whole workflow, including methods listed below. Some part of module can 
 
 ## 5.2 filter
 
-Filter out fastq sequences of low quality, binary is written in Rust to ensure speed and data safety. The method will not output compressed clean data by default, and most workflow is designed to directly process with plain data format, clean data will be deleted after the workflow is done if `--keep-temp` option is not set.
+Filter out fastq sequences of low quality, binary is written in Rust to ensure speed and data safety. The method will not output compressed clean data by default, and most workflow is designed to directly process with plain data format, clean data will be deleted after the `all` command is done if `--keep-temp` option is not set.
 
 ## 5.3 assemble
 
@@ -230,7 +230,7 @@ There are several possible problems to make this happen. Check if your run is :
 1. of low bps? Like only 1.5Gbps of the data, if so, please specify a more tolerant depth list, less reads decrease the overall depth of sequences, your result may be filtered out during the iteration.
 2. of low quality? It could be happened sometimes, if your raw data is of too many other sequences, like contaminated or just because it's poor, then it will happens as above.
 3. specified a too strict depth list? In most test cases, target sequence depths varies from 300 to 1000, in dedicated result it can go even up to 10000, result sequences will just be dropped out if your sequences is of not enough depth.
-4. analysing species of small database? `findmitoscaf` module depends on database much, if the species you want to assemble is having too few data, it could make MitoFlex fail to detect mitogenome sequences, if so, please enrich the database by adding more profile.
+4. analysing species of small database? `findmitoscaf` module depends on database much, if the species you want to assemble is having too few data, it could make MitoFlex fail to detect mitogenome sequences, if so, please extend the database by adding more profile.
 
 ## 6.3 "Iteration broke at kmer = x, since no no valid contig in kmer = y is done!"
 
@@ -318,7 +318,7 @@ Further adjustment on the process may be scheduled, but not now.
 
 # 9 Extending the function of MitoFlex
 
-Although MitoFlex has already implemented a full workflow to filter, assemble and annotate the mitogenome, and all of this can be done in one-click, it also support to modify some behaviour if you want to do.
+Although MitoFlex has already implemented a full workflow to filter, assemble and annotate the mitogenome, and all of this can be done in one-click, it also support to modify some behaviour if you want to do. This section is for extending MitoFlex for your own usage, though most users may not have the need to do this.
 
 MitoFlex is designed for extendability and readability, to make users to extend it if they find the tools used by MitoFlex are not good enough or the workflow could be even optimized. Extending the function should not be an hard task as MitoZ.
 
@@ -458,7 +458,9 @@ Actually you can `register_group` anywhere as long as your `@parser_func` decora
 
 # 10 Reusing my code
 
-I'm very glad to see that my code is used in other fields, even in non-bioinformatic way, the [utility](utility/) folder contains most helper classes and methods used in the program development. If you want to directly reuse the code I wrote in related research field(mitogenome analyzing, for example), please cite my paper if you will publish one, if you want to implement a similar workflow yourself, please cite the MitoZ's paper since this program is inspired from the former toolkit.
+I'm very glad to see that my code is used in other fields, even in non-bioinformatic way. But sadly this toolkit is done in a hurry, and lacks detailed utilization of design patterns, so some part of it may look ugly, and even confusing to understand. This toolkit have incubated many other repositories that I've found something worth to deal with, but they all require some time before being developed, since I have to finish my courses as a undergraduate in SZU.
+
+The [utility](utility/) folder contains most helper classes and methods used in the program development. If you want to directly reuse the code I wrote in related research field(mitogenome analyzing, for example), please cite my paper if you will publish one, if you want to implement a similar workflow yourself, please cite the MitoZ's paper since this program is inspired from the former toolkit.
 
 The argument [parser](utility/parser.py) of this software is quite useful, but sadly I strongly not recommend you to use it directly in the program, since it was a temporarily made argparse wrapper just in three days, much code here is neither clean, nor easy to use, though already suitable for MitoFlex's current need and hard to rewrite one in short time. If you want to implement a workflow into a similar framework without having too much coding(like directly facing the argparse module), better integration of other caller besides bash or command prompt, for example a `Jupyter` web notebook or a `Django` or `Flask` server, and more flexible, modularized, clean code and code structure, please refer to the `Workflow Descriptor for Python (WDP)`, a [repo](https://github.com/Prunoideae/WDP) pinned on my GitHub page.
 
