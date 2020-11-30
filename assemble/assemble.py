@@ -90,7 +90,8 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         except EmptyGraph:
             logger.log(
                 3, f'Iteration broke at kmer = {p}, since no valid contig in kmer = {c} is done!')
-            megahit.kmax = p
+            # Return to last iteration kmer sets.
+            megahit.kmax = kmer_list[i - 1][0]
             break
 
         contig_info, _ = megahit.assemble(c)
