@@ -28,6 +28,8 @@ import subprocess
 import multiprocessing
 from itertools import tee, chain
 
+from pandas.core.frame import DataFrame
+
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
@@ -175,7 +177,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
 
 # Filter out the most important sequences
-def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
+def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True, check_plus=True):
     cutoff = configurations.annotation.overlap_ratio
     if mut_plus:
         blast_frame['plus'] = (blast_frame.send - blast_frame.sstart) > 0
@@ -185,7 +187,8 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
         [blast_frame['sstart'], blast_frame['send']]
     )
 
-    by_sseq = dict(tuple(blast_frame.groupby(['sseq', 'plus'])))
+    by_sseq = dict(tuple(blast_frame.groupby(['sseq', 'plus'] if check_plus else ['sseq'])))
+
     by_sseq = {key: value.sort_values('sstart')
                for key, value in by_sseq.items()}
 
@@ -225,6 +228,8 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
 
 
 # Call genewise
+
+
 def genewise(basedir=None, prefix=None, codon_table=None,
              wises: pandas.DataFrame = None, infile=None,
              dbfile=None, cutoff=0.5):
@@ -297,18 +302,19 @@ def genewise(basedir=None, prefix=None, codon_table=None,
                        if x.split('\t')[2] == 'cds']
         for x in wise_result:
             # Fix the actual position of seq
-            x[3] = str(int(x[3]) + extended_sstart - 1)
-            x[4] = str(int(x[4]) + extended_sstart - 1)
-        wise_result.sort(key=lambda x: int(x[3]))
+            start, end = int(x[3]) + extended_sstart - 1, int(x[4]) + extended_sstart - 1
+            x[3] = min(start, end)
+            x[4] = max(start, end)
+        wise_result.sort(key=lambda x: x[3])
         wise_shift = sum(x[2] == 'match' for x in wise_result) - 1
-        wise_start = min(int(x[3]) for x in wise_result)
-        wise_end = max(int(x[4]) for x in wise_result)
+        wise_start = min(x[3] for x in wise_result)
+        wise_end = max(x[4] for x in wise_result)
 
         pandas.set_option('mode.chained_assignment', None)
         wises['wise_cover'][index] = wise_cover
         wises['wise_shift'][index] = wise_shift
-        wises['wise_min_start'][index] = wise_start
-        wises['wise_max_end'][index] = wise_end
+        wises['wise_min_start'][index] = wise_start if wise.plus else wise_end
+        wises['wise_max_end'][index] = wise_end if wise.plus else wise_start
 
     wises.to_csv(path.join(basedir, f'{prefix}.wise.csv'), index=False)
     return wises, queries, dbparsed
