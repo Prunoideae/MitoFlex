@@ -28,7 +28,7 @@ from os import path
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, safe_makedirs
+    from utility.helper import shell_call, safe_makedirs, timed
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
     import psutil
@@ -112,6 +112,7 @@ class MEGAHIT():
         for k, v in kwargs.items():
             self.__dict__[k] = v
 
+    @timed(enabled=False)
     def initialize(self):
         self.basedir = path.abspath(self.basedir)
         self.fq1 = path.abspath(self.fq1)
@@ -161,6 +162,7 @@ class MEGAHIT():
         self.available_memory = int(vm.available * a_conf.max_mem_percent)
         logger.log(2, f'Scheduled {self.available_memory/(1024**2):.2f}MB to use.')
 
+    @timed(enabled=False)
     def build_lib(self):
 
         # Write reads info
@@ -200,6 +202,7 @@ class MEGAHIT():
             info = [x.split(' ') for x in ri.readlines()]
             return LibInfo(info)
 
+    @timed(enabled=False)
     def graph(self, current_kmer, next_kmer):
         options = {
             'k': next_kmer,
@@ -260,6 +263,7 @@ class MEGAHIT():
         if file_size != 0 and current_kmer != 0 and not self.keep_temp:
             os.system(f"rm -r {path.join(self.temp_dir, f'k{current_kmer}')}")
 
+    @timed(enabled=True)
     def assemble(self, kmer) -> Tuple[ContigInfo, ContigInfo]:
         min_standalone = max(
             min(self.kmax * 3 - 1, int(self.min_length * 1.5)),
@@ -293,6 +297,7 @@ class MEGAHIT():
                 open(self._contig_prefix(kmer) + '.addi.fa.info', 'r') as a:
             return ContigInfo(c), ContigInfo(a)
 
+    @timed(enabled=True)
     def local(self, current_kmer, next_kmer):
         logger.log(2, f'Local assembly for k = {current_kmer}')
         shell_call(self.MEGAHIT_CORE, 'local',
@@ -301,6 +306,7 @@ class MEGAHIT():
                    o=self._contig_prefix(current_kmer) + '.local.fa',
                    kmax=next_kmer)
 
+    @timed(enabled=False)
     def iterate(self, current_kmer, next_kmer):
         logger.log(
             2, f'Extracting iterative edges from k = {current_kmer} to {next_kmer}')
@@ -311,6 +317,7 @@ class MEGAHIT():
                    r=self.read_lib + '.bin',
                    k=current_kmer)
 
+    @timed(enabled=False)
     def filter(self, kmer=None, min_depth=3, min_length=0, max_length=20000, force_filter=False, deny_number=a_conf.filter_keep):
         logger.log(2, f'Filtering output contig files of k = {kmer}')
 
@@ -338,6 +345,7 @@ class MEGAHIT():
 
         return tuple(results)
 
+    @timed(enabled=False)
     def finalize(self, kmer):
         self.final_contig = path.join(
             self.result_dir,

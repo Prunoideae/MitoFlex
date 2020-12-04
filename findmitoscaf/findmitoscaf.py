@@ -26,6 +26,7 @@ import os
 import sys
 import json
 
+
 import pandas
 from Bio import SeqIO, SeqRecord, Seq
 from ete3 import NCBITaxa
@@ -40,7 +41,7 @@ try:
     from utility import logger
     from configurations import findmitoscaf as f_conf
     from configurations import assemble as a_conf
-    from utility.helper import concat_command, direct_call, shell_call
+    from utility.helper import concat_command, direct_call, shell_call, timed
     from subprocess import check_output
     from misc.check_circular import check_circular
     from misc import libfastmathcal
@@ -464,20 +465,7 @@ def remap_sequence(prefix=None, basedir=None, fasta_file=None, fastq1=None, fast
     return fasta_file
 
 
-class Time():
-    def __init__(self):
-        self.__time__ = time()
-
-    def call(self):
-        overlapped = time() - self.__time__
-        self.__time__ = time()
-        return overlapped
-
-
-def elapsed(message, inner=Time()):
-    print(f"{message} Elapsed : {inner.call():.2f}s")
-
-
+@timed(enabled=True)
 def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=8, index=0):
     # Merge sequences that are possibly be overlapped with each others.
 
@@ -513,6 +501,7 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
     return index
 
 
+@timed(enabled=True)
 def merge_partial(fasta_file=None, dbfile=None, overlapped_len=50, search_range=5, threads=8):
     # Merges a picked set of contigs/scaffolds for themselves, and against a larger set of sequences.
     logger.log(1, 'Trying to merge partial sequences that are possibly overlapped.')

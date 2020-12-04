@@ -35,7 +35,7 @@ if sys.version_info[0] < 3:
 try:
     from utility.parser import parse_func, freeze_arguments, arg_prop, parse_then_call
     from utility import logger
-    from utility.helper import shell_call
+    from utility.helper import shell_call, timed
     from arguments import *  # pylint: disable=unused-wildcard-import
     import configurations
 except ModuleNotFoundError as identifier:
@@ -70,6 +70,7 @@ Citation
 
 @parse_func(func_help='filter out unqualified reads from fastq',
             parents=[universal_parser, fastq_parser, filter_parser])
+@timed(enabled=False)
 def filter(args):
 
     if not hasattr(args, 'disable_filter'):
@@ -112,6 +113,7 @@ def filter(args):
 
 @parse_func(func_help='assemble from input fastq reads, output contigs',
             parents=[universal_parser, fastq_parser, assembly_parser])
+@timed(enabled=True)
 def assemble(args):
 
     from assemble.assemble import assemble as _assemble
@@ -134,6 +136,7 @@ def assemble(args):
 @parse_func(func_help='search for the most possible mitochondrial sequences from assembled data',
             parents=[universal_parser, fasta_parser, search_parser, saa_parser, fastq_parser])
 @arg_prop(dest='from_megahit', help='on if the result is from megahit, so remapping will be skipped.', default=False)
+@timed(enabled=True)
 def findmitoscaf(args):
 
     if args.__calling == 'findmitoscaf':
@@ -172,6 +175,7 @@ def findmitoscaf(args):
 
 @parse_func(func_help='annotate PCGs, tRNA and rRNA genes',
             parents=[universal_parser, fasta_parser, annotation_parser, saa_parser, search_parser])
+@timed(enabled=True)
 def annotate(args):
 
     from annotation.annotation import annotate as _annotate, fix_circular
@@ -210,8 +214,10 @@ def annotate(args):
             print('\nrRNAs found :')
             for key, value in rrna.items():
                 print(key, ':', value[0], '-', value[1], 'from', value[3])
+
         if circular:
             print('The final mitogenome is circular and trimmed.')
+
         os.rename(fa_file, path.join(args.result_dir, path.basename(fa_file)))
         os.rename(rna_file, path.join(
             args.result_dir, path.basename(rna_file)))
@@ -223,6 +229,7 @@ def annotate(args):
             parents=[universal_parser, fasta_parser, fastq_parser])
 @arg_prop(dest='pos_json', help='specify the json file for marking genes')
 @arg_prop(dest='circular', help='draw the genome like a circle or have some break', default=False)
+@timed(enabled=True)
 def visualize(args):
 
     basedir = args.temp_dir if args.__calling == 'visualize' else path.join(
@@ -253,6 +260,7 @@ def visualize(args):
                      search_parser, saa_parser, annotation_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on', default=False)
 @arg_prop(dest='disable_visualization', help='visualization will be not enabled if this switched on', default=False)
+@timed(enabled=True)
 def all(args):
 
     # Go filtering
@@ -302,6 +310,7 @@ def all(args):
 
 
 @parse_func(func_help='load all modules provided by MitoFlex, use to test if some modules are not installed correctly.')
+@timed(enabled=False)
 def load_modules(args):
     try:
         logger.log(2, 'Loading filter module.')

@@ -24,6 +24,9 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import subprocess
 import sys
 import os
+from . import logger
+from time import time
+from functools import wraps
 
 # cmd runner
 
@@ -98,3 +101,23 @@ def safe_makedirs(path, exist_ok=False):
     os.makedirs(path, exist_ok=True)
 
     return path
+
+
+def timed(enabled: bool):
+    '''
+    A decorator that logs the start and the end of execution.
+    '''
+    def timed_constructor(func):
+        if enabled:
+            @wraps(func)
+            def timed_wrapper(*args, **kwargs):
+                start = time()
+                logger.log(level=1, info=f"Entering {func}.")
+                result = func(*args, **kwargs)
+                logger.log(level=1, info=f"{func} execution finished in {time()-start:.2f}s.")
+                return result
+            return timed_wrapper
+        else:
+            return func
+
+    return timed_constructor
