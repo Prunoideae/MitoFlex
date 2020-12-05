@@ -63,7 +63,6 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
     truncated_call('makeblastdb', '-in', infile, dbtype='nucl')
 
     tasks = []
-    results = []
 
     protein_data_dir = path.join(basedir, 'tblastn_data')
 
@@ -84,20 +83,16 @@ def tblastn_multi(dbfile=None, infile=None, genetic_code=9, basedir=None,
                 f'tblastn -evalue 1e-5 -outfmt 6 -seg no -db_gencode {genetic_code} -db {infile} -query {dataset_path}')
     logger.log(1, f'Generating map for calling tblastn.')
     pool = multiprocessing.Pool(processes=threads)
-    res = pool.map_async(direct_call, tasks, callback=results.append)
 
-    logger.log(1, f'Waiting for all processes to finish.')
-    res.wait()
-
-    logger.log(1, f'Merging results and cleaning generated temp files.')
-    results = list(chain.from_iterable(results))
     out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
     with open(out_blast, 'w') as f:
-        f.write(''.join(results))
+        pool.map_async(direct_call, tasks, callback=lambda x: f.write(''.join(x)))
+        logger.log(1, f'Waiting for all processes to finish.')
+        pool.close()
+        pool.join()
 
+    logger.log(1, f'Cleaning generated temp files.')
     shell_call('rm -r', protein_data_dir)
-    pool.close()
-
     os.remove(f'{infile}.nhr')
     os.remove(f'{infile}.nin')
     os.remove(f'{infile}.nsq')
@@ -130,15 +125,15 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
     for i in range(threads):
         SeqIO.write(seqs[i], file_names[i], 'fasta')
 
-    out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
-    blast_handle = open(out_blast, 'w')
-
     logger.log(1, 'Generating map for calling blastn.')
     pool = multiprocessing.Pool(processes=threads)
-    res = pool.map_async(direct_call, tasks, callback=lambda x: blast_handle.write("".join(x)))
 
-    logger.log(1, "Waiting for all processes to finish.")
-    res.wait()
+    out_blast = path.join(path.abspath(basedir), f'{prefix}.blast')
+    with open(out_blast, 'w') as f:
+        pool.map_async(direct_call, tasks, callback=lambda x: f.write(''.join(x)))
+        pool.close()
+        logger.log(1, "Waiting for all processes to finish.")
+        pool.join()
 
     logger.log(1, f'Cleaning generated temp files.')
 
@@ -146,8 +141,7 @@ def blastn_multi(dbfile=None, infile=None, basedir=None, prefix=None, threads=8)
     os.remove(f'{infile}.nhr')
     os.remove(f'{infile}.nin')
     os.remove(f'{infile}.nsq')
-    blast_handle.close()
-    pool.close()
+
     return out_blast
 
 
@@ -177,7 +171,7 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
 
 # Filter out the most important sequences
-def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True, check_plus=True):
+def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
     cutoff = configurations.annotation.overlap_ratio
     if mut_plus:
         blast_frame['plus'] = (blast_frame.send - blast_frame.sstart) > 0
@@ -187,7 +181,7 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True, chec
         [blast_frame['sstart'], blast_frame['send']]
     )
 
-    by_sseq = dict(tuple(blast_frame.groupby(['sseq', 'plus'] if check_plus else ['sseq'])))
+    by_sseq = dict(tuple(blast_frame.groupby(['sseq'])))
 
     by_sseq = {key: value.sort_values('sstart')
                for key, value in by_sseq.items()}
