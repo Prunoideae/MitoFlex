@@ -582,3 +582,38 @@ annotation_parser, annotation_group = register_group('Annotation arguments', [
         'help': 'if nhmmer is used, results with e-value lower than this will be selected.'
     }
 ], func=annotation_regulator)
+
+
+def clade_regulator(args) -> bool:
+    pass
+
+
+clade_parser, clade_group = register_group("Clade config arguments", [
+    {
+        'name': 'name',
+        'help': 'Name of the clade that needs configuration.',
+        'required': True
+    },
+    {
+        'name': 'profile',
+        'default': None,
+        'meta': "PATH",
+        'help': 'Which hmmer profile is used in this clade. Specified file will be copied and renamed to target clade profile. Leaving this out means the clade will be deleted.'
+    },
+    {
+        'name': 'genetic-code',
+        'default': 5,
+        'help': 'The genetic code of the clade.'
+    }, {
+        'name': 'proteins',
+        'default': None,
+        'meta': "PATH",
+        'help': 'Protein fasta sequences of clade required for taxonomy identification and filtering. Must be present if not deleting clade profile.'
+    },
+    {
+        'name': 'pcgs-absent',
+        'default': None,
+        'meta': "LIST",
+        'help': "PCGs that are absent in specified clade. For example, Platyhelminthes don't have the gene ATP8."
+    }
+], func=clade_regulator)

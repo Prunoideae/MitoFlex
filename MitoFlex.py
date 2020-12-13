@@ -329,6 +329,13 @@ def load_modules(args):
         logger.log(2, 'All modules are loaded correctly.')
 
 
+@parse_func(func_help='Config current profile used by MitoFlex, including HMM profiles, clades or others. [WIP]',
+            parents=[clade_parser])
+@timed(enabled=False)
+def config_clade(args):
+    pass
+
+
 # This is for initializing the framework right before the command executed,
 # but after the arguments are processed. Pre will initialize something no
 # matter what command is called. Not pretty.

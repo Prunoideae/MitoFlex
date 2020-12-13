@@ -26,6 +26,7 @@ from importlib import util as import_util
 import argparse
 import inspect
 import sys
+from typing import Callable
 
 collected_args = {}
 group_callback = {}
@@ -100,7 +101,7 @@ def register_group(group_name, argument_list, func=None):
     return parser, group
 
 
-def parse_func(func=None, *, func_help='', parents=[]):
+def parse_func(func: Callable = None, *, func_help='', parents=[]):
     '''
     Mark the decorated function as a valid 'argument acceptable'
     function. Decorated function will be analysed once it's created,
@@ -128,7 +129,7 @@ def parse_func(func=None, *, func_help='', parents=[]):
 
     global collected_args
 
-    func_name = func.__name__
+    func_name = func.__name__.replace("_", '-')
     if func_name not in collected_args:
         collected_args[func_name] = {
             'args': {}

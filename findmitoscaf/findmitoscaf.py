@@ -56,6 +56,9 @@ profile_dir_hmm = path.join(profile_dir, 'CDS_HMM')
 profile_dir_tbn = path.join(profile_dir, 'MT_database')
 profile_dir_rna = path.join(profile_dir, 'rRNA_CM')
 
+if any(not path.isdir(x) for x in [profile_dir_hmm, profile_dir_tbn, profile_dir_rna]):
+    sys.exit(f"Profile structural check failed, is the installation of MitoFlex valid?")
+
 rank_list = ['kindom', 'phylum', 'class',
              'order', 'family', 'genus', 'species']
 
