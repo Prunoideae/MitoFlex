@@ -222,8 +222,6 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
 
 
 # Call genewise
-
-
 def genewise(basedir=None, prefix=None, codon_table=None,
              wises: pandas.DataFrame = None, infile=None,
              dbfile=None, cutoff=0.5):

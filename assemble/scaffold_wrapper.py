@@ -48,7 +48,7 @@ class SOAP():
                 'map_len=32\n'
                 f'q1={self.fq1}\n' + f"q2={self.fq2}" if self.fq2 != None else "")
 
-    def scaf(self):
+    def scaf(self) -> str:
         if self.lib_file == None:
             raise RuntimeError("Lib was not build before scaffolding!")
 

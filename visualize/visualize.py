@@ -101,9 +101,6 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
 
     shell_call('bwa index', fa_copy)
     bam_file = path.join(basedir, f'{prefix}.bam')
-    # Max thread count 24 here, because bwa's para-process mechanism
-    # is quite like a pseudo-paraprocessing, which may increase the
-    # thread competition if threads are set too many.
     check_output(
         f'bwa mem -t {threads} {fa_copy} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -q 30 -h -o {bam_file} -', shell=True)
     bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')

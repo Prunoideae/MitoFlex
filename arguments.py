@@ -23,6 +23,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import os
+import json
 
 try:
     from utility.parser import register_group
@@ -40,9 +41,11 @@ except ImportError as identifier:
 profile_dir_tbn = os.path.join(
     os.path.dirname(__file__), 'profile', 'MT_database')
 profile_dir_hmm = os.path.join(os.path.dirname(__file__), 'profile', 'CDS_HMM')
-
+profile_code_json = os.path.join(os.path.dirname(__file__), 'profile', 'codes.json')
 
 # Universal group
+
+
 def universal_regulator(args):
 
     args.work_dir = os.path.abspath(os.path.join(args.basedir, args.workname))
@@ -434,13 +437,22 @@ def saa_regulator(args):
         '-6': 'Ciliate, Dasycladacean and Hexamita Nuclear code',
         '-10': 'Euplotid Nuclear code',
         '-12': 'Alternative Yeast Nuclear code',
-        '-26': 'Pachysolen tannophilus Nuclear Code',
+        '-26': 'Pachysolen tannophilus Nuclear code',
         '-27': 'Karyorelict Nuclear code',
         '-28': 'Condylostoma Nuclear code',
         '-29': 'Mesodinium Nuclear code',
         '-30': 'Peritrich Nuclear code',
         '-31': 'Blastocrithidia Nuclear code'
     }
+
+    if args.genetic_code is None:
+        code_mapping = json.load(open(profile_code_json))
+        if args.clade in code_mapping:
+            args.genetic_code = code_mapping[args.clade]
+            print(f"Genetic code judged from clade : {args.genetic_code}")
+        else:
+            print("Cannot find relevant code in profile/codes.json!")
+            return False
 
     code = str(args.genetic_code)
 
@@ -464,9 +476,9 @@ def saa_regulator(args):
                 sys.exit('Exited.')
 
             print(
-                f'Using genetic code {code} : {gene_code["-" + code]}, assembling quality may not be guaranteed.')
+                f'Using genetic code {code} : {gene_code["-" + code]}, result may not be guaranteed.')
     elif code == '1':
-        print('You are using Standard Code 1! Please make sure you really have the need to do this, because the standard code is NOT meant to be applied in most cases!')
+        print('You are using Standard Code 1! Please make sure you really have the need to do this, because the standard code is NOT meant to be applied in most cases.')
         if not hasattr(args, 'y') or not args.y:
             answer = input("Continue? Y/[N] : ")
             while answer not in ['Y', 'N', '', 'y', 'n']:
@@ -474,7 +486,7 @@ def saa_regulator(args):
             if answer.upper() is not 'Y':
                 sys.exit('Exited.')
 
-            print(f'Using genetic code 1, assembling quality can\'t be guaranteed!')
+            print(f'Using genetic code 1, result quality can\'t be guaranteed.')
     else:
         print('Genetic code not found in the NCBI table!')
         return False
@@ -486,8 +498,8 @@ profiles_hmm = [os.path.splitext(profile_name)[0]
 saa_parser, saa_group = register_group('Search and annotate arguments', [
     {
         'name': 'genetic-code',
-        'default': 5,
-        'help': 'genetic code table to be used in the run.'
+        'default': None,
+        'help': 'genetic code table to be used in the run, leave out to judge by clade.'
     },
     {
         'name': 'clade',

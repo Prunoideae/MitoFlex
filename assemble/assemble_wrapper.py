@@ -64,11 +64,11 @@ class MEGAHIT():
 
     Introduced a filter of depth and length, enabling a much more in-site
     changes of the original pipeline, since MEGAHIT is original designed
-    for assembling metagenomes, which usually possess a ultra-low depth of
-    sequencing, almost contracted to the requirements of mitogenome assembly.
+    for assembling metagenomes, which are usually of a ultra-low depth in
+    sequencing, almost being contradict to the requirements of mitogenome assembly.
 
     Such a filter can effectively reduce the noise of graph, while retaining
-    most of, even improve the quality of graph.
+    most of, even improve the quality of assembly, and latter process.
     '''
     basedir = None
     fq1 = None
@@ -318,7 +318,9 @@ class MEGAHIT():
                    k=current_kmer)
 
     @timed(enabled=False)
-    def filter(self, kmer=None, min_depth=3, min_length=0, max_length=20000, force_filter=False, deny_number=a_conf.filter_keep):
+    def filter(self, kmer=None,
+               min_depth=3, min_length=0, max_length=20000,
+               force_filter=False, deny_number=a_conf.filter_keep) -> Tuple[int, int, int]:
         logger.log(2, f'Filtering output contig files of k = {kmer}')
 
         results = [0, 0, 0]
