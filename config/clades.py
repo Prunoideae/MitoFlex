@@ -2,12 +2,13 @@ import os
 from os import path
 import json
 import sys
-from typing import Dict
+from typing import Dict, List
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility import logger
+    from Bio import SeqIO
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -52,5 +53,12 @@ def delete_clade(clade_name: str):
     json.dump(codes, open(genetic_code_profile, 'w'))
 
 
-def config_clade():
-    pass
+def config_clade(clade_name: str, genetic_code: int, hmm_profile: str, mtdb_profile: str, cds_profile: str):
+    # Dumping genetic code
+    codes: Dict[str, int] = json.load(open(genetic_code_profile))
+    codes[clade_name] = genetic_code
+    json.dump(codes, open(genetic_code_profile))
+
+    # Loading cds profile, and checking file integrity.
+    to_insert: Dict[str, int] = json.load(open(cds_profile))
+    

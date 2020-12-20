@@ -333,6 +333,7 @@ def load_modules(args):
             parents=[clade_parser])
 @timed(enabled=False)
 def config_clade(args):
+    logger.log(4, 'This is still a feature work in progress, maybe future version will have this completed.')
     pass
 
 

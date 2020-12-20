@@ -611,9 +611,9 @@ clade_parser, clade_group = register_group("Clade config arguments", [
         'help': 'Protein fasta sequences of clade required for taxonomy identification and filtering. Must be present if not deleting clade profile.'
     },
     {
-        'name': 'pcgs-absent',
+        'name': 'pcgs-lengths',
         'default': None,
-        'meta': "LIST",
-        'help': "PCGs that are absent in specified clade. For example, Platyhelminthes don't have the gene ATP8."
+        'meta': "PATH",
+        'help': "A json file including clade's required PCGs and their avg. lengths. Default structure is the same as structure in CDS_HMM/required_cds.json, but without a clade specification."
     }
 ], func=clade_regulator)
