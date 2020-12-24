@@ -24,6 +24,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import os
 import json
+from os import path
 
 try:
     from utility.parser import register_group
@@ -585,7 +586,20 @@ annotation_parser, annotation_group = register_group('Annotation arguments', [
 
 
 def clade_regulator(args) -> bool:
-    pass
+    valid = True
+    if args.profile is not None:
+        if args.proteins is None or args.pcgs_lengths is None:
+            print("Both fasta profile and pcgs length file must be provided.")
+            valid = False
+        else:
+            if not (path.isfile(args.proteins) and path.isfile(args.pcgs_lengths)):
+                print("Both fasta profile and pcgs length file must be valid file.")
+                valid = False
+    else:
+        pass
+
+    return valid
+
 
 
 clade_parser, clade_group = register_group("Clade config arguments", [

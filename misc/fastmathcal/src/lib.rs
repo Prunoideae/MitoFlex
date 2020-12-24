@@ -190,7 +190,6 @@ fn merge_overlaps(
         } else if alen >= ssub.seq().len() {
             sque
         } else {
-            let l = ssub.seq().len() as u32 + if qs > ss { qe - se } else { se - qe };
             let sec_conc = &if qs > ss {
                 let mut new_seq = sque.seq()[..qe as usize]
                     .iter()
@@ -209,7 +208,7 @@ fn merge_overlaps(
 
             fasta::Record::with_attrs(
                 &format!("M{}", sindex),
-                Some(&format!("flag=1 multi=32767 len={}", l)),
+                Some(&format!("flag=1 multi=32767 len={}", sec_conc.len())),
                 sec_conc,
             )
         };
