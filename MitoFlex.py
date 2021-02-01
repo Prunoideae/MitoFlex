@@ -279,7 +279,8 @@ def all(args):
         args.cleanq1 += '.gz'
         args.cleanq2 += '.gz'
 
-    args.fastq1, args.fastq2 = filter(args)
+    if not args.disable_filter:
+        args.fastq1, args.fastq2 = filter(args)
 
     args.fastafile = assemble(args)
     args.fastafile = findmitoscaf(args)
@@ -309,6 +310,33 @@ def all(args):
         logger.log(2, f'Results dumped at {args.result_dir}')
 
 
+@parse_func(func_help='Assemble, annotate and visualize mitogenome, but with a pipeline similar to MITObim',
+            parents=[universal_parser, fasta_parser, assembly_parser, filter_parser, fastq_parser,
+                     search_parser, saa_parser, annotation_parser])
+@arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on', default=False)
+@arg_prop(dest='disable_visualization', help='visualization will be not enabled if this switched on', default=False)
+@timed(enabled=True)
+def bim(args):
+    # Also a WIP idea.
+    # MITObim uses MIRA as mapper and assembler, which is clearly outperformed by
+    # bwa alongwith the modified MEGAHIT. If we can reuse current pipeline, then
+    # we surely can make a more powerful MITObim.
+
+    args.cleanq1 = 'clean.1.fq'
+    args.cleanq2 = 'clean.2.fq'
+
+    if configurations.filter_rawdata.compress_output_in_all:
+        args.cleanq1 += '.gz'
+        args.cleanq2 += '.gz'
+
+    if not args.disable_filter:
+        args.fastq1, args.fastq2 = filter(args)
+
+    from bim.bim import bim_assemble
+
+    pass
+
+
 @parse_func(func_help='load all modules provided by MitoFlex, use to test if some modules are not installed correctly.')
 @timed(enabled=False)
 def load_modules(args):
@@ -327,14 +355,6 @@ def load_modules(args):
         logger.log(4, 'Cannot load module!')
     finally:
         logger.log(2, 'All modules are loaded correctly.')
-
-
-@parse_func(func_help='Config current profile used by MitoFlex, including HMM profiles, clades or others. [WIP]',
-            parents=[clade_parser])
-@timed(enabled=False)
-def config_clade(args):
-    logger.log(4, 'This is still a feature work in progress, maybe future version will have this completed.')
-    pass
 
 
 # This is for initializing the framework right before the command executed,
@@ -379,7 +399,7 @@ def pre(args):
             if exception_type != KeyboardInterrupt:
                 logger.log(
                     4,
-                    "An unexpected error was happened in the MitoFlex, this could be an bug in the program,"
+                    "An unexpected error was happened in the MitoFlex, this could be a bug in the program,"
                     " so please report it if you see this message in log.")
                 logger.log(
                     4, f"Error type : {exception_type.__name__}, value : {value}")

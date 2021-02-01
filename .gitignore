@@ -6,6 +6,7 @@ findmitoscaf/mlc/target/
 findmitoscaf/avgdep/target/
 filter/filter_bin/target/
 filter/filter_multi/target/
+bim/seqpro/target/
 assemble/fastfilter_src/target/
 misc/fastmathcal/target/
 profile/MT_database/Animal.fa

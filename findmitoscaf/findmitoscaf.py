@@ -25,6 +25,7 @@ from time import time
 import os
 import sys
 import json
+from utility.helper import some
 
 
 import pandas
@@ -365,10 +366,10 @@ def findmitoscaf(thread_number=8, clade=None, prefix=None, split_two=f_conf.spli
                                         max_contig_len=max_contig_len, contigs_file=picked_fasta,
                                         relaxing=relaxing, multi=multi, merge_method=2,
                                         merge_overlapping=merge_overlapping, split_two=False)
-            logger.log(2, "Some of the merged contigs are thought to be conflicted with selected sequences, so they are not picked in the result.")
-            logger.log(2, "But they may also contain some gene, if so, please check at the [workname].abundance.high.fa at findmitoscaf temp folder.")
-            logger.log(2, "They are mainly not merged because blastn failed to recognize their overlapped region, if so happened visualization is")
-            logger.log(2, "not recommended, since they have redundant bases, and will be misleading if such a graph is presented.")
+            """Some of the merged contigs are thought to be conflicted with selected sequences, so they are not picked in the result
+            But they may also contain some gene, if so, please check at the [workname].abundance.high.fa at findmitoscaf temp folder.
+            They are mainly not merged because blastn failed to recognize their overlapped region, if so happened visualization is
+            not recommended, since they have redundant bases, and will be misleading if such a graph is presented."""
 
     if merge_method == 2:
         logger.log(2, f"Merging sequences with global method.")
@@ -475,6 +476,9 @@ def merge_sequences(fasta_file=None, overlapped_len=50, search_range=5, threads=
     logger.log(1, "Trying to merge candidates that are possibly overlapped.")
 
     fasta_file = path.abspath(fasta_file)
+    if some(SeqIO.parse(fasta_file, 'fasta')):
+        logger.log(1, "No sequences needed merging.")
+        return 0
 
     while True:
         blast_results = tk.blastn_multi(fasta_file, fasta_file, path.dirname(fasta_file), 'merge', threads=threads)

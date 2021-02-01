@@ -24,6 +24,7 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 import subprocess
 import sys
 import os
+from typing import Iterable
 from . import logger
 from time import time
 from functools import wraps
@@ -121,3 +122,16 @@ def timed(enabled: bool):
             return func
 
     return timed_constructor
+
+
+def some(i: Iterable, n=2) -> bool:
+    '''
+    Checks if an iterable have >= n elements.
+    This is used for some check to avoid exhausting the 
+    whole iterator, thus causing a heavy performance impact.
+    '''
+    for _ in i:
+        n -= 1
+        if n == 0:
+            return True
+    return n <= 0

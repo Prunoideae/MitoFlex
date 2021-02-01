@@ -585,49 +585,19 @@ annotation_parser, annotation_group = register_group('Annotation arguments', [
 ], func=annotation_regulator)
 
 
-def clade_regulator(args) -> bool:
+def bim_regulator(args) -> bool:
     valid = True
-    if args.profile is not None:
-        if args.proteins is None or args.pcgs_lengths is None:
-            print("Both fasta profile and pcgs length file must be provided.")
-            valid = False
-        else:
-            if not (path.isfile(args.proteins) and path.isfile(args.pcgs_lengths)):
-                print("Both fasta profile and pcgs length file must be valid file.")
-                valid = False
-    else:
-        pass
+    args.bim_dir = os.path.join(args.temp_dir, "bim")
+
+    try:
+        safe_makedirs(args.bim_dir)
+    except:
+        print("Cannot validate directory.")
+        valid = False
 
     return valid
 
 
+bim_parser, bim_group = register_group("BIM config arguments", [
 
-clade_parser, clade_group = register_group("Clade config arguments", [
-    {
-        'name': 'name',
-        'help': 'Name of the clade that needs configuration.',
-        'required': True
-    },
-    {
-        'name': 'profile',
-        'default': None,
-        'meta': "PATH",
-        'help': 'Which hmmer profile is used in this clade. Specified file will be copied and renamed to target clade profile. Leaving this out means the clade will be deleted.'
-    },
-    {
-        'name': 'genetic-code',
-        'default': 5,
-        'help': 'The genetic code of the clade.'
-    }, {
-        'name': 'proteins',
-        'default': None,
-        'meta': "PATH",
-        'help': 'Protein fasta sequences of clade required for taxonomy identification and filtering. Must be present if not deleting clade profile.'
-    },
-    {
-        'name': 'pcgs-lengths',
-        'default': None,
-        'meta': "PATH",
-        'help': "A json file including clade's required PCGs and their avg. lengths. Default structure is the same as structure in CDS_HMM/required_cds.json, but without a clade specification."
-    }
-], func=clade_regulator)
+], func=bim_regulator)
