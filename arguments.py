@@ -595,9 +595,16 @@ def bim_regulator(args) -> bool:
         print("Cannot validate directory.")
         valid = False
 
+    if args.max_iteration <= 0:
+        args.max_iteration = 32767
+
     return valid
 
 
 bim_parser, bim_group = register_group("BIM config arguments", [
-
+    {
+        'name': 'max-iteration',
+        'default': 10,
+        'help': 'how many generations before the bait-assemble loop will be forcebily stopped. Setting to invalid numbers will be regard as infinite.'
+    }
 ], func=bim_regulator)
