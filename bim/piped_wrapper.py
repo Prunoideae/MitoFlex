@@ -98,7 +98,7 @@ class MEGAHIT():
 
     @property
     def FAST_FILTER(self) -> str:
-        FAST_BIN = path.dirname(__file__)
+        FAST_BIN = path.join(path.abspath(path.join(path.dirname(__file__), "..")), "assemble")
         return path.join(FAST_BIN, 'fastfilter')
 
     def __init__(self, **kwargs):

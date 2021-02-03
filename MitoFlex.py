@@ -321,6 +321,7 @@ def bim(args):
     # MITObim uses MIRA as mapper and assembler, which is clearly outperformed by
     # bwa alongwith the modified MEGAHIT. If we can reuse current pipeline, then
     # we surely can make a more powerful MITObim.
+    raise RuntimeError("This module is still work in progress, in later versions it may be completed.")
 
     args.cleanq1 = 'clean.1.fq'
     args.cleanq2 = 'clean.2.fq'
