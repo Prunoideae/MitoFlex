@@ -57,6 +57,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         'prefix': work_prefix,
         'threads': threads,
         'no_local': disable_local,
+        'min_depth': min_multi,
         'fq1': fastq1,
         'fq2': fastq2,
     }
@@ -103,7 +104,8 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
 
         if n == -1:
             break
-        megahit.local(c, n)
+        if not disable_local:
+            megahit.local(c, n)
         megahit.iterate(c, n)
 
     megahit.finalize(megahit.kmax)

@@ -30,11 +30,12 @@ from typing import Tuple, Union
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call, direct_call
+    from utility.helper import direct_call
     from bim.piped_wrapper import MEGAHIT, EmptyGraph
     from utility import logger
     from configurations import assemble as a_conf
     from assemble.scaffold_wrapper import SOAP
+    from utility.helper import timed
 except ImportError as err:
     sys.exit(
         f"Unable to import helper module {err.name}, is the installation of MitoFlex valid?")
@@ -42,6 +43,7 @@ except ImportError as err:
 bin_dir = path.dirname(__file__)
 
 
+@timed(True)
 def bim_assemble(threads: int, fasta_file: str, basedir: str, prefix: str,
                  fastq1: str, fastq2: Union[str, None] = None, disable_local=False,
                  prune_level=2, prune_depth=2, keep_temp=False, insert_size=125,

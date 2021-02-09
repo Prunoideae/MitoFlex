@@ -335,7 +335,13 @@ def bim(args):
 
     from bim.bim import bim_assemble
 
-    pass
+    for i in range(args.max_iteration):
+        args.fastafile = bim_assemble(
+            threads=args.threads, fasta_file=args.fastafile, basedir=args.temp_dir, prefix=args.workname,
+            fastq1=args.fastq1, fastq2=args.fastq2, disable_local=args.disable_local,
+            prune_level=args.prune_level, prune_depth=args.prune_depth, keep_temp=args.keep_temp,
+            insert_size=args.insert_size, no_scaf=args.disable_scaffolding,
+            kmer_list=args.kmer_list, depth_list=args.depth_list)
 
 
 @parse_func(func_help='load all modules provided by MitoFlex, use to test if some modules are not installed correctly.')

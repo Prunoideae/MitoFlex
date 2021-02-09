@@ -491,6 +491,7 @@ def saa_regulator(args):
     else:
         print('Genetic code not found in the NCBI table!')
         return False
+    args.genetic_code = int(args.genetic_code)
     return True
 
 
