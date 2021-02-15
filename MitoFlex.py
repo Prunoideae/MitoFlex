@@ -410,7 +410,7 @@ def pre(args):
             logger.log(4, value)
             logger.log(
                 4,
-                'A RuntimeError was occured! This is already considered in the code'
+                'A RuntimeError was occured. This is already considered in the code'
                 ', but since it\'s thought to be errors in parts outside the MitoFlex can handle, it\'s'
                 ' NOT a bug caused by MitoFlex itself. Please check the error message'
                 ' and try to fix the possible cause of the crash, only as a last resort, send '
@@ -428,9 +428,7 @@ def pre(args):
                     4, f"Error type : {exception_type.__name__}, value : {value}")
                 logger.log(
                     4, f"Traceback :")
-                logger.__log(traceback.format_tb(tb=tb))
-                with open(path.join(path.dirname(logger.get_file()), 'traceback.txt'), 'w') as f:
-                    traceback.print_tb(tb, file=f)
+                logger.__log('\n'.join(traceback.format_tb(tb=tb)))
 
                 logger.log(4, "Logging additional information")
                 import psutil
@@ -438,7 +436,9 @@ def pre(args):
                 logger.log(4, curp.open_files())
                 logger.log(4, curp.environ())
                 logger.log(4, curp.memory_full_info())
-
+                logger.log(4, "Logging ignored logs.")
+                for l in logger.__ignored:
+                    logger.log(4, l)
             else:
                 logger.log(2, "This run was terminated manually.")
             logger.finalize()

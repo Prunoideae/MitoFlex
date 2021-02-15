@@ -37,6 +37,7 @@ __initialized = False
 __logger = None
 __level_valve = 0
 __filepath = ""
+__ignored = []
 
 
 def init(file_path: str):
@@ -87,6 +88,7 @@ def log(level: int = 2, info: str = None):
         init(None)
 
     if level < __level_valve:
+        __ignored.append(info)
         return
     time_now = datetime.datetime.now().strftime("%H:%M:%S")
 
