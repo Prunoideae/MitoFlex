@@ -48,7 +48,7 @@ def bim_assemble(threads: int, fasta_file: str, basedir: str, prefix: str,
                  fastq1: str, fastq2: Union[str, None] = None, disable_local=False,
                  prune_level=2, prune_depth=2, keep_temp=False, insert_size=125,
                  no_scaf=False, kmer_list=None, depth_list=None
-                 ) -> Tuple[str, Union[str, None]]:
+                 ) -> str:
     '''
     A special assemble function that chains tons of program together to assemble from bait and reads.
     '''

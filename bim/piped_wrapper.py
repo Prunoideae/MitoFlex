@@ -22,7 +22,6 @@ along with MitoFlex.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-from subprocess import Popen
 import sys
 from os import path
 
@@ -131,11 +130,11 @@ class MEGAHIT():
             logger.log(3, "Using 1-pass mode.")
 
         self.result_dir = safe_makedirs(
-            path.join(self.basedir, f'{self.prefix}.result'), False)
+            path.join(self.basedir, f'{self.prefix}.result'), True)
 
         if not path.isdir(str(a_conf.external_temp)):
             self.temp_dir = safe_makedirs(
-                path.join(self.basedir, f'{self.prefix}.temp'), False)
+                path.join(self.basedir, f'{self.prefix}.temp'), True)
         else:
             self.temp_dir = safe_makedirs(
                 path.join(
@@ -143,7 +142,7 @@ class MEGAHIT():
                     str(uuid.uuid4()),
                     f'{self.prefix}.temp'
                 ),
-                False
+                True
             )
 
         self.read_lib = path.join(self.temp_dir, 'reads.lib')

@@ -28,6 +28,7 @@ import os
 import sys
 import traceback
 import time
+import shutil
 
 if sys.version_info[0] < 3:
     sys.exit('Python 3 must be installed in current environment! Please check if any of your environment setup (like conda environment) is deactivated or wrong!')
@@ -38,6 +39,7 @@ try:
     from utility.helper import shell_call, timed
     from arguments import *  # pylint: disable=unused-wildcard-import
     import configurations
+    from Bio import SeqIO
 except ModuleNotFoundError as identifier:
     print(
         f'Module {identifier.name} not found! Please check your MitoFlex installation!')
@@ -64,7 +66,7 @@ Version
 
 Citation
     MitoFlex: an efficient, high-performance toolkit for mitogenome assembly, 
-    annotation, and visualization. (Not yet published)
+    annotation, and visualization. Oxford Bioinformatics.
 
 """
 
@@ -335,13 +337,27 @@ def bim(args):
 
     from bim.bim import bim_assemble
 
+    fasta_path = path.join(args.temp_dir, f'{args.workname}.bait.fa')
+    shutil.copy(args.fastafile, fasta_path)
+    args.fastafile = fasta_path
+
     for i in range(args.max_iteration):
-        args.fastafile = bim_assemble(
+        logger.log(2, f"Iteration {i} starts.")
+        next_generation = bim_assemble(
             threads=args.threads, fasta_file=args.fastafile, basedir=args.temp_dir, prefix=args.workname,
             fastq1=args.fastq1, fastq2=args.fastq2, disable_local=args.disable_local,
             prune_level=args.prune_level, prune_depth=args.prune_depth, keep_temp=args.keep_temp,
             insert_size=args.insert_size, no_scaf=args.disable_scaffolding,
             kmer_list=args.kmer_list, depth_list=args.depth_list)
+
+        # Criteria of breaking the cycle:
+        # 1. No extension can be made after an iteration.
+        # 2. Genome assembled currently possess of enough
+        #    quality, and passed some coverage tests.
+
+        next_fasta = path.join(args.temp_dir, f'{args.workname}.bait.fa')
+        os.rename(next_generation, next_fasta)
+        args.fastafile = next_fasta
 
 
 @parse_func(func_help='load all modules provided by MitoFlex, use to test if some modules are not installed correctly.')
