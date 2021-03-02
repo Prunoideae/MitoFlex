@@ -73,6 +73,6 @@ def cal_insert(bam: str, basedir: str, prefix: str) -> int:
         grep ^IS|\
         cut -f 2-'
     ).split("\n") if x]
-    avg_ins = sum(a * b for a, b in stats) / sum(list(zip(*stats)[1]))
+    avg_ins = sum(a * b for a, b in stats) / sum(list(zip(*stats))[1])
     log(2, f"Measured insert size is {avg_ins}")
     return avg_ins
