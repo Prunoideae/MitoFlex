@@ -46,9 +46,7 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
              threads=8, min_multi=3.0, insert_size=125, no_scaf=False):
 
     logger.log(2, 'Start assembling mitochondrial sequences.')
-
     logger.log(1, f'Using kmer list : {kmer_list}')
-
     options = {
         'prune_level': prune_level,
         'prune_depth': prune_depth,

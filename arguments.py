@@ -588,13 +588,6 @@ annotation_parser, annotation_group = register_group('Annotation arguments', [
 
 def bim_regulator(args) -> bool:
     valid = True
-    args.bim_dir = os.path.join(args.temp_dir, "bim")
-
-    try:
-        safe_makedirs(args.bim_dir)
-    except:
-        print("Cannot validate directory.")
-        valid = False
 
     if args.max_iteration <= 0:
         args.max_iteration = 32767

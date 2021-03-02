@@ -317,6 +317,7 @@ def all(args):
                      search_parser, saa_parser, annotation_parser, bim_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on', default=False)
 @arg_prop(dest='disable_visualization', help='visualization will be not enabled if this switched on', default=False)
+@arg_prop(dest="insert_size_auto", help="estimate insert size from mapping data", default=False)
 @timed(enabled=True)
 def bim(args):
     # Also a WIP idea.
@@ -335,7 +336,8 @@ def bim(args):
     if not args.disable_filter:
         args.fastq1, args.fastq2 = filter(args)
 
-    from bim.bim import bim_assemble
+    from bim.bim import bwa_map, cal_insert
+    from assemble.assemble import assemble
 
     fasta_path = path.join(args.temp_dir, f'{args.workname}.bait.fa')
     shutil.copy(args.fastafile, fasta_path)
@@ -343,11 +345,19 @@ def bim(args):
 
     for i in range(args.max_iteration):
         logger.log(2, f"Iteration {i} starts.")
-        next_generation = bim_assemble(
-            threads=args.threads, fasta_file=args.fastafile, basedir=args.assemble_dir, prefix=args.workname,
-            fastq1=args.fastq1, fastq2=args.fastq2, disable_local=args.disable_local,
+
+        if len(os.listdir(args.assemble_dir)) != 0:
+            os.system(f"rm -rf {args.assemble_dir}/*")
+
+        bam, fq1, fq2 = bwa_map(args.threads, args.fastafile, args.assemble_dir, args.workname, args.fastq1, args.fastq2)
+        if args.insert_size_auto:
+            args.insert_size = cal_insert(bam, args.threads)
+
+        next_generation = assemble(
+            threads=args.threads, basedir=args.assemble_dir, work_prefix=args.workname,
+            fastq1=fq1, fastq2=fq2, disable_local=args.disable_local,
             prune_level=args.prune_level, prune_depth=args.prune_depth, keep_temp=args.keep_temp,
-            insert_size=args.insert_size, no_scaf=args.disable_scaffolding,
+            insert_size=args.insert_size, no_scaf=args.disable_scaffolding or i == 0,
             kmer_list=args.kmer_list, depth_list=args.depth_list)
 
         # Criteria of breaking the cycle:
