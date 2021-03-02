@@ -352,7 +352,7 @@ def bim(args):
 
         bam, fq1, fq2 = bwa_map(args.threads, args.fastafile, args.assemble_dir, args.workname, args.fastq1, args.fastq2)
         if args.insert_size_auto:
-            args.insert_size = cal_insert(bam, args.threads, args.assemble_dir, args.workname)
+            args.insert_size = cal_insert(bam, args.assemble_dir, args.workname)
 
         next_generation = assemble(
             threads=args.threads, base_dir=args.assemble_dir, work_prefix=args.workname,

@@ -598,7 +598,12 @@ def bim_regulator(args) -> bool:
 bim_parser, bim_group = register_group("BIM config arguments", [
     {
         'name': 'max-iteration',
-        'default': 10,
+        'default': 20,
         'help': 'how many generations before the bait-assemble loop will be forcebily stopped. Setting to invalid numbers will be regard as infinite.'
+    },
+    {
+        'name': 'iteration-dispose',
+        'default': 10,
+        'help': 'how many generations before gene search and taxonomy prediction is applied.'
     }
 ], func=bim_regulator)

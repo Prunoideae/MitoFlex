@@ -58,6 +58,10 @@ def bwa_map(threads: int, fasta_file: str, basedir: str, prefix: str,
     return bam, fq1, fq2
 
 
+def filter_by_seqid():
+    pass
+
+
 @timed(enabled=True)
 def cal_insert(bam: str, basedir: str, prefix: str) -> int:
     stat_file = path.join(basedir, prefix + ".stats")
