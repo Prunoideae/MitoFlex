@@ -101,13 +101,16 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
 
     shell_call('bwa index', fa_copy)
     bam_file = path.join(basedir, f'{prefix}.bam')
+
+    mem_count = max(int(threads * 0.8), 1)
+    view_count = max(threads - mem_count, 1)
+
     check_output(
-        f'bwa mem -t {threads} {fa_copy} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -q 30 -h -o {bam_file} -', shell=True)
+        f'bwa mem -t {mem_count} {fa_copy} {fastq1} {fastq2 if fastq2!=None else ""} |samtools view -bS -@ {view_count} -q 30 -h -o {bam_file} -', shell=True)
     bam_sorted_file = path.join(basedir, f'{prefix}.sorted.bam')
-    check_output(f'samtools sort -o {bam_sorted_file} {bam_file}', shell=True)
+    check_output(f'samtools sort -@ {threads} -o {bam_sorted_file} {bam_file}', shell=True)
     gene_depth_file = path.join(basedir, f'{prefix}.dep')
-    check_output(
-        f'samtools depth -aa {bam_sorted_file} > {gene_depth_file}', shell=True)
+    check_output(f'samtools depth -aa {bam_sorted_file} > {gene_depth_file}', shell=True)
 
     # Calculate the things
     circos_depth_file = path.join(basedir, f'{prefix}.depth.txt')
@@ -159,10 +162,8 @@ def visualize(fasta_file=None, fastq1=None, fastq2=None, pos_json=None,
     with generated_config.plots['plot', 3] as depth_plot:
         depth_plot.file = circos_depth_file
         depth_plot.max = max_gene_depth
-        depth_plot.rules['rule', 0
-                         ].condition = f'var(value) > {int(max_gene_depth*0.9)}'
-        depth_plot.rules['rule', 1
-                         ].condition = f'var(value) < {int(max_gene_depth*0.1)}'
+        depth_plot.rules['rule', 0].condition = f'var(value) > {int(max_gene_depth*0.9)}'
+        depth_plot.rules['rule', 1].condition = f'var(value) < {int(max_gene_depth*0.1)}'
 
     generated_config.highlights['highlight', 0].file = gene_feature_file
 

@@ -314,7 +314,7 @@ def all(args):
 
 @parse_func(func_help='Assemble, annotate and visualize mitogenome, but with a pipeline similar to MITObim',
             parents=[universal_parser, fasta_parser, assembly_parser, filter_parser, fastq_parser,
-                     search_parser, saa_parser, annotation_parser])
+                     search_parser, saa_parser, annotation_parser, bim_parser])
 @arg_prop(dest='disable_filter', help='filter will be not enabled if this switched on', default=False)
 @arg_prop(dest='disable_visualization', help='visualization will be not enabled if this switched on', default=False)
 @timed(enabled=True)
@@ -323,7 +323,7 @@ def bim(args):
     # MITObim uses MIRA as mapper and assembler, which is clearly outperformed by
     # bwa alongwith the modified MEGAHIT. If we can reuse current pipeline, then
     # we surely can make a more powerful MITObim.
-    raise RuntimeError("This module is still work in progress, in later versions it may be completed.")
+    # raise RuntimeError("This module is still work in progress, in later versions it may be completed.")
 
     args.cleanq1 = 'clean.1.fq'
     args.cleanq2 = 'clean.2.fq'
@@ -344,7 +344,7 @@ def bim(args):
     for i in range(args.max_iteration):
         logger.log(2, f"Iteration {i} starts.")
         next_generation = bim_assemble(
-            threads=args.threads, fasta_file=args.fastafile, basedir=args.temp_dir, prefix=args.workname,
+            threads=args.threads, fasta_file=args.fastafile, basedir=args.assemble_dir, prefix=args.workname,
             fastq1=args.fastq1, fastq2=args.fastq2, disable_local=args.disable_local,
             prune_level=args.prune_level, prune_depth=args.prune_depth, keep_temp=args.keep_temp,
             insert_size=args.insert_size, no_scaf=args.disable_scaffolding,
@@ -353,7 +353,7 @@ def bim(args):
         # Criteria of breaking the cycle:
         # 1. No extension can be made after an iteration.
         # 2. Genome assembled currently possess of enough
-        #    quality, and passed some coverage tests.
+        #    quality, and passed some tests.
 
         next_fasta = path.join(args.temp_dir, f'{args.workname}.bait.fa')
         os.rename(next_generation, next_fasta)

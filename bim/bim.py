@@ -31,7 +31,7 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
     from utility.helper import direct_call
-    from bim.piped_wrapper import MEGAHIT, EmptyGraph
+    from assemble.assemble_wrapper import MEGAHIT, EmptyGraph
     from utility import logger
     from configurations import assemble as a_conf
     from assemble.scaffold_wrapper import SOAP
@@ -57,17 +57,12 @@ def bim_assemble(threads: int, fasta_file: str, basedir: str, prefix: str,
     direct_call(f'bwa index -p {index} {fasta_file}')
     fq1, fq2 = path.join(basedir, prefix + '.1.fq'), path.join(basedir, prefix + '.2.fq') if fastq2 is not None else None
 
-    os.mkfifo(fq1)
-    if fq2 is not None:
-        os.mkfifo(fq2)
-
     logger.log(2, "Mapping and extracting reads from bwa mem.")
-    feed = subprocess.Popen(
+    direct_call(
         f'\
         bwa mem -t {threads} {index} {fastq1} {fastq2 if fastq2 is not None else ""} |\
         samtools view -bS -q 30 -h - |\
-        samtools fastq -1 {fq1} {f"-2 {fq2}" if fq2 is not None else ""} -',
-        shell=True, preexec_fn=os.setsid)
+        samtools fastq -1 {fq1} {f"-2 {fq2}" if fq2 is not None else ""} -')
 
     options = {
         'prune_level': prune_level,
@@ -77,6 +72,7 @@ def bim_assemble(threads: int, fasta_file: str, basedir: str, prefix: str,
         'prefix': prefix,
         'threads': threads,
         'no_local': disable_local,
+        'min_depth': 3.0,
         'fq1': fq1,
         'fq2': fq2,
     }
@@ -86,9 +82,6 @@ def bim_assemble(threads: int, fasta_file: str, basedir: str, prefix: str,
 
     megahit.initialize()
     libread = megahit.build_lib()
-
-    if feed.wait() != 0:
-        raise RuntimeError("Error occurred in pipe.")
 
     logger.log(1, f"Loaded {libread.read_count} reads from bwa mem.")
 

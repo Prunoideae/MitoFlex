@@ -298,7 +298,7 @@ Please put your cm file into the [tRNA_CM](profile/tRNA_CM) folder, MitoFlex wil
 
 # 8 Things that will effect MitoFlex's overall performance
 
-MitoFlex itself isn't doing magic, though it's fast and (more) reliable, bad result could be outputted if you don't even give it a good result input, but at least it will be the most reliable result of all contigs that megahit can assemble.
+MitoFlex itself isn't doing magic, though it's fast and (more) reliable, bad result could be outputted if you don't even give it a good input, but at least it will be the most reliable result of all contigs that megahit can assemble, and it will be better than MitoZ.
 
 There are mainly two factors influencing result quality : 1. The quality of rawdata itself. 2. The size of genome profile that MitoFlex currently have in the profile folder.
 
