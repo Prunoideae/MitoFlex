@@ -25,6 +25,7 @@ import os
 import sys
 from os import path
 from typing import Tuple, Union
+from utility.logger import log
 
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
@@ -57,14 +58,17 @@ def bwa_map(threads: int, fasta_file: str, basedir: str, prefix: str,
     return bam, fq1, fq2
 
 
-def cal_insert(bam: str, threads: int, basedir: str, prefix: str) -> int:
+@timed(enabled=True)
+def cal_insert(bam: str, basedir: str, prefix: str) -> int:
     stat_file = path.join(basedir, prefix + ".stats")
-    stats = direct_call(
+    log(2, "Measuring insert size of alignments.")
+    stats = [[int(y) for y in x.split("\t")][:2] for x in direct_call(
         f'\
         samtools stats {bam}|\
         tee {stat_file}|\
         grep ^IS|\
         cut -f 2-'
-    )
-    logger.log(2, str(stats))
-    return 150
+    ).split("\n")]
+    avg_ins = sum(a * b for a, b in stats) / sum(list(zip(*stats)[1]))
+    log(2, f"Measured insert size is {avg_ins}")
+    return avg_ins
