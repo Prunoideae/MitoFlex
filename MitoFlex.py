@@ -347,6 +347,7 @@ def bim(args):
         logger.log(2, f"Iteration {i} starts.")
 
         if len(os.listdir(args.assemble_dir)) != 0:
+            logger.log(2, f"Removing data in previous iteration.")
             os.system(f"rm -rf {args.assemble_dir}/*")
 
         bam, fq1, fq2 = bwa_map(args.threads, args.fastafile, args.assemble_dir, args.workname, args.fastq1, args.fastq2)
@@ -354,7 +355,7 @@ def bim(args):
             args.insert_size = cal_insert(bam, args.threads)
 
         next_generation = assemble(
-            threads=args.threads, basedir=args.assemble_dir, work_prefix=args.workname,
+            threads=args.threads, base_dir=args.assemble_dir, work_prefix=args.workname,
             fastq1=fq1, fastq2=fq2, disable_local=args.disable_local,
             prune_level=args.prune_level, prune_depth=args.prune_depth, keep_temp=args.keep_temp,
             insert_size=args.insert_size, no_scaf=args.disable_scaffolding or i == 0,
