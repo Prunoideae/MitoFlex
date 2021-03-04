@@ -602,8 +602,13 @@ bim_parser, bim_group = register_group("BIM config arguments", [
         'help': 'how many generations before the bait-assemble loop will be forcebily stopped. Setting to invalid numbers will be regard as infinite.'
     },
     {
-        'name': 'iteration-dispose',
+        'name': 'iteration-ignore',
         'default': 10,
         'help': 'how many generations before gene search and taxonomy prediction is applied.'
+    },
+    {
+        'name': 'scaffolding-spare',
+        'default': 2,
+        'help': 'how many generations between two generations which scaffolding is applied.'
     }
 ], func=bim_regulator)

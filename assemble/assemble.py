@@ -28,7 +28,6 @@ from os import path
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))
-    from utility.helper import shell_call
     from utility import logger
     from configurations import assemble as a_conf  # Prevent naming confliction
     from assemble.assemble_wrapper import MEGAHIT, EmptyGraph  # pylint: disable=import-error, no-name-in-module
@@ -115,6 +114,8 @@ def assemble(fastq1=None, fastq2=None, base_dir=None, work_prefix=None,
         soap.lib()
         logger.log(2, "Calling SOAP-Wrapper.")
         return soap.scaf()
+    elif fastq2 is None:
+        logger.log(2, "Scaffolding skipped due to SE reads.")
     else:
         logger.log(2, "Scaffolding skipped due to disabled.")
 

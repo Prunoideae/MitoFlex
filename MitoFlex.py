@@ -358,13 +358,15 @@ def bim(args):
             threads=args.threads, base_dir=args.assemble_dir, work_prefix=args.workname,
             fastq1=fq1, fastq2=fq2, disable_local=args.disable_local,
             prune_level=args.prune_level, prune_depth=args.prune_depth, keep_temp=args.keep_temp,
-            insert_size=args.insert_size, no_scaf=args.disable_scaffolding or i == 0,
+            insert_size=args.insert_size, no_scaf=args.disable_scaffolding or i % (args.scaffolding_spare + 1) != 0,
             kmer_list=args.kmer_list, depth_list=args.depth_list)
 
-        # Criteria of breaking the cycle:
-        # 1. No extension can be made after an iteration.
-        # 2. Genome assembled currently possess of enough
-        #    quality, and passed some tests.
+        if args.iteration_ignore < i:
+            # Criteria of breaking the cycle:
+            # 1. No extension can be made after an iteration.
+            # 2. Genome assembled currently possessed of enough
+            #    quality, and passed some tests.
+            pass
 
         next_fasta = path.join(args.temp_dir, f'{args.workname}.bait.fa')
         os.rename(next_generation, next_fasta)
