@@ -58,10 +58,6 @@ def bwa_map(threads: int, fasta_file: str, basedir: str, prefix: str,
     return bam, fq1, fq2
 
 
-def filter_by_seq():
-    pass
-
-
 def coverage_draft():
     pass
 

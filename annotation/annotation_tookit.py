@@ -28,8 +28,6 @@ import subprocess
 import multiprocessing
 from itertools import tee, chain
 
-from pandas.core.frame import DataFrame
-
 try:
     sys.path.insert(0, os.path.abspath(os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..")))

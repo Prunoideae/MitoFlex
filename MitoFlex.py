@@ -366,7 +366,9 @@ def bim(args):
             # 1. No extension can be made after an iteration.
             # 2. Genome assembled currently possessed of enough
             #    quality, and passed some tests.
-            pass
+
+            args.from_megahit = True
+            filtered_seq = findmitoscaf(args)
 
         next_fasta = path.join(args.temp_dir, f'{args.workname}.bait.fa')
         os.rename(next_generation, next_fasta)
