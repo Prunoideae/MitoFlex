@@ -399,10 +399,8 @@ def filter_taxanomy(taxa=None, fasta_file=None, hmm_frame: pandas.DataFrame = No
     blast_file = tk.tblastn_multi(dbfile=dbfile, infile=fasta_file,
                                   genetic_code=gene_code, basedir=basedir, prefix=prefix, threads=threads)
     blast_frame_unfiltered, _ = tk.blast_to_csv(blast_file)
-    try:
-        blast_frame = tk.wash_blast_results(blast_frame_unfiltered)
-    except Exception:
-        raise RuntimeError("Empty blast frame! Please check if your data is valid or of good quality.")
+
+    blast_frame = tk.wash_blast_results(blast_frame_unfiltered)
 
     # Drop the sequences which don't have even a gene related to taxa
     by_seqid = dict(tuple(blast_frame.groupby(['sseq'])))

@@ -81,8 +81,13 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
 
     blast_file = tk.tblastn_multi(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
                                   basedir=basedir, prefix=prefix, threads=thread_number)
-    blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
-    washed_frame = tk.wash_blast_results(blast_frame)
+    blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=score)
+
+    try:
+        washed_frame = tk.wash_blast_results(blast_frame)
+    except Exception:
+        raise RuntimeError(
+            f"Empty blast frame while annotation, annotation can't continue. Please check the {fastafile} .")
 
     if configurations.annotation.redirection:
         logger.log(2, 'Checking genome directions.')
@@ -91,7 +96,7 @@ def annotate(basedir=None, prefix=None, ident=30, fastafile=None,
             logger.log(2, "Genome is reversed, launching a second annotation to fix gene locations.")
             blast_file = tk.tblastn_multi(dbfile=tbn_profile, infile=fastafile, genetic_code=genetic_code,
                                           basedir=basedir, prefix=prefix, threads=thread_number)
-            blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=25)
+            blast_frame, _ = tk.blast_to_csv(blast_file, ident=ident, score=score)
             washed_frame = tk.wash_blast_results(blast_frame)
 
     wise_frame, _, _ = tk.genewise(

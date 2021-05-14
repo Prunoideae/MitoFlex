@@ -170,6 +170,9 @@ def blast_to_csv(blast_file, ident=30, score=25):
 
 # Filter out the most important sequences
 def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
+    if blast_frame.empty:
+        raise RuntimeError("Empty blast frame! No significant result found in blast. Please check your run setup and data.")
+
     cutoff = configurations.annotation.overlap_ratio
     if mut_plus:
         blast_frame['plus'] = (blast_frame.send - blast_frame.sstart) > 0
@@ -216,10 +219,11 @@ def wash_blast_results(blast_frame: pandas.DataFrame = None, mut_plus=True):
                 np.maximum(frame.sstart, max_start)
             frame = frame[overlays <= cutoffs]
 
-    return pandas.concat(results)
-
+    return pandas.concat(results) if results else blast_frame
 
 # Call genewise
+
+
 def genewise(basedir=None, prefix=None, codon_table=None,
              wises: pandas.DataFrame = None, infile=None,
              dbfile=None, cutoff=0.5):
