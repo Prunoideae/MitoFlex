@@ -123,11 +123,6 @@ assemble.external_temp = None
 
 # Findmitoscaf
 
-# Default clade of data.
-# Change this to the clades you frequently studies to avoid explicitly
-# specify the clade every time.
-findmitoscaf.default_clade = "Platyhelminthes"
-
 # What partial do MitoFlex treat the gene of a single sequence as full gene?
 # In most circumstances, genes are just full, but in case that your clade is rare,
 # and have no precise HMM models, lower this may increase the accuracy of the contig

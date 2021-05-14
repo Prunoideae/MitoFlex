@@ -505,7 +505,7 @@ saa_parser, saa_group = register_group('Search and annotate arguments', [
     },
     {
         'name': 'clade',
-        'default': f_conf.default_clade,
+        'required': True,
         'choices': [os.path.splitext(profile_name)[0]
                     for profile_name in os.listdir(profile_dir_tbn)
                     if os.path.splitext(profile_name)[0] in profiles_hmm],
