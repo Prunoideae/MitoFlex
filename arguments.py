@@ -98,7 +98,7 @@ universal_parser, universal_group = register_group('Universal arguments', [
     {
         'name': 'keep-temp',
         'default': False,
-        'help': 'remove temporal files and folders after work done.'
+        'help': 'keep temporal files and folders after work done.'
     },
     {
         'name': 'basedir',
