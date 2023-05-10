@@ -119,17 +119,14 @@ class MEGAHIT():
         if self.fq2:
             self.fq2 = path.abspath(self.fq2)
 
+        self.hwaccel = shell_call("megahit_core checkcpu").rstrip() == '1'
         # Check if POPCNT command is supported
         if self.use_popcnt:
             if shell_call('megahit_core checkpopcnt').rstrip() != '1':
                 self.use_popcnt = False
                 logger.log(3, "POPCNT is disabled since no features detected.")
             else:
-                self.hwaccel = shell_call(
-                    "megahit_core checkcpu").rstrip() == '1'
-
-                logger.log(
-                    2, f"Using megahit with {'POPCNT' if not self.hwaccel else 'hardware acceleration'} support.")
+                logger.log(2, f"Using megahit with {'POPCNT' if not self.hwaccel else 'hardware acceleration'} support.")
         else:
             logger.log(2, "POPCNT disabled by argument.")
 
